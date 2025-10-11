@@ -498,8 +498,9 @@ async function mapParticipantData(
     const championIcon = `${CDN_BASE}/${version}/img/champion/${championName}.png`;
 
     const itemSlots: ItemSlot[] = [];
-    for (let i = 0; i < 6; i += 1) {
-      const itemId = participant[`item${i}`];
+    const itemKeys = ["item0", "item1", "item2", "item3", "item4", "item5"] as const;
+    for (const itemKey of itemKeys) {
+      const itemId = participant[itemKey];
       if (itemId) {
         const itemMeta = items.get(itemId);
         itemSlots.push({
