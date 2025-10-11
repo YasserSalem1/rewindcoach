@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const isBrowser = () => typeof window !== "undefined";
+const isBrowser = typeof window !== "undefined";
 
 export interface UseScrubberOptions {
-  duration: number;
-  initialTime?: number;
-  onChange?: (time: number) => void;
+  duration: number;           // total length in seconds
+  initialTime?: number;       // start position in seconds
+  onChange?: (time: number) => void; // called whenever time updates
 }
 
 export function useScrubber({
@@ -13,70 +13,89 @@ export function useScrubber({
   initialTime = 0,
   onChange,
 }: UseScrubberOptions) {
-  const [currentTime, setCurrentTime] = useState(initialTime);
+  // Clamp initial value to [0, duration]
+  const [currentTime, setCurrentTime] = useState(() =>
+    Math.max(0, Math.min(initialTime, duration)),
+  );
   const [isPlaying, setIsPlaying] = useState(false);
-  const frameRef = useRef<number>();
-  const lastFrameRef = useRef<number>();
 
+  // Animation frame state
+  const frameRef = useRef<number | null>(null);
+  const lastTsRef = useRef<number | null>(null);
+
+  // Keep latest onChange without re-subscribing the RAF effect
+  const onChangeRef = useRef<typeof onChange>(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Seek/scrub to a time, clamped to [0, duration]
   const scrubTo = useCallback(
     (time: number) => {
-      const clamped = Math.min(Math.max(time, 0), duration);
+      const clamped = Math.max(0, Math.min(time, duration));
       setCurrentTime(clamped);
-      onChange?.(clamped);
+      onChangeRef.current?.(clamped);
     },
-    [duration, onChange],
+    [duration],
   );
 
-  const togglePlay = useCallback(
-    (play: boolean) => {
-      setIsPlaying(play);
-      if (!play) {
-        lastFrameRef.current = undefined;
-      }
-    },
-    [],
-  );
+  // Play/pause control (kept compatible with your original signature)
+  const togglePlay = useCallback((play: boolean) => {
+    setIsPlaying(play);
 
-  useEffect(() => {
-    if (!isBrowser() || !isPlaying) {
-      return;
+    if (!isBrowser) return;
+
+    // Reset timing state whenever play state changes
+    if (!play && frameRef.current !== null) {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
     }
+    lastTsRef.current = null;
+  }, []);
 
-    const loop = (timestamp: number) => {
-      if (lastFrameRef.current === undefined) {
-        lastFrameRef.current = timestamp;
-      }
+  // Optional convenience methods
+  const play = useCallback(() => togglePlay(true), [togglePlay]);
+  const pause = useCallback(() => togglePlay(false), [togglePlay]);
 
-      const delta = (timestamp - lastFrameRef.current) / 1000;
-      lastFrameRef.current = timestamp;
+  // Animation loop
+  useEffect(() => {
+    if (!isBrowser || !isPlaying || duration <= 0) return;
+
+    const loop = (ts: number) => {
+      const last = lastTsRef.current ?? ts;
+      const delta = (ts - last) / 1000; // ms -> s
+      lastTsRef.current = ts;
 
       setCurrentTime((prev) => {
-        const next = prev + delta;
+        let next = prev + delta;
         if (next >= duration) {
-          togglePlay(false);
-          onChange?.(duration);
-          return duration;
+          next = duration;         // stop at the end
+          setIsPlaying(false);
         }
-        onChange?.(next);
+        onChangeRef.current?.(next);
         return next;
       });
 
-      frameRef.current = window.requestAnimationFrame(loop);
+      frameRef.current = requestAnimationFrame(loop);
     };
 
-    frameRef.current = window.requestAnimationFrame(loop);
+    frameRef.current = requestAnimationFrame(loop);
 
     return () => {
-      if (frameRef.current !== undefined) {
-        window.cancelAnimationFrame(frameRef.current);
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
       }
+      lastTsRef.current = null;
     };
-  }, [duration, isPlaying, onChange, togglePlay]);
+  }, [isPlaying, duration]);
 
   return {
     currentTime,
     isPlaying,
     scrubTo,
     togglePlay,
+    play,
+    pause,
   };
 }
