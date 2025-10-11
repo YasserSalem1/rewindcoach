@@ -27,19 +27,16 @@ export function useScrubber({
     [duration, onChange],
   );
 
-  const togglePlay = useCallback(
-    (play: boolean) => {
-      setIsPlaying(play);
-      if (!play) {
-        // your original logic:
-        // note: this uses `undefined` sentinel even though the ref type is number|null
-        // keep as-is since you're reverting
-        // @ts-ignore
-        lastFrameRef.current = undefined;
+  const togglePlay = useCallback((play: boolean) => {
+    setIsPlaying(play);
+    if (!play) {
+      lastFrameRef.current = null;
+      if (frameRef.current !== null && isBrowser()) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
       }
-    },
-    [],
-  );
+    }
+  }, []);
 
   useEffect(() => {
     if (!isBrowser() || !isPlaying) {
@@ -47,16 +44,9 @@ export function useScrubber({
     }
 
     const loop = (timestamp: number) => {
-      // @ts-ignore matching your original undefined check
-      if (lastFrameRef.current === undefined) {
-        // @ts-ignore
-        lastFrameRef.current = timestamp;
-      }
-
-      // @ts-ignore
-      const delta = (timestamp - lastFrameRef.current) / 1000;
-      // @ts-ignore
+      const previousTimestamp = lastFrameRef.current ?? timestamp;
       lastFrameRef.current = timestamp;
+      const delta = (timestamp - previousTimestamp) / 1000;
 
       setCurrentTime((prev) => {
         const next = prev + delta;
@@ -75,12 +65,11 @@ export function useScrubber({
     frameRef.current = window.requestAnimationFrame(loop);
 
     return () => {
-      // keep original guard
-      // @ts-ignore
-      if (frameRef.current !== undefined) {
-        // @ts-ignore
+      if (frameRef.current !== null) {
         window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
       }
+      lastFrameRef.current = null;
     };
   }, [duration, isPlaying, onChange, togglePlay]);
 
