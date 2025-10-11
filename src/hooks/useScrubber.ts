@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const isBrowser = typeof window !== "undefined";
+const isBrowser = () => typeof window !== "undefined";
 
 export interface UseScrubberOptions {
-  duration: number;           // total length in seconds
-  initialTime?: number;       // start position in seconds
-  onChange?: (time: number) => void; // called whenever time updates
+  duration: number;
+  initialTime?: number;
+  onChange?: (time: number) => void;
 }
 
 export function useScrubber({
@@ -13,32 +13,18 @@ export function useScrubber({
   initialTime = 0,
   onChange,
 }: UseScrubberOptions) {
-  // Clamp initial value to [0, duration]
-  const [currentTime, setCurrentTime] = useState(() =>
-    Math.max(0, Math.min(initialTime, duration)),
-  );
+  const [currentTime, setCurrentTime] = useState(initialTime);
   const [isPlaying, setIsPlaying] = useState(false);
   const frameRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number | null>(null);
 
-  // Animation frame state
-  const frameRef = useRef<number | null>(null);
-  const lastTsRef = useRef<number | null>(null);
-
-  // Keep latest onChange without re-subscribing the RAF effect
-  const onChangeRef = useRef<typeof onChange>(onChange);
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
-
-  // Seek/scrub to a time, clamped to [0, duration]
   const scrubTo = useCallback(
     (time: number) => {
-      const clamped = Math.max(0, Math.min(time, duration));
+      const clamped = Math.min(Math.max(time, 0), duration);
       setCurrentTime(clamped);
-      onChangeRef.current?.(clamped);
+      onChange?.(clamped);
     },
-    [duration],
+    [duration, onChange],
   );
 
   const togglePlay = useCallback(
@@ -55,15 +41,10 @@ export function useScrubber({
     [],
   );
 
-    if (!isBrowser) return;
-
-    // Reset timing state whenever play state changes
-    if (!play && frameRef.current !== null) {
-      cancelAnimationFrame(frameRef.current);
-      frameRef.current = null;
+  useEffect(() => {
+    if (!isBrowser() || !isPlaying) {
+      return;
     }
-    lastTsRef.current = null;
-  }, []);
 
     const loop = (timestamp: number) => {
       // @ts-ignore matching your original undefined check
@@ -78,19 +59,20 @@ export function useScrubber({
       lastFrameRef.current = timestamp;
 
       setCurrentTime((prev) => {
-        let next = prev + delta;
+        const next = prev + delta;
         if (next >= duration) {
-          next = duration;         // stop at the end
-          setIsPlaying(false);
+          togglePlay(false);
+          onChange?.(duration);
+          return duration;
         }
-        onChangeRef.current?.(next);
+        onChange?.(next);
         return next;
       });
 
-      frameRef.current = requestAnimationFrame(loop);
+      frameRef.current = window.requestAnimationFrame(loop);
     };
 
-    frameRef.current = requestAnimationFrame(loop);
+    frameRef.current = window.requestAnimationFrame(loop);
 
     return () => {
       // keep original guard
@@ -99,16 +81,13 @@ export function useScrubber({
         // @ts-ignore
         window.cancelAnimationFrame(frameRef.current);
       }
-      lastTsRef.current = null;
     };
-  }, [isPlaying, duration]);
+  }, [duration, isPlaying, onChange, togglePlay]);
 
   return {
     currentTime,
     isPlaying,
     scrubTo,
     togglePlay,
-    play,
-    pause,
   };
 }
