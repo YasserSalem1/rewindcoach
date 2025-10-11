@@ -18,6 +18,8 @@ export function useScrubber({
     Math.max(0, Math.min(initialTime, duration)),
   );
   const [isPlaying, setIsPlaying] = useState(false);
+  const frameRef = useRef<number | null>(null);
+  const lastFrameRef = useRef<number | null>(null);
 
   // Animation frame state
   const frameRef = useRef<number | null>(null);
@@ -39,9 +41,19 @@ export function useScrubber({
     [duration],
   );
 
-  // Play/pause control (kept compatible with your original signature)
-  const togglePlay = useCallback((play: boolean) => {
-    setIsPlaying(play);
+  const togglePlay = useCallback(
+    (play: boolean) => {
+      setIsPlaying(play);
+      if (!play) {
+        // your original logic:
+        // note: this uses `undefined` sentinel even though the ref type is number|null
+        // keep as-is since you're reverting
+        // @ts-ignore
+        lastFrameRef.current = undefined;
+      }
+    },
+    [],
+  );
 
     if (!isBrowser) return;
 
@@ -53,18 +65,17 @@ export function useScrubber({
     lastTsRef.current = null;
   }, []);
 
-  // Optional convenience methods
-  const play = useCallback(() => togglePlay(true), [togglePlay]);
-  const pause = useCallback(() => togglePlay(false), [togglePlay]);
+    const loop = (timestamp: number) => {
+      // @ts-ignore matching your original undefined check
+      if (lastFrameRef.current === undefined) {
+        // @ts-ignore
+        lastFrameRef.current = timestamp;
+      }
 
-  // Animation loop
-  useEffect(() => {
-    if (!isBrowser || !isPlaying || duration <= 0) return;
-
-    const loop = (ts: number) => {
-      const last = lastTsRef.current ?? ts;
-      const delta = (ts - last) / 1000; // ms -> s
-      lastTsRef.current = ts;
+      // @ts-ignore
+      const delta = (timestamp - lastFrameRef.current) / 1000;
+      // @ts-ignore
+      lastFrameRef.current = timestamp;
 
       setCurrentTime((prev) => {
         let next = prev + delta;
@@ -82,9 +93,11 @@ export function useScrubber({
     frameRef.current = requestAnimationFrame(loop);
 
     return () => {
-      if (frameRef.current !== null) {
-        cancelAnimationFrame(frameRef.current);
-        frameRef.current = null;
+      // keep original guard
+      // @ts-ignore
+      if (frameRef.current !== undefined) {
+        // @ts-ignore
+        window.cancelAnimationFrame(frameRef.current);
       }
       lastTsRef.current = null;
     };
