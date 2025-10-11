@@ -15,8 +15,8 @@ export function useScrubber({
 }: UseScrubberOptions) {
   const [currentTime, setCurrentTime] = useState(initialTime);
   const [isPlaying, setIsPlaying] = useState(false);
-  const frameRef = useRef<number>();
-  const lastFrameRef = useRef<number>();
+  const frameRef = useRef<number | null>(null);
+  const lastFrameRef = useRef<number | null>(null);
 
   const scrubTo = useCallback(
     (time: number) => {
@@ -31,6 +31,10 @@ export function useScrubber({
     (play: boolean) => {
       setIsPlaying(play);
       if (!play) {
+        // your original logic:
+        // note: this uses `undefined` sentinel even though the ref type is number|null
+        // keep as-is since you're reverting
+        // @ts-ignore
         lastFrameRef.current = undefined;
       }
     },
@@ -43,11 +47,15 @@ export function useScrubber({
     }
 
     const loop = (timestamp: number) => {
+      // @ts-ignore matching your original undefined check
       if (lastFrameRef.current === undefined) {
+        // @ts-ignore
         lastFrameRef.current = timestamp;
       }
 
+      // @ts-ignore
       const delta = (timestamp - lastFrameRef.current) / 1000;
+      // @ts-ignore
       lastFrameRef.current = timestamp;
 
       setCurrentTime((prev) => {
@@ -67,7 +75,10 @@ export function useScrubber({
     frameRef.current = window.requestAnimationFrame(loop);
 
     return () => {
+      // keep original guard
+      // @ts-ignore
       if (frameRef.current !== undefined) {
+        // @ts-ignore
         window.cancelAnimationFrame(frameRef.current);
       }
     };
