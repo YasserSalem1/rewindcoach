@@ -137,38 +137,46 @@ export function CoachChat({ matchId, currentTime }: CoachChatProps) {
   );
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-3xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur-xl">
+    <div className="flex h-full flex-col gap-4 rounded-3xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur-xl shadow-lg">
       <div>
-        <h3 className="font-heading text-lg text-slate-100">Coach</h3>
+        <h3 className="font-heading text-lg text-slate-100">Chat Coach</h3>
         <p className="text-sm text-slate-300/75">
           Ask contextual questions as you scrub the timeline.
         </p>
       </div>
       <div className="flex flex-wrap gap-2">{suggestionButtons}</div>
-      <div className="flex-1 space-y-4 overflow-auto rounded-2xl bg-slate-900/45 p-3">
-        <AnimatePresence initial={false}>
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className={cn(
-                "max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                message.role === "coach"
-                  ? "bg-violet-500/15 text-violet-100"
-                  : "ml-auto bg-white/10 text-slate-100",
-              )}
-            >
-              {message.content || (
-                <span className="flex items-center gap-2 text-slate-300/70">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Thinking…
-                </span>
-              )}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+      <div className="flex-1 space-y-4 overflow-auto rounded-2xl bg-slate-900/45 p-3 min-h-[300px] max-h-[500px]">
+        {messages.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-center">
+            <p className="text-sm text-slate-400/75">
+              Start a conversation with your coach by asking a question or selecting a suggestion above.
+            </p>
+          </div>
+        ) : (
+          <AnimatePresence initial={false}>
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className={cn(
+                  "max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                  message.role === "coach"
+                    ? "bg-violet-500/15 text-violet-100"
+                    : "ml-auto bg-white/10 text-slate-100",
+                )}
+              >
+                {message.content || (
+                  <span className="flex items-center gap-2 text-slate-300/70">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Thinking…
+                  </span>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
       </div>
       <form onSubmit={handleSubmit} className="flex items-center gap-3">
         <div className="relative flex-1">

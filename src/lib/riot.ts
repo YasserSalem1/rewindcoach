@@ -565,11 +565,11 @@ export async function mapParticipantData(
           }
         : undefined,
       runes: {
-        primary: primaryRuneId
-          ? `${CDN_BASE}/${runes.get(primaryRuneId) ?? ""}`
+        primary: primaryRuneId && runes.get(primaryRuneId)
+          ? `${CDN_BASE}/img/${runes.get(primaryRuneId)}`
           : "",
-        secondary: secondaryRuneStyleId
-          ? `${CDN_BASE}/${runeStyles.get(secondaryRuneStyleId) ?? ""}`
+        secondary: secondaryRuneStyleId && runeStyles.get(secondaryRuneStyleId)
+          ? `${CDN_BASE}/img/${runeStyles.get(secondaryRuneStyleId)}`
           : "",
         shards: runeShards as string[],
       },
