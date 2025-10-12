@@ -88,7 +88,7 @@ export function MatchRow({ match, participant, onReview }: MatchRowProps) {
               items.map((item, idx) =>
                 item ? (
                   <Image
-                    key={item.id}
+                    key={`item-${idx}`}
                     src={item.icon}
                     alt={item.name}
                     width={28}
@@ -97,7 +97,7 @@ export function MatchRow({ match, participant, onReview }: MatchRowProps) {
                   />
                 ) : (
                   <div
-                    key={idx}
+                    key={`empty-item-${idx}`}
                     className="w-7 h-7 rounded-lg border border-white/10 bg-slate-900/30 p-0.5 opacity-40"
                   />
                 )
@@ -107,7 +107,7 @@ export function MatchRow({ match, participant, onReview }: MatchRowProps) {
               <>
                 {Array(NUM_ITEM_SLOTS).fill(0).map((_, idx) => (
                   <div
-                    key={idx}
+                    key={`no-item-${idx}`}
                     className="w-7 h-7 rounded-lg border border-white/10 bg-slate-900/30 p-0.5 opacity-40"
                   />
                 ))}
