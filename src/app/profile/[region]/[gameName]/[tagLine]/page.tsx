@@ -93,20 +93,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             </p>
           </div>
         </div>
-        <Card className="bg-slate-900/45 p-4 text-sm text-slate-200">
-          <CardContent className="flex items-center gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-300/65">
-                Season Focus
-              </p>
-              <p className="text-sm text-slate-300/75">
-                RewindCoach summarises your last 20 games and reveals your style DNA
-                fingerprint. Dive into any match to see timeline events with coach
-                highlights.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       </section>
       <section className="grid gap-6 lg:grid-cols-[1.1fr,1.8fr,1fr]">
         <StyleDNA data={styleDNA} />

@@ -474,6 +474,15 @@ interface BackendAccountResponse {
   };
 }
 
+interface BackendAccountInfoResponse {
+  puuid: string;
+  platform?: string;
+  summonerLevel?: number;
+  profileIconId?: number;
+  profileIconUrl?: string | null;
+  ddVersion?: string;
+}
+
 type BackendMatchesResponse = string[] | { matches: string[] };
 
 type BackendMatchResponse =
@@ -816,13 +825,65 @@ function mapTimeline(
   });
 }
 
+interface AccountInfoParams {
+  riotId?: string;
+  gameName?: string;
+  tagLine?: string;
+  puuid?: string;
+  platform?: string;
+}
+
+export interface AccountInfoResult {
+  puuid: string;
+  platform?: string;
+  summonerLevel?: number;
+  profileIconId?: number;
+  profileIconUrl?: string | null;
+  ddVersion?: string;
+}
+
+export async function getAccountInfo(params: AccountInfoParams): Promise<AccountInfoResult> {
+  const search = new URLSearchParams();
+
+  if (params.riotId) {
+    search.set("riotId", params.riotId);
+  } else if (params.gameName && params.tagLine) {
+    search.set("gameName", params.gameName);
+    search.set("tagLine", params.tagLine);
+  } else if (params.puuid) {
+    search.set("puuid", params.puuid);
+    if (params.platform) {
+      search.set("platform", params.platform);
+    }
+  } else {
+    throw new Error("Provide riotId, gameName+tagLine, or puuid to fetch account info.");
+  }
+
+  if (params.platform && !search.has("platform")) {
+    search.set("platform", params.platform);
+  }
+
+  const info = await backendFetch<BackendAccountInfoResponse>(
+    `/account_info?${search.toString()}`,
+  );
+
+  return {
+    puuid: info.puuid,
+    platform: info.platform,
+    summonerLevel: info.summonerLevel,
+    profileIconId: info.profileIconId,
+    profileIconUrl: info.profileIconUrl,
+    ddVersion: info.ddVersion,
+  };
+}
+
 export async function getProfileBundle(
   region: Region,
   gameName: string,
   tagLine: string,
   matchCount = 10,
 ): Promise<ProfileBundle> {
-  getRegionConfig(region); // validate region early
+  const regionConfig = getRegionConfig(region); // validate region early
 
   const account = await backendFetch<BackendAccountResponse>(
     `/account?region=${encodeURIComponent(region)}&gameName=${encodeURIComponent(
@@ -834,12 +895,26 @@ export async function getProfileBundle(
     throw new Error("Account lookup did not return a PUUID.");
   }
 
+  let accountInfo: AccountInfoResult | undefined;
+  try {
+    accountInfo = await getAccountInfo({
+      puuid: account.puuid,
+      platform: regionConfig.platform,
+    });
+  } catch (error) {
+    console.warn("[riot] Failed to load account info, falling back to /account response", error);
+  }
+
   const version = await getLatestVersion();
   const profileIconId =
-    typeof account.profileIcon === "number"
+    accountInfo?.profileIconId ??
+    (typeof account.profileIcon === "number"
       ? account.profileIcon
-      : account.profileIconId;
+      : account.profileIconId);
   const profileIcon = (() => {
+    if (accountInfo?.profileIconUrl) {
+      return accountInfo.profileIconUrl;
+    }
     if (typeof account.profileIcon === "string") {
       return account.profileIcon.startsWith("http")
         ? account.profileIcon
@@ -883,7 +958,8 @@ export async function getProfileBundle(
   const rankedDivision = account.rankedDivision ?? account.ranked?.rank ?? "-";
   const rankedLpRaw = account.rankedLp ?? account.ranked?.leaguePoints ?? 0;
   const rankedLp = Number.isFinite(Number(rankedLpRaw)) ? Number(rankedLpRaw) : 0;
-  const summonerLevelValue = Number(account.summonerLevel ?? 0) || 0;
+  const summonerLevelValue =
+    Number(accountInfo?.summonerLevel ?? account.summonerLevel ?? 0) || 0;
 
   return {
     puuid: account.puuid,
