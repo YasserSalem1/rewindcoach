@@ -201,7 +201,7 @@ const REGION_CONFIG: Record<
   TR: { platform: "TR1", routing: "europe" },
 };
 
-const PLATFORM_TO_REGION: Record<string, Region> = {
+export const PLATFORM_TO_REGION: Record<string, Region> = {
   EUW1: "EUW",
   EUN1: "EUNE",
   NA1: "NA",
@@ -492,7 +492,7 @@ type BackendMatchResponse =
       timeline?: RiotTimelineDto;
     };
 
-async function mapParticipantData(
+export async function mapParticipantData(
   match: RiotMatchDto,
   region: Region,
   focusPuuid: string,
@@ -611,7 +611,7 @@ function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
-function summarizeMatches(matches: RiotMatch[], focusPuuid: string) {
+export function summarizeMatches(matches: RiotMatch[], focusPuuid: string) {
   let wins = 0;
   let totalKills = 0;
   let totalDeaths = 0;

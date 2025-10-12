@@ -17,10 +17,10 @@ export function ReviewExperience({ bundle }: ReviewExperienceProps) {
   const { match, timeline } = bundle;
   const events = useMemo(
     () =>
-      timeline.reduce<TimelineEvent[]>(
+      timeline?.reduce<TimelineEvent[]>(
         (acc, frame) => acc.concat(frame.events),
         [],
-      ),
+      ) || [],
     [timeline],
   );
 

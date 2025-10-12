@@ -1,18 +1,32 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { MatchRow } from "@/components/MatchRow";
 import type { RiotMatch } from "@/lib/riot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface MatchListProps {
   matches: RiotMatch[];
   heading?: string;
+  puuid?: string;
+  region?: string;
+  onMatchesUpdate?: (matches: RiotMatch[]) => void;
 }
 
-export function MatchList({ matches, heading = "Recent Matches" }: MatchListProps) {
+export function MatchList({ 
+  matches: initialMatches, 
+  heading = "Recent Matches",
+  puuid,
+  region,
+  onMatchesUpdate 
+}: MatchListProps) {
+  const [matches, setMatches] = useState<RiotMatch[]>(initialMatches);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
   const matchEntries = useMemo(
     () =>
       matches.map((match) => {
@@ -23,6 +37,70 @@ export function MatchList({ matches, heading = "Recent Matches" }: MatchListProp
       }),
     [matches],
   ).filter(Boolean) as Array<{ match: RiotMatch; participant: RiotMatch["participants"][number] }>;
+
+  const loadMoreMatches = useCallback(async () => {
+    if (!puuid || !region || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const startIndex = matches.length;
+      const response = await fetch(
+        `/api/matches?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}&start=${startIndex}&count=5`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to load more matches");
+      }
+
+      const data = await response.json();
+      const { matchIds, hasMore: moreAvailable } = data;
+
+      // Only hide button if we got no matches at all
+      if (!matchIds || matchIds.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      // Fetch full match data for each match ID
+      const newMatches: RiotMatch[] = [];
+      for (const matchId of matchIds) {
+        try {
+          const matchResponse = await fetch(
+            `/api/match?matchId=${encodeURIComponent(matchId)}&puuid=${encodeURIComponent(puuid)}`
+          );
+          if (matchResponse.ok) {
+            const bundle = await matchResponse.json();
+            // Extract just the match from the bundle (API returns MatchBundle with match + timeline)
+            const match = bundle.match || bundle;
+            newMatches.push(match);
+          }
+        } catch (error) {
+          console.error(`Failed to load match ${matchId}:`, error);
+        }
+      }
+
+      // Only update hasMore if we got fewer matches than requested or backend says no more
+      if (newMatches.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      const updatedMatches = [...matches, ...newMatches];
+      setMatches(updatedMatches);
+      
+      // Keep button visible unless backend explicitly says no more
+      setHasMore(moreAvailable);
+      
+      // Always notify parent component of updates for analytics recalculation
+      if (onMatchesUpdate) {
+        onMatchesUpdate(updatedMatches);
+      }
+    } catch (error) {
+      console.error("Failed to load more matches:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [matches, puuid, region, isLoading, onMatchesUpdate]);
 
   return (
     <Card className="h-full border-white/5 bg-slate-950/65">
@@ -39,6 +117,16 @@ export function MatchList({ matches, heading = "Recent Matches" }: MatchListProp
                 participant={participant}
               />
             ))}
+            {puuid && region && hasMore && (
+              <Button 
+                variant="secondary" 
+                onClick={loadMoreMatches}
+                disabled={isLoading}
+                className="w-full mt-2"
+              >
+                {isLoading ? "Loading..." : "Load More Matches"}
+              </Button>
+            )}
           </div>
         </ScrollArea>
       </CardContent>
