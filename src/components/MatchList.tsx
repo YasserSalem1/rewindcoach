@@ -10,9 +10,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 interface MatchListProps {
   matches: RiotMatch[];
   heading?: string;
+  gameName?: string;
+  tagLine?: string;
 }
 
-export function MatchList({ matches, heading = "Recent Matches" }: MatchListProps) {
+export function MatchList({
+  matches,
+  heading = "Recent Matches",
+  gameName,
+  tagLine,
+}: MatchListProps) {
   const matchEntries = useMemo(
     () =>
       matches.map((match) => {
@@ -33,13 +40,15 @@ export function MatchList({ matches, heading = "Recent Matches" }: MatchListProp
         <ScrollArea className="h-[28rem] pr-2">
           <div className="flex flex-col gap-4">
             {matchEntries.map(({ match, participant }) => (
-              <MatchRow
-                key={match.id}
-                match={match}
-                participant={participant}
-              />
-            ))}
-          </div>
+          <MatchRow
+            key={match.id}
+            match={match}
+            participant={participant}
+            gameName={gameName}
+            tagLine={tagLine}
+          />
+        ))}
+      </div>
         </ScrollArea>
       </CardContent>
     </Card>

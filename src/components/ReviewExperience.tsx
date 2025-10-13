@@ -11,9 +11,17 @@ import { Timeline } from "@/components/Timeline";
 
 interface ReviewExperienceProps {
   bundle: MatchBundle;
+  focusPuuid?: string;
+  focusGameName?: string;
+  focusTagLine?: string;
 }
 
-export function ReviewExperience({ bundle }: ReviewExperienceProps) {
+export function ReviewExperience({
+  bundle,
+  focusPuuid,
+  focusGameName,
+  focusTagLine,
+}: ReviewExperienceProps) {
   const { match, timeline } = bundle;
   const events = useMemo(
     () =>
@@ -22,6 +30,15 @@ export function ReviewExperience({ bundle }: ReviewExperienceProps) {
         [],
       ),
     [timeline],
+  );
+
+  const activePuuid = focusPuuid ?? match.primaryParticipantPuuid;
+  const focusParticipant = useMemo(
+    () =>
+      match.participants.find(
+        (participant) => participant.puuid === activePuuid,
+      ),
+    [activePuuid, match.participants],
   );
 
   const { currentTime, scrubTo, togglePlay } = useScrubber({
@@ -49,7 +66,12 @@ export function ReviewExperience({ bundle }: ReviewExperienceProps) {
             }}
           />
         </div>
-        <CoachChat matchId={match.id} currentTime={currentTime} />
+        <CoachChat
+          matchId={match.id}
+          currentTime={currentTime}
+          gameName={focusGameName ?? focusParticipant?.summonerName}
+          tagLine={focusTagLine}
+        />
       </div>
     </div>
   );

@@ -9,6 +9,8 @@ interface ReviewPageProps {
   };
   searchParams?: {
     puuid?: string;
+    gameName?: string;
+    tagLine?: string;
   };
 }
 
@@ -50,7 +52,12 @@ export default async function ReviewPage({ params, searchParams }: ReviewPagePro
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <ReviewExperience bundle={bundle} />
+      <ReviewExperience
+        bundle={bundle}
+        focusPuuid={searchParams?.puuid ?? bundle.match.primaryParticipantPuuid}
+        focusGameName={searchParams?.gameName ?? undefined}
+        focusTagLine={searchParams?.tagLine ?? undefined}
+      />
     </div>
   );
 }

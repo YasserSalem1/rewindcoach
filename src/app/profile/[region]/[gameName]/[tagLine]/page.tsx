@@ -6,7 +6,6 @@ import { MatchList } from "@/components/MatchList";
 import { PersistProfilePref } from "@/components/PersistProfilePref";
 import { StyleDNA } from "@/components/StyleDNA";
 import { REGIONS, type ProfileBundle, type Region } from "@/lib/riot";
-import { Card, CardContent } from "@/components/ui/card";
 
 function getInternalUrl(path: string) {
   const base =
@@ -96,7 +95,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       </section>
       <section className="grid gap-6 lg:grid-cols-[1.1fr,1.8fr,1fr]">
         <StyleDNA data={styleDNA} />
-        <MatchList matches={matches} />
+        <MatchList
+          matches={matches}
+          gameName={normalizedGameName}
+          tagLine={normalizedTagLine}
+        />
         <HighlightsCard highlights={highlights} />
       </section>
     </div>
