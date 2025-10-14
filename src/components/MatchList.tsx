@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 interface MatchListProps {
   matches: RiotMatch[];
   heading?: string;
-  gameName?: string;
-  tagLine?: string;
   puuid?: string;
   region?: string;
   onMatchesUpdate?: (matches: RiotMatch[]) => void;
@@ -21,8 +19,6 @@ interface MatchListProps {
 export function MatchList({ 
   matches: initialMatches, 
   heading = "Recent Matches",
-  gameName,
-  tagLine,
   puuid,
   region,
   onMatchesUpdate 

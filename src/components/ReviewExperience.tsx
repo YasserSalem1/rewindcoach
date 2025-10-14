@@ -248,15 +248,14 @@ export function ReviewExperience({
             }}
           />
         </div>
-        <CoachChat
-          matchId={match.id}
-          currentTime={currentTime}
-          gameName={focusGameName ?? focusParticipant?.summonerName}
-          tagLine={focusTagLine}
-        />
         {/* Sticky Chat on Right - Takes 1/3 */}
         <div className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
-          <CoachChat matchId={match.id} currentTime={currentTime} />
+          <CoachChat
+            matchId={match.id}
+            currentTime={currentTime}
+            gameName={focusGameName ?? focusParticipant?.summonerName}
+            tagLine={focusTagLine}
+          />
         </div>
       </div>
     </div>

@@ -16,11 +16,9 @@ import { summarizeMatches } from "@/lib/riot";
 interface ProfileContentProps {
   bundle: ProfileBundle;
   region: string;
-  gameName: string;
-  tagLine: string;
 }
 
-export function ProfileContent({ bundle, region, gameName: _gameName, tagLine: _tagLine }: ProfileContentProps) {
+export function ProfileContent({ bundle, region }: ProfileContentProps) {
   const router = useRouter();
   const { profile: summoner, puuid } = bundle;
   
@@ -123,4 +121,3 @@ export function ProfileContent({ bundle, region, gameName: _gameName, tagLine: _
     </div>
   );
 }
-

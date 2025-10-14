@@ -4,14 +4,14 @@ import { ReviewExperience } from "@/components/ReviewExperience";
 import type { MatchBundle } from "@/lib/riot";
 
 interface ReviewPageProps {
-  params: Promise<{
+  params: {
     matchId: string;
-  }>;
-  searchParams?: Promise<{
+  };
+  searchParams?: {
     puuid?: string;
     gameName?: string;
     tagLine?: string;
-  }>;
+  };
 }
 
 function getInternalUrl(path: string) {
@@ -43,10 +43,9 @@ async function loadMatch(matchId: string, focusPuuid?: string) {
 }
 
 export default async function ReviewPage({ params, searchParams }: ReviewPageProps) {
-  const { matchId: matchIdRaw } = await params;
-  const searchParamsResolved = await searchParams;
+  const { matchId: matchIdRaw } = params;
   const matchId = decodeURIComponent(matchIdRaw);
-  const bundle = await loadMatch(matchId, searchParamsResolved?.puuid);
+  const bundle = await loadMatch(matchId, searchParams?.puuid);
 
   if (!bundle) {
     notFound();

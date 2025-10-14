@@ -70,8 +70,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       <ProfileContent
         bundle={bundle}
         region={region}
-        gameName={normalizedGameName}
-        tagLine={normalizedTagLine}
       />
     </>
   );
