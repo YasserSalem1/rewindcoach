@@ -7,20 +7,6 @@ interface BackendMatchesResponse {
   matchIds?: string[];
 }
 
-interface BackendMatchDto {
-  metadata: {
-    matchId: string;
-    participants: string[];
-  };
-  info: {
-    gameCreation: number;
-    gameDuration: number;
-    gameVersion: string;
-    queueId: number;
-    participants: Array<JSON>;
-    teams: Array<JSON>;
-  };
-}
 
 const BACKEND_FALLBACK_BASE =
   process.env.BACKEND_API_BASE_URL ||
@@ -85,7 +71,7 @@ export async function GET(req: NextRequest) {
     const allMatchIds = Array.isArray(matchesResponse)
       ? matchesResponse
       : (matchesResponse as BackendMatchesResponse).matches ?? 
-        (matchesResponse as any).matchIds ?? [];
+        (matchesResponse as BackendMatchesResponse).matchIds ?? [];
 
     // Get the subset based on pagination
     const matchIds = allMatchIds.slice(startIndex, startIndex + count);

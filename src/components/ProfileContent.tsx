@@ -20,7 +20,7 @@ interface ProfileContentProps {
   tagLine: string;
 }
 
-export function ProfileContent({ bundle, region, gameName, tagLine }: ProfileContentProps) {
+export function ProfileContent({ bundle, region, gameName: _gameName, tagLine: _tagLine }: ProfileContentProps) {
   const router = useRouter();
   const { profile: summoner, puuid } = bundle;
   

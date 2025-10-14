@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-import type { MatchBundle, TimelineEvent, RiotParticipant } from "@/lib/riot";
+import type { MatchBundle, TimelineEvent } from "@/lib/riot";
 import { useScrubber } from "@/hooks/useScrubber";
 import { CoachChat } from "@/components/CoachChat";
 import { ReviewHeader } from "@/components/ReviewHeader";
