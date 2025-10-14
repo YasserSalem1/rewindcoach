@@ -11,7 +11,7 @@ interface ReviewPageProps {
     puuid?: string;
     gameName?: string;
     tagLine?: string;
-  };
+  }>;
 }
 
 function getInternalUrl(path: string) {
