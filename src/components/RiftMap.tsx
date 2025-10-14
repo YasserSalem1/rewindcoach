@@ -1,90 +1,91 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
-import type { TimelineEvent } from "@/lib/riot";
+import type { TimelineEvent, RiotParticipant } from "@/lib/riot";
 import { cn } from "@/lib/ui";
 
 const MAP_SIZE = 14870;
-const MIN_SCALE = 0.8;
-const MAX_SCALE = 2.2;
 
 interface RiftMapProps {
   events: TimelineEvent[];
   currentTime: number;
+  participants: RiotParticipant[];
+  primaryPuuid: string;
+  selectedPlayers: Set<string>;
   className?: string;
 }
 
-export function RiftMap({ events, currentTime, className }: RiftMapProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1.05);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const dragging = useRef(false);
-  const dragOrigin = useRef({ x: 0, y: 0 });
-
+export function RiftMap({ 
+  events, 
+  currentTime, 
+  participants,
+  primaryPuuid,
+  selectedPlayers,
+  className 
+}: RiftMapProps) {
   const visibleEvents = useMemo(
     () => events.filter((event) => event.timestamp <= currentTime),
-    [currentTime, events],
+    [currentTime, events]
   );
 
-  const clampScale = useCallback(
-    (value: number) => Math.min(Math.max(value, MIN_SCALE), MAX_SCALE),
-    [],
-  );
-
-  const handleWheel = useCallback(
-    (event: React.WheelEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      const delta = event.deltaY > 0 ? -0.1 : 0.1;
-      setScale((prev) => clampScale(prev + delta));
-    },
-    [clampScale],
-  );
-
-  const pointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    dragging.current = true;
-    dragOrigin.current = { x: event.clientX - offset.x, y: event.clientY - offset.y };
-    (event.target as HTMLElement).setPointerCapture(event.pointerId);
-  }, [offset]);
-
-  const pointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragging.current) return;
-    setOffset({
-      x: event.clientX - dragOrigin.current.x,
-      y: event.clientY - dragOrigin.current.y,
-    });
-  }, []);
-
-  const pointerUp = useCallback(() => {
-    dragging.current = false;
-  }, []);
+  // Get player positions from the most recent events
+  const playerPositions = useMemo(() => {
+    const positions = new Map<string, { x: number; y: number; participant: RiotParticipant }>();
+    
+    // Find the most recent position for each player
+    for (const event of [...visibleEvents].reverse()) {
+      if (event.killerPuuid && !positions.has(event.killerPuuid)) {
+        const participant = participants.find((p) => p.puuid === event.killerPuuid);
+        if (participant) {
+          positions.set(event.killerPuuid, {
+            x: event.position.x,
+            y: event.position.y,
+            participant,
+          });
+        }
+      }
+      if (event.victimPuuid && !positions.has(event.victimPuuid)) {
+        const participant = participants.find((p) => p.puuid === event.victimPuuid);
+        if (participant) {
+          positions.set(event.victimPuuid, {
+            x: event.position.x,
+            y: event.position.y,
+            participant,
+          });
+        }
+      }
+    }
+    
+    return positions;
+  }, [visibleEvents, participants]);
 
   return (
     <div
-      ref={containerRef}
       className={cn(
-        "relative h-full overflow-hidden rounded-3xl border border-white/5 bg-slate-950/70",
-        className,
+        "relative h-full w-full overflow-hidden rounded-3xl border border-white/5 bg-slate-950/70",
+        className
       )}
-      onWheel={handleWheel}
-      onPointerDown={pointerDown}
-      onPointerMove={pointerMove}
-      onPointerUp={pointerUp}
-      onPointerLeave={pointerUp}
       aria-label="Summoner's Rift timeline map"
     >
-      <motion.div
-        className="absolute inset-0 origin-center"
-        animate={{ scale, x: offset.x, y: offset.y }}
-        transition={{ type: "spring", stiffness: 120, damping: 20 }}
-        style={{
-          backgroundImage: "url(/images/rift.jpg)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/40 via-transparent to-violet-900/60" />
+      <div className="absolute inset-0">
+        <Image
+          src="/images/rift.jpg"
+          alt=""
+          fill
+          className="object-cover"
+          draggable={false}
+          style={{
+            pointerEvents: "none",
+            borderRadius: '1.5rem',
+          }}
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/40 via-transparent to-violet-900/60 pointer-events-none" />
+        
+        {/* Event Markers */}
         {visibleEvents.map((event) => {
           const left = (event.position.x / MAP_SIZE) * 100;
           const bottom = (event.position.y / MAP_SIZE) * 100;
@@ -92,20 +93,74 @@ export function RiftMap({ events, currentTime, className }: RiftMapProps) {
             <motion.div
               key={event.id}
               className={cn(
-                "absolute flex h-7 w-7 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border text-xs font-semibold shadow-lg backdrop-blur",
+                "absolute flex h-6 w-6 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border text-xs font-semibold shadow-lg backdrop-blur",
                 markerClasses(event.type),
               )}
               initial={{ scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.2 }}
-              style={{ left: `${left}%`, bottom: `${bottom}%` }}
+              style={{
+                left: `${left}%`,
+                bottom: `${bottom}%`,
+                zIndex: 10,
+              }}
             >
               {event.type[0]}
               <span className="sr-only">{event.description}</span>
             </motion.div>
           );
         })}
-      </motion.div>
+
+        {/* Player Positions with Champion Icons */}
+        {Array.from(playerPositions.entries()).map(([puuid, { x, y, participant }]) => {
+          const left = (x / MAP_SIZE) * 100;
+          const bottom = (y / MAP_SIZE) * 100;
+          const isSelected = selectedPlayers.has(puuid);
+          const isPrimary = puuid === primaryPuuid;
+          const isBlueTeam = participant.teamId === 100;
+          
+          return (
+            <motion.div
+              key={`player-${puuid}`}
+              className={cn(
+                "absolute -translate-x-1/2 translate-y-1/2",
+                isSelected && "ring-2 ring-violet-400 rounded-full"
+              )}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              style={{
+                left: `${left}%`,
+                bottom: `${bottom}%`,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className={cn(
+                  "relative h-12 w-12 overflow-hidden rounded-full border-2 shadow-lg",
+                  isBlueTeam ? "border-blue-400" : "border-red-400",
+                  isPrimary && "ring-2 ring-yellow-400 ring-offset-2 ring-offset-slate-950"
+                )}
+                title={`${participant.summonerName} (${participant.championName})`}
+              >
+                <Image
+                  src={participant.championIcon}
+                  alt={participant.championName}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              {/* Small indicator for team */}
+              <div
+                className={cn(
+                  "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-slate-950",
+                  isBlueTeam ? "bg-blue-500" : "bg-red-500"
+                )}
+              />
+            </motion.div>
+          );
+        })}
+      </div>
       <div className="pointer-events-none absolute inset-0 rounded-3xl border border-violet-400/20" />
     </div>
   );
@@ -117,7 +172,12 @@ function markerClasses(type: TimelineEvent["type"]) {
       return "border-violet-400 bg-violet-500/30 text-violet-50";
     case "DEATH":
       return "border-red-400 bg-red-500/30 text-red-50";
+    case "DRAGON":
+    case "BARON":
+    case "HERALD":
     case "OBJECTIVE":
+      return "border-amber-400 bg-amber-500/30 text-amber-50";
+    case "TOWER":
       return "border-sky-400 bg-sky-500/30 text-sky-50";
     default:
       return "border-white/30 bg-white/20 text-white";

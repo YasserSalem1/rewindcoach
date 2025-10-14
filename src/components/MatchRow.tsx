@@ -51,6 +51,13 @@ export function MatchRow({
     router.push(`/review/${match.id}?${search.toString()}`);
   };
 
+  // For static item slots
+  const NUM_ITEM_SLOTS = 6;
+  const items = Array(NUM_ITEM_SLOTS)
+    .fill(null)
+    .map((_, i) => participant.items[i] || null);
+
+  // Runes are always present in a static spot in the layout regardless of items
   return (
     <motion.article
       variants={rowVariants}
@@ -87,23 +94,41 @@ export function MatchRow({
             K / D / A
           </span>
         </div>
+        {/* Items row, always fixed slots */}
         <div className="flex flex-col gap-2">
           <span className="text-xs uppercase text-slate-300/65">Items</span>
           <div className="flex items-center gap-1.5">
-            {participant.items.length > 0 ? (
-              participant.items.map((item) => (
-                <Image
-                  key={item.id}
-                  src={item.icon}
-                  alt={item.name}
-                  width={28}
-                  height={28}
-                  className="rounded-lg border border-white/10 bg-slate-900/60 p-0.5"
-                />
-              ))
+            {items.some((item) => item) ? (
+              items.map((item, idx) =>
+                item ? (
+                  <Image
+                    key={`item-${idx}`}
+                    src={item.icon}
+                    alt={item.name}
+                    width={28}
+                    height={28}
+                    className="rounded-lg border border-white/10 bg-slate-900/60 p-0.5"
+                  />
+                ) : (
+                  <div
+                    key={`empty-item-${idx}`}
+                    className="w-7 h-7 rounded-lg border border-white/10 bg-slate-900/30 p-0.5 opacity-40"
+                  />
+                )
+              )
             ) : (
-              <span className="text-xs text-slate-400/60">No build data</span>
+              // If *all* slots missing/no data
+              <>
+                {Array(NUM_ITEM_SLOTS).fill(0).map((_, idx) => (
+                  <div
+                    key={`no-item-${idx}`}
+                    className="w-7 h-7 rounded-lg border border-white/10 bg-slate-900/30 p-0.5 opacity-40"
+                  />
+                ))}
+                <span className="ml-2 text-xs text-slate-400/60">No build data</span>
+              </>
             )}
+            {/* Always reserve the next slot for trinket, even if null */}
             {participant.trinket ? (
               <Image
                 src={participant.trinket.icon}
@@ -112,13 +137,19 @@ export function MatchRow({
                 height={28}
                 className="rounded-lg border border-violet-400/45 bg-slate-900/60 p-0.5"
               />
-            ) : null}
+            ) : (
+              <div
+                className="w-7 h-7 rounded-lg border border-violet-400/45 bg-slate-900/30 p-0.5 opacity-40"
+                aria-label="No trinket"
+              />
+            )}
           </div>
         </div>
-        {participant.runes?.primary ? (
-          <div className="flex flex-col gap-2">
-            <span className="text-xs uppercase text-slate-300/65">Runes</span>
-            <div className="flex items-center gap-1.5">
+        {/* Runes row, always fixed location on the row */}
+        <div className="flex flex-col gap-2">
+          <span className="text-xs uppercase text-slate-300/65">Runes</span>
+          <div className="flex items-center gap-1.5">
+            {participant.runes && participant.runes.primary ? (
               <Image
                 src={participant.runes.primary}
                 alt="Primary rune"
@@ -126,18 +157,28 @@ export function MatchRow({
                 height={28}
                 className="rounded-full border border-violet-400/45 bg-slate-900/60 p-0.5"
               />
-              {participant.runes.secondary ? (
-                <Image
-                  src={participant.runes.secondary}
-                  alt="Secondary rune"
-                  width={28}
-                  height={28}
-                  className="rounded-full border border-white/10 bg-slate-900/60 p-0.5"
-                />
-              ) : null}
-            </div>
+            ) : (
+              <div
+                className="w-7 h-7 rounded-full border border-violet-400/45 bg-slate-900/30 p-0.5 opacity-40"
+                aria-label="No primary rune"
+              />
+            )}
+            {participant.runes && participant.runes.secondary ? (
+              <Image
+                src={participant.runes.secondary}
+                alt="Secondary rune"
+                width={28}
+                height={28}
+                className="rounded-full border border-white/10 bg-slate-900/60 p-0.5"
+              />
+            ) : (
+              <div
+                className="w-7 h-7 rounded-full border border-white/10 bg-slate-900/30 p-0.5 opacity-40"
+                aria-label="No secondary rune"
+              />
+            )}
           </div>
-        ) : null}
+        </div>
       </div>
       <Button
         variant="secondary"

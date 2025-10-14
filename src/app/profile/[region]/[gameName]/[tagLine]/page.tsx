@@ -1,10 +1,7 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 
-import { HighlightsCard } from "@/components/HighlightsCard";
-import { MatchList } from "@/components/MatchList";
 import { PersistProfilePref } from "@/components/PersistProfilePref";
-import { StyleDNA } from "@/components/StyleDNA";
+import { ProfileContent } from "@/components/ProfileContent";
 import { REGIONS, type ProfileBundle, type Region } from "@/lib/riot";
 
 function getInternalUrl(path: string) {
@@ -37,17 +34,18 @@ async function loadProfileData(region: Region, gameName: string, tagLine: string
 }
 
 interface ProfilePageProps {
-  params: {
+  params: Promise<{
     region: string;
     gameName: string;
     tagLine: string;
-  };
+  }>;
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const regionParam = decodeURIComponent(params.region).toUpperCase();
-  const gameName = decodeURIComponent(params.gameName);
-  const tagLine = decodeURIComponent(params.tagLine);
+  const { region: regionRaw, gameName: gameNameRaw, tagLine: tagLineRaw } = await params;
+  const regionParam = decodeURIComponent(regionRaw).toUpperCase();
+  const gameName = decodeURIComponent(gameNameRaw);
+  const tagLine = decodeURIComponent(tagLineRaw);
   const normalizedGameName = gameName.trim();
   const normalizedTagLine = tagLine.trim();
   const region = regionParam as Region;
@@ -62,10 +60,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     notFound();
   }
 
-  const { profile: summoner, styleDNA, highlights, matches } = bundle;
-
   return (
-    <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
+    <>
       <PersistProfilePref
         region={region}
         gameName={normalizedGameName}
@@ -103,5 +99,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <HighlightsCard highlights={highlights} />
       </section>
     </div>
+      <ProfileContent
+        bundle={bundle}
+        region={region}
+        gameName={normalizedGameName}
+        tagLine={normalizedTagLine}
+      />
+    </>
   );
 }
