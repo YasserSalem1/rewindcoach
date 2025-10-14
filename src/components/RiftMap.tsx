@@ -71,15 +71,17 @@ export function RiftMap({
       aria-label="Summoner's Rift timeline map"
     >
       <div className="absolute inset-0">
-        <img
+        <Image
           src="/images/rift.jpg"
           alt=""
-          className="h-full w-full object-cover"
+          fill
+          className="object-cover"
           draggable={false}
           style={{
             pointerEvents: "none",
             borderRadius: '1.5rem',
           }}
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950/40 via-transparent to-violet-900/60 pointer-events-none" />
         

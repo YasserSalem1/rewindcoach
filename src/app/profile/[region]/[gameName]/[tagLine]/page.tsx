@@ -34,17 +34,18 @@ async function loadProfileData(region: Region, gameName: string, tagLine: string
 }
 
 interface ProfilePageProps {
-  params: {
+  params: Promise<{
     region: string;
     gameName: string;
     tagLine: string;
-  };
+  }>;
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const regionParam = decodeURIComponent(params.region).toUpperCase();
-  const gameName = decodeURIComponent(params.gameName);
-  const tagLine = decodeURIComponent(params.tagLine);
+  const { region: regionRaw, gameName: gameNameRaw, tagLine: tagLineRaw } = await params;
+  const regionParam = decodeURIComponent(regionRaw).toUpperCase();
+  const gameName = decodeURIComponent(gameNameRaw);
+  const tagLine = decodeURIComponent(tagLineRaw);
   const normalizedGameName = gameName.trim();
   const normalizedTagLine = tagLine.trim();
   const region = regionParam as Region;
