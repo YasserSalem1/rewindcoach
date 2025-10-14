@@ -17,8 +17,8 @@ interface BackendMatchDto {
     gameDuration: number;
     gameVersion: string;
     queueId: number;
-    participants: Array<any>;
-    teams: Array<any>;
+    participants: Array<JSON>;
+    teams: Array<JSON>;
   };
 }
 
