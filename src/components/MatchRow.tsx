@@ -13,6 +13,8 @@ interface MatchRowProps {
   match: RiotMatch;
   participant: RiotParticipant;
   onReview?: (matchId: string) => void;
+  gameName?: string;
+  tagLine?: string;
 }
 
 const rowVariants = {
@@ -20,7 +22,13 @@ const rowVariants = {
   animate: { opacity: 1, y: 0 },
 };
 
-export function MatchRow({ match, participant, onReview }: MatchRowProps) {
+export function MatchRow({
+  match,
+  participant,
+  onReview,
+  gameName,
+  tagLine,
+}: MatchRowProps) {
   const router = useRouter();
   const isWin = participant.win;
   const kda = kdaString(participant.kills, participant.deaths, participant.assists);
@@ -34,6 +42,12 @@ export function MatchRow({ match, participant, onReview }: MatchRowProps) {
     }
 
     const search = new URLSearchParams({ puuid: participant.puuid });
+    if (gameName) {
+      search.set("gameName", gameName);
+    }
+    if (tagLine) {
+      search.set("tagLine", tagLine);
+    }
     router.push(`/review/${match.id}?${search.toString()}`);
   };
 

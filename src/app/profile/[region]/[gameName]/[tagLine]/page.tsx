@@ -67,6 +67,38 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         gameName={normalizedGameName}
         tagLine={normalizedTagLine}
       />
+      <section className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-slate-950/70 p-6 shadow-[0_0_60px_rgba(79,70,229,0.18)] md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-5">
+          <div className="relative h-24 w-24 overflow-hidden rounded-3xl border border-violet-400/45">
+            <Image
+              src={summoner.profileIcon}
+              alt={`${summoner.summonerName} icon`}
+              fill
+              className="object-cover"
+            />
+          </div>
+          <div>
+            <h1 className="font-heading text-3xl text-slate-100">
+              {summoner.summonerName}
+              <span className="text-slate-300/70">#{summoner.tagline}</span>
+            </h1>
+            <p className="text-sm text-slate-300/75">
+              Level {summoner.level} • {region} • Ranked {summoner.rankedTier}{" "}
+              {summoner.rankedDivision} ({summoner.rankedLp} LP)
+            </p>
+          </div>
+        </div>
+      </section>
+      <section className="grid gap-6 lg:grid-cols-[1.1fr,1.8fr,1fr]">
+        <StyleDNA data={styleDNA} />
+        <MatchList
+          matches={matches}
+          gameName={normalizedGameName}
+          tagLine={normalizedTagLine}
+        />
+        <HighlightsCard highlights={highlights} />
+      </section>
+    </div>
       <ProfileContent
         bundle={bundle}
         region={region}

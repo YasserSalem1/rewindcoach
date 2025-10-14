@@ -17,6 +17,8 @@ interface Message {
 interface CoachChatProps {
   matchId: string;
   currentTime: number;
+  gameName?: string;
+  tagLine?: string;
 }
 
 const SUGGESTIONS = [
@@ -25,7 +27,9 @@ const SUGGESTIONS = [
   "How can I snowball my lead?",
 ];
 
-export function CoachChat({ matchId, currentTime }: CoachChatProps) {
+const SYSTEM_PROMPT = "You are a concise League of Legends coach.";
+
+export function CoachChat({ matchId, currentTime, gameName, tagLine }: CoachChatProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -34,10 +38,24 @@ export function CoachChat({ matchId, currentTime }: CoachChatProps) {
     async (question: string) => {
       if (!question.trim()) return;
 
+      const historyMessages = messages
+        .filter((message) => message.content.trim().length > 0)
+        .map((message) => ({
+          role: message.role === "coach" ? "assistant" : "user",
+          content: message.content,
+        }));
+
       const payload: CoachQuestionPayload = {
         matchId,
-        question,
+        question: question.trim(),
         currentTime,
+        ...(gameName ? { gameName } : {}),
+        ...(tagLine ? { tagLine } : {}),
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...historyMessages,
+          { role: "user", content: question.trim() },
+        ],
       };
 
       const userMessage: Message = {
@@ -49,8 +67,8 @@ export function CoachChat({ matchId, currentTime }: CoachChatProps) {
       const assistantId = `coach-${Date.now()}`;
       const assistantMessage: Message = {
         id: assistantId,
-          role: "coach",
-          content: "",
+        role: "coach",
+        content: "",
       };
 
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
@@ -62,6 +80,24 @@ export function CoachChat({ matchId, currentTime }: CoachChatProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => "");
+          let errorMessage = errorText || `Coach responded with ${response.status}`;
+          if (errorText) {
+            try {
+              const parsed = JSON.parse(errorText);
+              if (typeof parsed?.error === "string") {
+                errorMessage = parsed.error;
+              } else if (typeof parsed?.message === "string") {
+                errorMessage = parsed.message;
+              }
+            } catch {
+              // ignore JSON parse errors
+            }
+          }
+          throw new Error(errorMessage);
+        }
 
         if (!response.body) {
           throw new Error("No stream received");
@@ -76,23 +112,23 @@ export function CoachChat({ matchId, currentTime }: CoachChatProps) {
           if (done) break;
           streamed += decoder.decode(value, { stream: true });
 
-          const chunk = streamed;
           setMessages((prev) =>
             prev.map((message) =>
-              message.id === assistantId
-                ? { ...message, content: chunk }
-                : message,
+              message.id === assistantId ? { ...message, content: streamed } : message,
             ),
           );
         }
       } catch (error) {
+        const fallbackMessage =
+          error instanceof Error && error.message
+            ? error.message
+            : "Coach is unavailable right now. Please try again in a moment.";
         setMessages((prev) =>
           prev.map((message) =>
             message.id === assistantId
               ? {
                   ...message,
-                  content:
-                    "Coach is unavailable right now. Please try again in a moment.",
+                  content: fallbackMessage,
                 }
               : message,
           ),
@@ -102,7 +138,7 @@ export function CoachChat({ matchId, currentTime }: CoachChatProps) {
         setIsStreaming(false);
       }
     },
-    [currentTime, matchId],
+    [currentTime, gameName, matchId, messages, tagLine],
   );
 
   const handleSubmit = useCallback(

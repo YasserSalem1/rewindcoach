@@ -15,9 +15,17 @@ import { Button } from "@/components/ui/button";
 
 interface ReviewExperienceProps {
   bundle: MatchBundle;
+  focusPuuid?: string;
+  focusGameName?: string;
+  focusTagLine?: string;
 }
 
-export function ReviewExperience({ bundle }: ReviewExperienceProps) {
+export function ReviewExperience({
+  bundle,
+  focusPuuid,
+  focusGameName,
+  focusTagLine,
+}: ReviewExperienceProps) {
   const { match, timeline } = bundle;
   // Initialize with primary player selected by default
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(
@@ -34,6 +42,14 @@ export function ReviewExperience({ bundle }: ReviewExperienceProps) {
     [timeline],
   );
 
+  const activePuuid = focusPuuid ?? match.primaryParticipantPuuid;
+  const focusParticipant = useMemo(
+    () =>
+      match.participants.find(
+        (participant) => participant.puuid === activePuuid,
+      ),
+    [activePuuid, match.participants],
+  );
   // Filter events based on selected players
   const filteredEvents = useMemo(() => {
     if (showAllEvents || selectedPlayers.size === 0) {
@@ -232,6 +248,12 @@ export function ReviewExperience({ bundle }: ReviewExperienceProps) {
             }}
           />
         </div>
+        <CoachChat
+          matchId={match.id}
+          currentTime={currentTime}
+          gameName={focusGameName ?? focusParticipant?.summonerName}
+          tagLine={focusTagLine}
+        />
         {/* Sticky Chat on Right - Takes 1/3 */}
         <div className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
           <CoachChat matchId={match.id} currentTime={currentTime} />

@@ -149,10 +149,26 @@ export interface MatchBundle {
   timeline: TimelineFrame[];
 }
 
+export interface CoachMatchContext {
+  meta?: Record<string, unknown>;
+  account?: Record<string, unknown>;
+  participants?: unknown[];
+  teams?: unknown[];
+  timeSeries?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 export interface CoachQuestionPayload {
   matchId: string;
   question: string;
   currentTime: number;
+  gameName?: string;
+  tagLine?: string;
+  messages?: Array<{
+    role: "system" | "user" | "assistant";
+    content: string;
+  }>;
+  matchContext?: CoachMatchContext;
 }
 
 export interface CoachAnswerChunk {

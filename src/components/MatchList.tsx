@@ -11,6 +11,16 @@ import { Button } from "@/components/ui/button";
 interface MatchListProps {
   matches: RiotMatch[];
   heading?: string;
+  gameName?: string;
+  tagLine?: string;
+}
+
+export function MatchList({
+  matches,
+  heading = "Recent Matches",
+  gameName,
+  tagLine,
+}: MatchListProps) {
   puuid?: string;
   region?: string;
   onMatchesUpdate?: (matches: RiotMatch[]) => void;
@@ -111,6 +121,15 @@ export function MatchList({
         <ScrollArea className="h-[28rem] pr-2">
           <div className="flex flex-col gap-4">
             {matchEntries.map(({ match, participant }) => (
+          <MatchRow
+            key={match.id}
+            match={match}
+            participant={participant}
+            gameName={gameName}
+            tagLine={tagLine}
+          />
+        ))}
+      </div>
               <MatchRow
                 key={match.id}
                 match={match}
