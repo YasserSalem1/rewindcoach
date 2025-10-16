@@ -46,21 +46,56 @@ export function SearchCard({
   const [gameName, setGameName] = useState("");
   const [tagLine, setTagLine] = useState("");
   const [error, setError] = useState<string>();
+  const [isValidating, setIsValidating] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     if (!gameName.trim() || !tagLine.trim()) {
       setError("Enter both your in-game name and tagline.");
       return;
     }
 
     setError(undefined);
+    setIsValidating(true);
+
     const trimmedGame = gameName.trim();
     const trimmedTag = tagLine.trim();
-    const path = `/profile/${region}/${encodeURIComponent(trimmedGame)}/${encodeURIComponent(trimmedTag)}`;
-    setProfilePref({ region, gameName: trimmedGame, tagLine: trimmedTag });
-    startTransition(() => {
-      router.push(path);
-    });
+
+    try {
+      // Validate profile exists before navigating
+      const params = new URLSearchParams({
+        region,
+        gameName: trimmedGame,
+        tagLine: trimmedTag,
+      });
+
+      const response = await fetch(`/api/profile?${params.toString()}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || "Profile not found";
+        
+        if (response.status === 404 || errorMessage.includes("not found")) {
+          setError(`Player "${trimmedGame}#${trimmedTag}" not found in ${region}. Please check your spelling and region.`);
+        } else if (response.status === 500) {
+          setError("Server error. Please try again in a moment.");
+        } else {
+          setError(errorMessage);
+        }
+        setIsValidating(false);
+        return;
+      }
+
+      // Profile exists, save preference and navigate
+      setProfilePref({ region, gameName: trimmedGame, tagLine: trimmedTag });
+      const path = `/profile/${region}/${encodeURIComponent(trimmedGame)}/${encodeURIComponent(trimmedTag)}`;
+      
+      startTransition(() => {
+        router.push(path);
+      });
+    } catch (err) {
+      setError("Network error. Please check your connection and try again.");
+      setIsValidating(false);
+    }
   };
 
   return (
@@ -133,7 +168,13 @@ export function SearchCard({
             </div>
           </div>
           {error ? (
-            <p className="text-sm text-red-300">{error}</p>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-lg border border-red-400/40 bg-red-500/10 p-3"
+            >
+              <p className="text-sm font-medium text-red-300">{error}</p>
+            </motion.div>
           ) : (
             <p className="text-sm text-slate-300/70">
               Enter the exact Riot details from your Riot client (IGN on the left,
@@ -145,12 +186,12 @@ export function SearchCard({
             onClick={() => {
               submit();
             }}
-            disabled={isPending}
+            disabled={isPending || isValidating}
           >
-            {isPending ? (
+            {isPending || isValidating ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Loading profile…
+                {isValidating ? "Validating..." : "Loading profile…"}
               </span>
             ) : (
               "Show my profile"

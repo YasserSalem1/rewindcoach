@@ -49,6 +49,8 @@ export interface RiotProfile {
   rankedTier: string;
   rankedDivision: string;
   rankedLp: number;
+  rankedTotalMatches?: number;
+  rankedWinRate?: number;
 }
 
 export interface ItemSlot {
@@ -490,6 +492,17 @@ interface BackendAccountResponse {
   };
 }
 
+export interface RankedEntry {
+  queueType?: string;
+  queue_type?: string;  // Handle snake_case variant
+  tier: string;
+  rank: string;
+  leaguePoints?: number;
+  league_points?: number;  // Handle snake_case variant
+  wins: number;
+  losses: number;
+}
+
 interface BackendAccountInfoResponse {
   puuid: string;
   platform?: string;
@@ -498,6 +511,13 @@ interface BackendAccountInfoResponse {
   profileIconUrl?: string | null;
   ddVersion?: string;
 }
+
+type BackendRankedInfoResponse = RankedEntry[] | {
+  rankedEntries?: RankedEntry[];
+  ranked_entries?: RankedEntry[];  // Handle snake_case variant
+  rankedError?: string;
+  ranked_error?: string;  // Handle snake_case variant
+};
 
 type BackendMatchesResponse = string[] | { matches: string[] };
 
@@ -893,6 +913,40 @@ export async function getAccountInfo(params: AccountInfoParams): Promise<Account
   };
 }
 
+export interface RankedInfoResult {
+  rankedEntries?: RankedEntry[];
+  rankedError?: string;
+}
+
+export async function getRankedInfo(puuid: string, platform: string): Promise<RankedInfoResult> {
+  try {
+    const response = await backendFetch<BackendRankedInfoResponse>(
+      `/ranked_info?puuid=${encodeURIComponent(puuid)}&platform=${encodeURIComponent(platform)}`,
+    );
+    
+    // Handle both array response and object response
+    if (Array.isArray(response)) {
+      return {
+        rankedEntries: response,
+      };
+    }
+
+    // Handle both camelCase and snake_case property names
+    const rankedEntries = response.rankedEntries || response.ranked_entries;
+    const rankedError = response.rankedError || response.ranked_error;
+
+    return {
+      rankedEntries,
+      rankedError,
+    };
+  } catch (error) {
+    console.error("[getRankedInfo] Failed to fetch ranked info:", error);
+    return {
+      rankedError: (error as Error).message ?? "Failed to fetch ranked info",
+    };
+  }
+}
+
 export async function getProfileBundle(
   region: Region,
   gameName: string,
@@ -919,6 +973,14 @@ export async function getProfileBundle(
     });
   } catch (error) {
     console.warn("[riot] Failed to load account info, falling back to /account response", error);
+  }
+
+  // Fetch ranked information (optional - don't fail if this errors)
+  let rankedInfo: RankedInfoResult | undefined;
+  try {
+    rankedInfo = await getRankedInfo(account.puuid, regionConfig.platform);
+  } catch (error) {
+    console.warn("[riot] Failed to load ranked info", error);
   }
 
   const version = await getLatestVersion();
@@ -970,12 +1032,41 @@ export async function getProfileBundle(
 
   const { highlights, styleDNA } = summarizeMatches(matches, account.puuid);
 
-  const rankedTier = (account.rankedTier ?? account.ranked?.tier ?? "UNRANKED").toUpperCase();
-  const rankedDivision = account.rankedDivision ?? account.ranked?.rank ?? "-";
-  const rankedLpRaw = account.rankedLp ?? account.ranked?.leaguePoints ?? 0;
-  const rankedLp = Number.isFinite(Number(rankedLpRaw)) ? Number(rankedLpRaw) : 0;
   const summonerLevelValue =
     Number(accountInfo?.summonerLevel ?? account.summonerLevel ?? 0) || 0;
+
+  // Extract ranked stats and rank info from ranked_info endpoint
+  let rankedTier = "UNRANKED";
+  let rankedDivision = "-";
+  let rankedLp = 0;
+  let rankedTotalMatches: number | undefined;
+  let rankedWinRate: number | undefined;
+  
+  if (rankedInfo?.rankedEntries && rankedInfo.rankedEntries.length > 0) {
+    // Find RANKED_SOLO_5x5 queue type (handle both camelCase and snake_case)
+    const soloQueueEntry = rankedInfo.rankedEntries.find(
+      (entry) => (entry.queueType || entry.queue_type) === "RANKED_SOLO_5x5"
+    );
+
+    if (soloQueueEntry) {
+      // Extract rank information (handle both camelCase and snake_case)
+      rankedTier = soloQueueEntry.tier || "UNRANKED";
+      rankedDivision = soloQueueEntry.rank || "-";
+      rankedLp = soloQueueEntry.leaguePoints || soloQueueEntry.league_points || 0;
+      
+      // Calculate stats
+      const wins = soloQueueEntry.wins || 0;
+      const losses = soloQueueEntry.losses || 0;
+      rankedTotalMatches = wins + losses;
+      rankedWinRate = rankedTotalMatches > 0 ? wins / rankedTotalMatches : undefined;
+    }
+  } else {
+    // Fallback to account data if ranked_info fails
+    rankedTier = (account.rankedTier ?? account.ranked?.tier ?? "UNRANKED").toUpperCase();
+    rankedDivision = account.rankedDivision ?? account.ranked?.rank ?? "-";
+    const rankedLpRaw = account.rankedLp ?? account.ranked?.leaguePoints ?? 0;
+    rankedLp = Number.isFinite(Number(rankedLpRaw)) ? Number(rankedLpRaw) : 0;
+  }
 
   return {
     puuid: account.puuid,
@@ -988,6 +1079,8 @@ export async function getProfileBundle(
       rankedTier,
       rankedDivision,
       rankedLp,
+      rankedTotalMatches,
+      rankedWinRate,
     },
     styleDNA,
     highlights,

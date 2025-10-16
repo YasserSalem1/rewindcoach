@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { HighlightsCard } from "@/components/HighlightsCard";
 import { MatchList } from "@/components/MatchList";
 import { StyleDNA } from "@/components/StyleDNA";
+import { ProfileCoachChat } from "@/components/ProfileCoachChat";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { ProfileBundle, RiotMatch, StyleDNA as StyleDNAType, ProfileHighlights } from "@/lib/riot";
@@ -99,12 +100,42 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
               {rankDisplay}
             </span>
             {summoner.rankedTier !== "UNRANKED" && (
-              <Badge variant="good" className="mt-2">
-                {summoner.rankedLp} LP
-              </Badge>
+              <>
+              {/* Commenting out rank stats
+                <Badge variant="good" className="mt-2">
+                  {summoner.rankedLp} LP
+                </Badge>
+                {summoner.rankedTotalMatches !== undefined && summoner.rankedTotalMatches > 0 && (
+                  <div className="mt-3 flex flex-col items-center gap-1">
+                    <span className="text-xs text-slate-400">
+                      {summoner.rankedTotalMatches} Games
+                    </span>
+                    {summoner.rankedWinRate !== undefined && (
+                      <span className={`text-sm font-semibold ${
+                        summoner.rankedWinRate >= 0.55 ? 'text-green-400' : 
+                        summoner.rankedWinRate >= 0.50 ? 'text-yellow-400' : 
+                        'text-red-400'
+                      }`}>
+                        {Math.round(summoner.rankedWinRate * 100)}% WR
+                      </span>
+                    )}
+                  </div>
+                )}
+              
+              */}
+              </>
             )}
           </div>
         </div>
+      </section>
+
+      {/* Profile Coach Chat - Full Width, Compact Height */}
+      <section>
+        <ProfileCoachChat
+          gameName={summoner.summonerName}
+          tagLine={summoner.tagline}
+          profileSummary={`Player: ${summoner.summonerName}#${summoner.tagline}, Rank: ${rankDisplay} ${summoner.rankedLp} LP, Level: ${summoner.level}, Win Rate: ${highlights.last20WinRate ? Math.round(highlights.last20WinRate * 100) : 0}%, Average KDA: ${highlights.averageKda}, CS/min: ${highlights.csPerMinute}`}
+        />
       </section>
 
       {/* Main Content Grid */}

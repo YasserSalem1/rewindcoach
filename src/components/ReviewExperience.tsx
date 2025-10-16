@@ -87,7 +87,13 @@ export function ReviewExperience({
 
   return (
     <div className="flex flex-col gap-6">
-      <ReviewHeader match={match} currentTime={currentTime} />
+      <ReviewHeader 
+        match={match} 
+        currentTime={currentTime}
+        gameName={focusGameName}
+        tagLine={focusTagLine}
+        region={match.region}
+      />
       
       {/* Champion Filter Buttons - Split by Team */}
       <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-4">
@@ -226,30 +232,20 @@ export function ReviewExperience({
         </div>
       </div>
 
+      {/* Map and Chat Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 lg:col-span-2">
-          {/* Square Map Container */}
-          <div className="aspect-square w-full">
-            <RiftMap
-              events={filteredEvents}
-              currentTime={currentTime}
-              participants={match.participants}
-              primaryPuuid={match.primaryParticipantPuuid}
-              selectedPlayers={selectedPlayers}
-            />
-          </div>
-          <Timeline
+        {/* Square Map Container */}
+        <div className="aspect-square w-full lg:col-span-2">
+          <RiftMap
             events={filteredEvents}
-            duration={match.gameDuration}
             currentTime={currentTime}
-            onScrub={(time) => {
-              togglePlay(false);
-              scrubTo(time);
-            }}
+            participants={match.participants}
+            primaryPuuid={match.primaryParticipantPuuid}
+            selectedPlayers={selectedPlayers}
           />
         </div>
-        {/* Sticky Chat on Right - Takes 1/3 */}
-        <div className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
+        {/* Chat - extends to cover map + timeline height */}
+        <div className="flex flex-col">
           <CoachChat
             matchId={match.id}
             currentTime={currentTime}
@@ -258,6 +254,17 @@ export function ReviewExperience({
           />
         </div>
       </div>
+
+      {/* Timeline spans full width below */}
+      <Timeline
+        events={filteredEvents}
+        duration={match.gameDuration}
+        currentTime={currentTime}
+        onScrub={(time) => {
+          togglePlay(false);
+          scrubTo(time);
+        }}
+      />
     </div>
   );
 }

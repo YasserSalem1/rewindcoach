@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 
 import type { RiotMatch, RiotParticipant } from "@/lib/riot";
 import { formatDuration, formatRelativeDate, kdaString } from "@/lib/ui";
@@ -30,12 +32,15 @@ export function MatchRow({
   tagLine,
 }: MatchRowProps) {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const isWin = participant.win;
   const kda = kdaString(participant.kills, participant.deaths, participant.assists);
   const resultLabel = isWin ? "Victory" : "Defeat";
   const resultTone = isWin ? "good" : "bad";
 
   const review = () => {
+    setIsLoading(true);
+    
     if (onReview) {
       onReview(match.id);
       return;
@@ -93,6 +98,37 @@ export function MatchRow({
           <span className="text-xs uppercase tracking-wide text-slate-300/65">
             K / D / A
           </span>
+        </div>
+        {/* Summoner Spells - stacked vertically */}
+        <div className="flex flex-col gap-1.5">
+          {participant.spells && participant.spells[0] ? (
+            <Image
+              src={participant.spells[0]}
+              alt="Summoner spell 1"
+              width={28}
+              height={28}
+              className="rounded-lg border border-violet-400/45 bg-slate-900/60 p-0.5"
+            />
+          ) : (
+            <div
+              className="w-7 h-7 rounded-lg border border-violet-400/45 bg-slate-900/30 p-0.5 opacity-40"
+              aria-label="No summoner spell 1"
+            />
+          )}
+          {participant.spells && participant.spells[1] ? (
+            <Image
+              src={participant.spells[1]}
+              alt="Summoner spell 2"
+              width={28}
+              height={28}
+              className="rounded-lg border border-white/10 bg-slate-900/60 p-0.5"
+            />
+          ) : (
+            <div
+              className="w-7 h-7 rounded-lg border border-white/10 bg-slate-900/30 p-0.5 opacity-40"
+              aria-label="No summoner spell 2"
+            />
+          )}
         </div>
         {/* Items row, always fixed slots */}
         <div className="flex flex-col gap-2">
@@ -180,13 +216,41 @@ export function MatchRow({
           </div>
         </div>
       </div>
-      <Button
-        variant="secondary"
-        className="w-full sm:w-auto"
-        onClick={review}
+      <motion.div
+        whileHover={!isLoading ? { scale: 1.05 } : {}}
+        whileTap={!isLoading ? { scale: 0.95 } : {}}
       >
-        Review
-      </Button>
+        <Button
+          variant="default"
+          size="lg"
+          className="relative w-full overflow-hidden bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/50 transition-all hover:shadow-xl hover:shadow-violet-500/60 sm:w-auto sm:px-8"
+          onClick={review}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <span className="relative z-10 flex items-center gap-2 font-semibold">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Loading...
+            </span>
+          ) : (
+            <>
+              <span className="relative z-10 font-semibold">Review Match</span>
+              {/* Animated glow effect */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+            </>
+          )}
+        </Button>
+      </motion.div>
     </motion.article>
   );
 }
