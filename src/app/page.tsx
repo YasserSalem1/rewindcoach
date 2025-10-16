@@ -4,19 +4,8 @@ import { SearchCard } from "@/components/SearchCard";
 
 export default function Home() {
   return (
-    <section className="relative isolate flex min-h-[calc(100vh-160px)] items-center justify-center overflow-hidden px-4 py-20">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.3),transparent_65%)]" />
-      <div className="absolute inset-0 opacity-30">
-        <Image
-          src="/images/background.png"
-          alt="Summoner's Rift vignette"
-          fill
-          className="object-cover"
-          priority
-        />
-      </div>
-
-      <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-10 text-center">
+    <section className="flex min-h-[calc(100vh-160px)] items-center justify-center px-4 py-20">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-10 text-center">
         <div className="flex flex-col items-center gap-8">
           <Image
             src="/images/Logo.png"

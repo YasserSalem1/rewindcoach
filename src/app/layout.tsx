@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo, Inter } from "next/font/google";
+import Image from "next/image";
 
 import { Footer } from "@/components/Footer";
 
@@ -56,8 +57,21 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${archivo.variable} font-body antialiased`}
       >
-        <div className="flex min-h-screen flex-col bg-slate-950/95">
-          <main className="flex-1">{children}</main>
+        <div className="relative flex min-h-screen flex-col bg-slate-950/95">
+          {/* Background that appears on all pages */}
+          <div className="fixed inset-0 z-0 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.3),transparent_65%)]" />
+          <div className="fixed inset-0 z-0 opacity-30">
+            <Image
+              src="/images/background.png"
+              alt="Summoner's Rift background"
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+          
+          {/* Content */}
+          <main className="relative z-10 flex-1">{children}</main>
           <Footer />
         </div>
       </body>
