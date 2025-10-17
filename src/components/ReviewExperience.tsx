@@ -249,6 +249,7 @@ export function ReviewExperience({
           <CoachChat
             matchId={match.id}
             currentTime={currentTime}
+            puuid={activePuuid}
             gameName={focusGameName ?? focusParticipant?.summonerName}
             tagLine={focusTagLine}
           />

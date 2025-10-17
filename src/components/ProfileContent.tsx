@@ -132,6 +132,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
       {/* Profile Coach Chat - Full Width, Compact Height */}
       <section>
         <ProfileCoachChat
+          puuid={puuid}
           gameName={summoner.summonerName}
           tagLine={summoner.tagline}
           profileSummary={`Player: ${summoner.summonerName}#${summoner.tagline}, Rank: ${rankDisplay} ${summoner.rankedLp} LP, Level: ${summoner.level}, Win Rate: ${highlights.last20WinRate ? Math.round(highlights.last20WinRate * 100) : 0}%, Average KDA: ${highlights.averageKda}, CS/min: ${highlights.csPerMinute}`}
@@ -140,7 +141,12 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
 
       {/* Main Content Grid */}
       <section className="grid gap-6 lg:grid-cols-[1.1fr,1.8fr,1fr]">
-        <StyleDNA data={styleDNA} />
+        <StyleDNA 
+          data={styleDNA}
+          region={region}
+          gameName={summoner.summonerName}
+          tagLine={summoner.tagline}
+        />
         <MatchList 
           matches={bundle.matches} 
           puuid={puuid}

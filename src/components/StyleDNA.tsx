@@ -7,6 +7,8 @@ import {
   RadarChart,
   ResponsiveContainer,
 } from "recharts";
+import { useRouter } from "next/navigation";
+import { TrendingUp } from "lucide-react";
 
 import type { StyleDNA as StyleDNAType } from "@/lib/riot";
 import { cn } from "@/lib/ui";
@@ -18,13 +20,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface StyleDNAProps {
   data: StyleDNAType;
   className?: string;
+  region?: string;
+  gameName?: string;
+  tagLine?: string;
 }
 
-export function StyleDNA({ data, className }: StyleDNAProps) {
+export function StyleDNA({ data, className, region, gameName, tagLine }: StyleDNAProps) {
+  const router = useRouter();
+
+  const handleViewChronicle = () => {
+    if (region && gameName && tagLine) {
+      router.push(`/profile/${region}/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}/chronicle`);
+    }
+  };
+
   return (
     <Card className={cn("h-full", className)}>
       <CardHeader>
@@ -58,6 +72,16 @@ export function StyleDNA({ data, className }: StyleDNAProps) {
             </Badge>
           ))}
         </div>
+        {region && gameName && tagLine && (
+          <Button
+            onClick={handleViewChronicle}
+            variant="outline"
+            className="w-full border-violet-400/30 bg-slate-900/40 text-violet-300 hover:bg-violet-400/10 hover:text-violet-200"
+          >
+            <TrendingUp className="mr-2 h-4 w-4" />
+            View Season Chronicle
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

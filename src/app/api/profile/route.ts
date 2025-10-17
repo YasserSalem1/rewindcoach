@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { REGIONS, type Region, getProfileBundle } from "@/lib/riot";
 
+/**
+ * API route for profile data
+ * 
+ * This route exists specifically for client-side validation in SearchCard.tsx.
+ * Server components call getProfileBundle() directly from riot.ts.
+ */
 export async function GET(req: NextRequest) {
   const regionParam = (req.nextUrl.searchParams.get("region") ?? "").toUpperCase();
   const gameName = req.nextUrl.searchParams.get("gameName") ?? "";
