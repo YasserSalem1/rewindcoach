@@ -1,53 +1,32 @@
 import { notFound } from "next/navigation";
 
 import { ReviewExperience } from "@/components/ReviewExperience";
-import type { MatchBundle } from "@/lib/riot";
+import { getMatchBundle } from "@/lib/riot";
 
 interface ReviewPageProps {
-  params: {
+  params: Promise<{
     matchId: string;
-  };
-  searchParams?: {
+  }>;
+  searchParams?: Promise<{
     puuid?: string;
     gameName?: string;
     tagLine?: string;
-  };
-}
-
-function getInternalUrl(path: string) {
-  const base =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-
-  if (!path.startsWith("/")) {
-    return `${base}/${path}`;
-  }
-  return `${base}${path}`;
-}
-
-async function loadMatch(matchId: string, focusPuuid?: string) {
-  const params = new URLSearchParams({
-    matchId,
-    ...(focusPuuid ? { focusPuuid } : {}),
-  });
-
-  const res = await fetch(getInternalUrl(`/api/match?${params.toString()}`), {
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    return null;
-  }
-
-  return (await res.json()) as MatchBundle;
+  }>;
 }
 
 export default async function ReviewPage({ params, searchParams }: ReviewPageProps) {
-  const { matchId: matchIdRaw } = params;
+  // Await params and searchParams (Next.js 15 requirement)
+  const { matchId: matchIdRaw } = await params;
+  const searchParamsResolved = searchParams ? await searchParams : undefined;
+  
   const matchId = decodeURIComponent(matchIdRaw);
-  const bundle = await loadMatch(matchId, searchParams?.puuid);
-
-  if (!bundle) {
+  
+  // Call riot.ts directly - no HTTP overhead
+  let bundle;
+  try {
+    bundle = await getMatchBundle(matchId, searchParamsResolved?.puuid);
+  } catch (error) {
+    console.error("[ReviewPage] Failed to load match:", error);
     notFound();
   }
 
@@ -55,9 +34,9 @@ export default async function ReviewPage({ params, searchParams }: ReviewPagePro
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <ReviewExperience
         bundle={bundle}
-        focusPuuid={searchParams?.puuid ?? bundle.match.primaryParticipantPuuid}
-        focusGameName={searchParams?.gameName ?? undefined}
-        focusTagLine={searchParams?.tagLine ?? undefined}
+        focusPuuid={searchParamsResolved?.puuid ?? bundle.match.primaryParticipantPuuid}
+        focusGameName={searchParamsResolved?.gameName ?? undefined}
+        focusTagLine={searchParamsResolved?.tagLine ?? undefined}
       />
     </div>
   );

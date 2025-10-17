@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMatchBundle } from "@/lib/riot";
 
+/**
+ * API route for match data
+ * 
+ * This route exists for client-side fetching in MatchList.tsx (load more functionality).
+ * Server components call getMatchBundle() directly from riot.ts.
+ */
 export async function GET(req: NextRequest) {
   const matchId = req.nextUrl.searchParams.get("matchId");
   const focusPuuid = req.nextUrl.searchParams.get("focusPuuid") || req.nextUrl.searchParams.get("puuid");

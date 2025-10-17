@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
-
-import { PersistProfilePref } from "@/components/PersistProfilePref";
-import { ProfileContent } from "@/components/ProfileContent";
 import { REGIONS, type Region, getProfileBundle } from "@/lib/riot";
+import { ChronicleContent } from "@/components/ChronicleContent";
 
-interface ProfilePageProps {
+interface ChroniclePageProps {
   params: Promise<{
     region: string;
     gameName: string;
@@ -12,7 +10,7 @@ interface ProfilePageProps {
   }>;
 }
 
-export default async function ProfilePage({ params }: ProfilePageProps) {
+export default async function ChroniclePage({ params }: ChroniclePageProps) {
   const { region: regionRaw, gameName: gameNameRaw, tagLine: tagLineRaw } = await params;
   const regionParam = decodeURIComponent(regionRaw).toUpperCase();
   const gameName = decodeURIComponent(gameNameRaw);
@@ -30,21 +28,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   try {
     bundle = await getProfileBundle(region, normalizedGameName, normalizedTagLine);
   } catch (error) {
-    console.error("[ProfilePage] Failed to load profile:", error);
+    console.error("[ChroniclePage] Failed to load profile:", error);
     notFound();
   }
 
   return (
-    <>
-      <PersistProfilePref
-        region={region}
-        gameName={normalizedGameName}
-        tagLine={normalizedTagLine}
-      />
-      <ProfileContent
-        bundle={bundle}
-        region={region}
-      />
-    </>
+    <ChronicleContent
+      bundle={bundle}
+      region={region}
+    />
   );
 }
+
+

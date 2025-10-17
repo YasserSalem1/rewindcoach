@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getAccountInfo } from "@/lib/riot";
 
+/**
+ * API route for account information
+ * 
+ * This route wraps the getAccountInfo() function for potential client-side usage.
+ * Currently used if needed by client components.
+ */
 export async function GET(req: NextRequest) {
   const riotId = req.nextUrl.searchParams.get("riotId") ?? undefined;
   const gameName = req.nextUrl.searchParams.get("gameName") ?? undefined;

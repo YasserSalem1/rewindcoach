@@ -1,11 +1,12 @@
 "use client";
 
-import { FormEvent, useCallback, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Maximize2, Minimize2 } from "lucide-react";
 
 import { cn } from "@/lib/ui";
 import { Button } from "@/components/ui/button";
+import { ChatMessage } from "@/components/ChatMessage";
 
 interface Message {
   id: string;
@@ -14,6 +15,7 @@ interface Message {
 }
 
 interface ProfileCoachChatProps {
+  puuid: string;
   gameName: string;
   tagLine: string;
   profileSummary?: string;
@@ -29,10 +31,19 @@ const SYSTEM_PROMPT = "You are a concise League of Legends coach analyzing a pla
 
 const MAX_HISTORY = 8;
 
-export function ProfileCoachChat({ gameName, tagLine, profileSummary }: ProfileCoachChatProps) {
+export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: ProfileCoachChatProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   const sendMessage = useCallback(
     async (question: string) => {
@@ -56,6 +67,7 @@ export function ProfileCoachChat({ gameName, tagLine, profileSummary }: ProfileC
         matchId: "profile", // Special identifier for profile-based queries
         question: contextMessage,
         currentTime: 0,
+        puuid,
         gameName,
         tagLine,
         messages: [
@@ -120,7 +132,7 @@ export function ProfileCoachChat({ gameName, tagLine, profileSummary }: ProfileC
         setIsStreaming(false);
       }
     },
-    [gameName, tagLine, profileSummary, isStreaming, messages],
+    [puuid, gameName, tagLine, profileSummary, isStreaming, messages],
   );
 
   const handleSubmit = useCallback(
@@ -153,22 +165,57 @@ export function ProfileCoachChat({ gameName, tagLine, profileSummary }: ProfileC
   );
 
   return (
-    <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur-xl shadow-lg">
-      <div>
-        <h3 className="font-heading text-lg text-slate-100">Profile Coach</h3>
-        <p className="text-xs text-slate-300/75">
-          Ask questions about your performance, champion pool, or get personalized advice.
-        </p>
+    <motion.div
+      className={cn(
+        "flex flex-col gap-3 rounded-3xl border p-4 backdrop-blur-xl shadow-lg transition-all duration-300",
+        isExpanded
+          ? "fixed inset-4 z-50 border-violet-400/40 bg-slate-950/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/20"
+          : "border-white/10 bg-slate-950/70",
+      )}
+      layout
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-heading text-lg text-slate-100">Profile Coach</h3>
+          <p className="text-xs text-slate-300/75">
+            Ask questions about your performance, champion pool, or get personalized advice.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-slate-400 hover:text-violet-300 hover:bg-violet-500/10"
+          title={isExpanded ? "Minimize" : "Expand"}
+        >
+          {isExpanded ? (
+            <Minimize2 className="h-4 w-4" />
+          ) : (
+            <Maximize2 className="h-4 w-4" />
+          )}
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-2">{suggestionButtons}</div>
 
-      <div className="space-y-3 overflow-auto rounded-2xl bg-slate-900/45 p-3 min-h-[200px] max-h-[250px]">
+      <div
+        className={cn(
+          "space-y-4 overflow-auto rounded-2xl bg-slate-900/45 p-4",
+          "scrollbar-thin scrollbar-thumb-violet-500/20 scrollbar-track-transparent",
+          isExpanded ? "flex-1" : "min-h-[200px] max-h-[250px]",
+        )}
+      >
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center text-center">
-            <p className="text-sm text-slate-400/75">
-              Start a conversation with your coach by asking a question or selecting a suggestion above.
-            </p>
+            <div className="max-w-md space-y-2">
+              <p className="text-sm text-slate-400/75">
+                Start a conversation with your coach by asking a question or selecting a suggestion above.
+              </p>
+              <p className="text-xs text-slate-500/60">
+                Your coach analyzes your profile statistics and match history.
+              </p>
+            </div>
           </div>
         ) : (
           <AnimatePresence initial={false}>
@@ -178,21 +225,22 @@ export function ProfileCoachChat({ gameName, tagLine, profileSummary }: ProfileC
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                className={cn(
-                  "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                  message.role === "coach"
-                    ? "bg-violet-500/15 text-violet-100"
-                    : "ml-auto bg-white/10 text-slate-100",
-                )}
               >
-                {message.content || (
-                  <span className="flex items-center gap-2 text-slate-300/70">
+                {message.content ? (
+                  <ChatMessage
+                    role={message.role}
+                    content={message.content}
+                    isStreaming={isStreaming && message.role === "coach"}
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 text-slate-300/70 px-4">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Thinking…
-                  </span>
+                    <span className="text-sm">Thinking…</span>
+                  </div>
                 )}
               </motion.div>
             ))}
+            <div ref={messagesEndRef} />
           </AnimatePresence>
         )}
       </div>
@@ -201,7 +249,7 @@ export function ProfileCoachChat({ gameName, tagLine, profileSummary }: ProfileC
         <div className="relative flex-1">
           <textarea
             ref={inputRef}
-            rows={1}
+            rows={isExpanded ? 2 : 1}
             placeholder={isStreaming ? "Coach is thinking…" : "Ask your coach…"}
             className="w-full resize-none rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none ring-violet-400 transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             onKeyDown={(event) => {
@@ -220,10 +268,25 @@ export function ProfileCoachChat({ gameName, tagLine, profileSummary }: ProfileC
           />
         </div>
         <Button type="submit" size="sm" disabled={isStreaming}>
-          {isStreaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          {isStreaming ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
         </Button>
       </form>
-    </div>
+
+      {/* Backdrop when expanded */}
+      {isExpanded && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 -z-10 bg-black/60 backdrop-blur-sm"
+          onClick={() => setIsExpanded(false)}
+        />
+      )}
+    </motion.div>
   );
 }
 
