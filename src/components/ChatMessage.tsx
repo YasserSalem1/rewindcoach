@@ -17,7 +17,7 @@ interface ChatMessageProps {
 type MarkdownCodeProps = HTMLAttributes<HTMLElement> & {
   inline?: boolean;
   className?: string;
-  children: ReactNode;
+  children?: ReactNode;
   node?: unknown;
 };
 
@@ -33,7 +33,7 @@ const markdownComponents: Components = {
           PreTag="div"
           className="rounded-lg !bg-slate-900/80 !mt-2 !mb-2"
         >
-          {String(children).replace(/\n$/, "")}
+          {String(children ?? "").replace(/\n$/, "")}
         </SyntaxHighlighter>
       );
     }
