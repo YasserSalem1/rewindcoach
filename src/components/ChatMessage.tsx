@@ -1,15 +1,14 @@
 "use client";
 
-import type { HTMLAttributes, ReactNode } from "react";
+import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import type { SyntaxHighlighterProps } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { cn } from "@/lib/ui";
 
-const prismTheme = oneDark as SyntaxHighlighterProps["style"];
+const prismTheme = oneDark as Record<string, CSSProperties>;
 
 interface ChatMessageProps {
   role: "user" | "coach";
