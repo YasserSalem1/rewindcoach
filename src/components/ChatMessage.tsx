@@ -8,7 +8,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { cn } from "@/lib/ui";
 
-const prismTheme = oneDark as Record<string, CSSProperties>;
+const prismTheme: { [key: string]: CSSProperties } = oneDark as { [key: string]: CSSProperties };
 
 interface ChatMessageProps {
   role: "user" | "coach";
