@@ -70,7 +70,11 @@ export function ReviewExperience({
   const togglePlayerSelection = useCallback((puuid: string) => {
     setSelectedPlayers((prev) => {
       const next = new Set(prev);
-      next.has(puuid) ? next.delete(puuid) : next.add(puuid);
+      if (next.has(puuid)) {
+        next.delete(puuid);
+      } else {
+        next.add(puuid);
+      }
       return next;
     });
   }, []);

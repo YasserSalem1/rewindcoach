@@ -8,7 +8,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import oneDark from "react-syntax-highlighter/dist/esm/styles/prism/one-dark";
 import { cn } from "@/lib/ui";
 
-const prismTheme = oneDark as unknown as Record<string, CSSProperties>;
+const prismTheme = oneDark as Record<string, CSSProperties>;
 
 interface ChatMessageProps {
   role: "user" | "coach";
@@ -26,17 +26,16 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
   const isCoach = role === "coach";
 
   const markdownComponents: Components = {
-    code({ inline, className, children, ...props }: MarkdownCodeProps) {
+    code({ inline, className, children }: MarkdownCodeProps) {
       const match = /language-(\w+)/.exec(className ?? "");
 
       if (!inline && match) {
         return (
           <SyntaxHighlighter
-            style={prismTheme as Record<string, CSSProperties>}
+            style={prismTheme}
             language={match[1]}
             PreTag="div"
             className="rounded-lg !bg-slate-900/80 !mt-2 !mb-2"
-            {...props}
           >
             {String(children ?? "").replace(/\n$/, "")}
           </SyntaxHighlighter>
@@ -44,7 +43,7 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
       }
 
       return (
-        <code className={className} {...props}>
+        <code className={className}>
           {children}
         </code>
       );

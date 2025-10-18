@@ -68,8 +68,16 @@ export function MatchRow({
       variants={rowVariants}
       initial="initial"
       animate="animate"
-      className="flex flex-col gap-4 rounded-2xl border border-white/5 bg-slate-900/45 p-4 transition hover:border-violet-400/40 hover:bg-slate-900/65 sm:flex-row sm:items-center"
+      className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-white/5 bg-slate-900/45 p-4 transition-all duration-300 ease-out hover:border-amber-200/80 hover:bg-slate-900/70 hover:shadow-[0_0_55px_rgba(250,215,36,0.45)] sm:flex-row sm:items-center"
     >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top,_rgba(252,211,77,0.35),_transparent_60%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-full h-24 w-[150%] -translate-x-1/2 -translate-y-1/3 rounded-full bg-gradient-to-b from-[#FEDC56]/55 via-[#FBBF24]/35 to-transparent blur-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      />
       <div className="flex items-center gap-4">
         <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-violet-400/45">
           <Image

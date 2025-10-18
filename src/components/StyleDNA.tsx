@@ -92,7 +92,7 @@ export function StyleDNA({ data, className, region, gameName, tagLine }: StyleDN
           {data.tags.map((tag) => (
             <Badge
               key={tag}
-              variant="outline"
+              variant="neutral"
               className="border-transparent bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-violet-100/90 backdrop-blur"
             >
               {tag}

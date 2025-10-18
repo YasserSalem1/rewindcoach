@@ -28,6 +28,7 @@ import {
   type MatchBundle,
   type RiotMatch,
   type RiotMatchDto,
+  type RiotTimelineDto,
 } from "./types";
 
 import {
@@ -39,11 +40,7 @@ import {
   fetchTimeline,
 } from "./fetchers";
 
-import {
-  mapParticipantData,
-  mapTimeline,
-  summarizeMatches,
-} from "./transformers";
+import { mapParticipantData, mapTimeline, summarizeMatches } from "./transformers";
 
 // ============================================================================
 // High-Level API Functions
@@ -198,14 +195,41 @@ export async function getMatchBundle(
   );
 
   // Fetch timeline separately (new API has separate /timeline endpoint)
-  let timeline: typeof MatchBundle.prototype.timeline = [];
+  let timeline: MatchBundle["timeline"] = [];
   try {
     const timelineResponse = await fetchTimeline(matchId);
-    // timelineResponse.timeline contains both metadata and info
-    // Extract the info object which has the frames
-    if (timelineResponse.timeline?.info?.frames) {
+
+    const extractTimelineInfo = (
+      timelineData: unknown,
+    ): RiotTimelineDto["info"] | undefined => {
+      if (!timelineData || typeof timelineData !== "object") {
+        return undefined;
+      }
+
+      const candidate = timelineData as Partial<RiotTimelineDto["info"]>;
+      if (Array.isArray(candidate.frames)) {
+        return candidate as RiotTimelineDto["info"];
+      }
+
+      if (
+        "info" in timelineData &&
+        timelineData.info &&
+        typeof timelineData.info === "object" &&
+        Array.isArray(
+          (timelineData.info as RiotTimelineDto["info"]).frames,
+        )
+      ) {
+        return timelineData.info as RiotTimelineDto["info"];
+      }
+
+      return undefined;
+    };
+
+    const timelineInfo = extractTimelineInfo(timelineResponse.timeline);
+
+    if (timelineInfo?.frames?.length) {
       const timelineDto: RiotTimelineDto = {
-        info: timelineResponse.timeline.info,
+        info: timelineInfo,
       };
       timeline = mapTimeline(timelineDto, matchDto);
     } else {

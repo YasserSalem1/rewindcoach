@@ -261,18 +261,19 @@ export function mapTimeline(
             ? participantIdToTeam.get(killerId)
             : undefined;
 
-          const assistingRaw = (event.assistingParticipantIds ?? []).filter(
-            (id): id is number => typeof id === "number" && id > 0,
-          );
-          const assistingParticipants = assistingRaw
-            .map((id) => ({
+          const assistingParticipants = (event.assistingParticipantIds ?? []).reduce<
+            Array<{ id: number; puuid: string; position?: { x: number; y: number } }>
+          >((acc, id) => {
+            if (typeof id !== "number" || id <= 0) return acc;
+            const puuid = participantIdToPuuid.get(id);
+            if (!puuid) return acc;
+            acc.push({
               id,
-              puuid: participantIdToPuuid.get(id),
+              puuid,
               position: getFramePosition(id),
-            }))
-            .filter((entry): entry is { id: number; puuid: string; position?: { x: number; y: number } } =>
-              Boolean(entry.puuid),
-            );
+            });
+            return acc;
+          }, []);
           const assistingPuuids = assistingParticipants.map((entry) => entry.puuid);
 
           makeEvent("kill", {
