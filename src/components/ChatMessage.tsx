@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import oneDark from "react-syntax-highlighter/dist/esm/styles/prism/one-dark";
 import { cn } from "@/lib/ui";
 
 const prismTheme: { [key: string]: CSSProperties } = oneDark as { [key: string]: CSSProperties };
