@@ -1,6 +1,7 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -11,6 +12,96 @@ interface ChatMessageProps {
   content: string;
   isStreaming?: boolean;
 }
+
+const markdownComponents: Components = {
+  code({ inline, className, children }) {
+    const match = /language-(\w+)/.exec(className ?? "");
+
+    if (!inline && match) {
+      return (
+        <SyntaxHighlighter
+          style={oneDark}
+          language={match[1]}
+          PreTag="div"
+          className="rounded-lg !bg-slate-900/80 !mt-2 !mb-2"
+        >
+          {String(children).replace(/\n$/, "")}
+        </SyntaxHighlighter>
+      );
+    }
+
+    return (
+      <code className={className}>
+        {children}
+      </code>
+    );
+  },
+  h1: ({ children }) => (
+    <h1 className="text-lg font-bold mb-2 mt-3 text-violet-100">
+      {children}
+    </h1>
+  ),
+  h2: ({ children }) => (
+    <h2 className="text-base font-semibold mb-2 mt-2 text-violet-200">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="text-sm font-semibold mb-1 mt-2 text-violet-200">
+      {children}
+    </h3>
+  ),
+  p: ({ children }) => (
+    <p className="text-sm leading-relaxed my-2">
+      {children}
+    </p>
+  ),
+  ul: ({ children }) => (
+    <ul className="list-disc ml-4 my-2 space-y-1">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="list-decimal ml-4 my-2 space-y-1">
+      {children}
+    </ol>
+  ),
+  li: ({ children }) => (
+    <li className="text-sm">
+      {children}
+    </li>
+  ),
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-violet-300 hover:text-violet-200 hover:underline transition-colors"
+    >
+      {children}
+    </a>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-4 border-violet-400/50 pl-4 my-2 italic text-violet-200/80">
+      {children}
+    </blockquote>
+  ),
+  table: ({ children }) => (
+    <div className="overflow-x-auto my-2">
+      <table className="min-w-full text-sm border border-white/10">{children}</table>
+    </div>
+  ),
+  th: ({ children }) => (
+    <th className="bg-violet-500/20 p-2 border border-white/10 font-semibold text-left">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="p-2 border border-white/10">
+      {children}
+    </td>
+  ),
+};
 
 export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
   const isCoach = role === "coach";
@@ -44,74 +135,10 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
           isStreaming && "animate-pulse-subtle",
         )}
       >
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            code({ node, inline, className, children, ...props }: any) {
-              const match = /language-(\w+)/.exec(className || "");
-              return !inline && match ? (
-                <SyntaxHighlighter
-                  style={oneDark}
-                  language={match[1]}
-                  PreTag="div"
-                  className="rounded-lg !bg-slate-900/80 !mt-2 !mb-2"
-                  {...props}
-                >
-                  {String(children).replace(/\n$/, "")}
-                </SyntaxHighlighter>
-              ) : (
-                <code className={className} {...props}>
-                  {children}
-                </code>
-              );
-            },
-            h1: ({ children }) => (
-              <h1 className="text-lg font-bold mb-2 mt-3 text-violet-100">{children}</h1>
-            ),
-            h2: ({ children }) => (
-              <h2 className="text-base font-semibold mb-2 mt-2 text-violet-200">{children}</h2>
-            ),
-            h3: ({ children }) => (
-              <h3 className="text-sm font-semibold mb-1 mt-2 text-violet-200">{children}</h3>
-            ),
-            p: ({ children }) => <p className="text-sm leading-relaxed my-2">{children}</p>,
-            ul: ({ children }) => <ul className="list-disc ml-4 my-2 space-y-1">{children}</ul>,
-            ol: ({ children }) => <ol className="list-decimal ml-4 my-2 space-y-1">{children}</ol>,
-            li: ({ children }) => <li className="text-sm">{children}</li>,
-            a: ({ href, children }) => (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-violet-300 hover:text-violet-200 hover:underline transition-colors"
-              >
-                {children}
-              </a>
-            ),
-            blockquote: ({ children }) => (
-              <blockquote className="border-l-4 border-violet-400/50 pl-4 my-2 italic text-violet-200/80">
-                {children}
-              </blockquote>
-            ),
-            table: ({ children }) => (
-              <div className="overflow-x-auto my-2">
-                <table className="min-w-full text-sm border border-white/10">{children}</table>
-              </div>
-            ),
-            th: ({ children }) => (
-              <th className="bg-violet-500/20 p-2 border border-white/10 font-semibold text-left">
-                {children}
-              </th>
-            ),
-            td: ({ children }) => (
-              <td className="p-2 border border-white/10">{children}</td>
-            ),
-          }}
-        >
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
           {content}
         </ReactMarkdown>
       </div>
     </div>
   );
 }
-

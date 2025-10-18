@@ -10,8 +10,6 @@ import {
   Radar,
   RadarChart,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -32,7 +30,7 @@ interface ChronicleContentProps {
 
 export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   const router = useRouter();
-  const { profile: summoner, styleDNA, highlights, matches, puuid } = bundle;
+  const { profile: summoner, styleDNA, matches, puuid } = bundle;
 
   // Calculate season stats (season starts at beginning of year)
   const seasonStats = useMemo(() => {
@@ -535,5 +533,4 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     </div>
   );
 }
-
 
