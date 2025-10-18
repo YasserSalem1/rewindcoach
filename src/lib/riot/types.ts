@@ -202,6 +202,7 @@ export interface RiotMatch {
 
 export type TimelineEventType =
   | "KILL"
+  | "ASSIST"
   | "DEATH"
   | "TOWER"
   | "DRAGON"
@@ -225,6 +226,8 @@ export interface TimelineEvent {
   teamId?: number;
   killerPuuid?: string;
   victimPuuid?: string;
+  actorPuuid?: string;
+  assistingPuuids?: string[];
   description: string;
 }
 
@@ -342,12 +345,21 @@ export interface RiotTimelineEventDto {
   victimId?: number;
   teamId?: number;
   creatorId?: number;
+  participantId?: number;
+  assistingParticipantIds?: Array<number | null>;
   position?: { x: number; y: number };
   monsterType?: string;
   monsterSubType?: string;
   buildingType?: string;
+  laneType?: string;
   killerName?: string;
   victimName?: string;
+}
+
+export interface RiotTimelineParticipantFrame {
+  participantId: number;
+  position?: { x: number; y: number };
+  [key: string]: unknown;
 }
 
 export interface RiotTimelineDto {
@@ -356,6 +368,7 @@ export interface RiotTimelineDto {
     frames: Array<{
       timestamp: number;
       events: Array<RiotTimelineEventDto>;
+      participantFrames?: Record<string, RiotTimelineParticipantFrame>;
     }>;
   };
 }
@@ -454,4 +467,3 @@ export interface RankedInfoResult {
   queues?: RankedQueueEntry[];
   rankedError?: string;
 }
-

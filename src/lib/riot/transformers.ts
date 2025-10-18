@@ -200,20 +200,66 @@ export function mapTimeline(
     participantIdToName.set(index + 1, participant.summonerName);
   });
 
-  return timeline.info.frames.map((frame) => {
+  return (timeline.info.frames ?? []).map((frame) => {
+    const participantFrames = frame.participantFrames ?? {};
+    const getFramePosition = (id?: number | null) => {
+      if (!id) return undefined;
+      const entry = participantFrames[String(id)];
+      return entry?.position;
+    };
+
+    const resolvePosition = (
+      ...positions: Array<{ x: number; y: number } | undefined>
+    ) => {
+      for (const position of positions) {
+        if (
+          position &&
+          typeof position.x === "number" &&
+          typeof position.y === "number"
+        ) {
+          return position;
+        }
+      }
+      return undefined;
+    };
+
+    const toPoint = (
+      ...candidates: Array<{ x: number; y: number } | undefined>
+    ) => {
+      for (const candidate of candidates) {
+        if (
+          candidate &&
+          typeof candidate.x === "number" &&
+          typeof candidate.y === "number"
+        ) {
+          return { x: candidate.x, y: candidate.y };
+        }
+      }
+      return { x: 0, y: 0 };
+    };
+
     const events: TimelineEvent[] = [];
     (frame.events ?? []).forEach((event, eventIdx) => {
-      const base: Omit<TimelineEvent, "type" | "description"> = {
-        id: `${event.type}-${frame.timestamp}-${eventIdx}`,
-        timestamp: Math.round((event.timestamp ?? frame.timestamp) / 1000),
-        position: {
-          x: event.position?.x ?? 0,
-          y: event.position?.y ?? 0,
-        },
+      const baseId = `${event.type}-${frame.timestamp}-${eventIdx}`;
+      const timestamp = Math.round((event.timestamp ?? frame.timestamp) / 1000);
+      const fallbackPosition = resolvePosition(
+        event.position,
+        getFramePosition(event.participantId),
+        getFramePosition(event.killerId),
+        getFramePosition(event.victimId),
+        ...(event.assistingParticipantIds ?? []).map((id) =>
+          getFramePosition(id),
+        ),
+      );
+      const basePosition = toPoint(fallbackPosition);
+      const base: Omit<TimelineEvent, "type" | "description" | "id"> = {
+        timestamp,
+        position: basePosition,
       };
 
       switch (event.type) {
-        case "CHAMPION_KILL": {
+        case "CHAMPION_KILL":
+        case "CHAMPION_SPECIAL_KILL": {
           const killerId = event.killerId ?? 0;
           const victimId = event.victimId ?? 0;
           const killerPuuid = participantIdToPuuid.get(killerId);
@@ -221,13 +267,56 @@ export function mapTimeline(
           const killerTeam = killerPuuid
             ? participantIdToTeam.get(killerId)
             : undefined;
+          const assistingParticipants = (event.assistingParticipantIds ?? [])
+            .map((id) => ({
+              id,
+              puuid: participantIdToPuuid.get(id ?? 0),
+            }))
+            .filter(
+              (participant): participant is { id: number; puuid: string } =>
+                Boolean(participant.puuid),
+            );
+          const assistingPuuids = assistingParticipants.map((participant) => participant.puuid);
+
           events.push({
+            id: `${baseId}-kill`,
             ...base,
             type: "KILL",
+            position: toPoint(event.position, getFramePosition(killerId), basePosition),
             teamId: killerTeam,
             killerPuuid,
             victimPuuid,
+            actorPuuid: killerPuuid,
+            assistingPuuids,
             description: `${event.killerName ?? "Player"} eliminated ${event.victimName ?? "Opponent"}`,
+          });
+
+          if (victimPuuid) {
+            events.push({
+              id: `${baseId}-death`,
+              ...base,
+              type: "DEATH",
+              position: toPoint(event.position, getFramePosition(victimId), basePosition),
+              teamId: victimId ? participantIdToTeam.get(victimId) : undefined,
+              killerPuuid,
+              victimPuuid,
+              actorPuuid: victimPuuid,
+              description: `${participantIdToName.get(victimId) ?? "Player"} was defeated`,
+            });
+          }
+
+          assistingParticipants.forEach(({ id: assistId, puuid: assistPuuid }, assistIdx) => {
+            events.push({
+              id: `${baseId}-assist-${assistIdx}`,
+              ...base,
+              type: "ASSIST",
+              position: toPoint(event.position, getFramePosition(assistId), basePosition),
+              teamId: killerTeam,
+              killerPuuid,
+              victimPuuid,
+              actorPuuid: assistPuuid,
+              description: `${participantIdToName.get(assistId) ?? "Teammate"} assisted in the takedown`,
+            });
           });
           break;
         }
@@ -243,30 +332,53 @@ export function mapTimeline(
                   : "OBJECTIVE";
           const killerId = event.killerId ?? 0;
           events.push({
+            id: `${baseId}-objective`,
             ...base,
             type,
+            position: toPoint(event.position, getFramePosition(killerId), basePosition),
             teamId: participantIdToTeam.get(killerId),
             killerPuuid: participantIdToPuuid.get(killerId),
+            actorPuuid: participantIdToPuuid.get(killerId),
             description: `${event.killerName ?? "Team"} secured ${event.monsterSubType ?? monsterType}`,
           });
           break;
         }
         case "BUILDING_KILL": {
           events.push({
+            id: `${baseId}-structure`,
             ...base,
             type: "TOWER",
+            position: toPoint(event.position, getFramePosition(event.killerId), basePosition),
             teamId: event.teamId,
+            actorPuuid: event.killerId ? participantIdToPuuid.get(event.killerId) : undefined,
             description: `${event.buildingType ?? "Structure"} destroyed`,
+          });
+          break;
+        }
+        case "TURRET_PLATE_DESTROYED": {
+          const killerId = event.killerId ?? 0;
+          events.push({
+            id: `${baseId}-plate`,
+            ...base,
+            type: "TOWER",
+            position: toPoint(event.position, getFramePosition(killerId), basePosition),
+            teamId: event.teamId,
+            killerPuuid: participantIdToPuuid.get(killerId),
+            actorPuuid: participantIdToPuuid.get(killerId),
+            description: `${event.laneType ?? "Lane"} turret plate destroyed`,
           });
           break;
         }
         case "WARD_PLACED": {
           const creatorId = event.creatorId ?? 0;
           events.push({
+            id: `${baseId}-placed`,
             ...base,
             type: "WARD_PLACED",
+            position: toPoint(event.position, getFramePosition(creatorId), basePosition),
             teamId: participantIdToTeam.get(creatorId),
             killerPuuid: participantIdToPuuid.get(creatorId),
+            actorPuuid: participantIdToPuuid.get(creatorId),
             description: `${participantIdToName.get(creatorId) ?? "Player"} placed a ward`,
           });
           break;
@@ -274,11 +386,28 @@ export function mapTimeline(
         case "WARD_KILL": {
           const killerId = event.killerId ?? 0;
           events.push({
+            id: `${baseId}-clear`,
             ...base,
             type: "WARD_KILL",
+            position: toPoint(event.position, getFramePosition(killerId), basePosition),
             teamId: participantIdToTeam.get(killerId),
             killerPuuid: participantIdToPuuid.get(killerId),
+            actorPuuid: participantIdToPuuid.get(killerId),
             description: `${participantIdToName.get(killerId) ?? "Player"} cleared a ward`,
+          });
+          break;
+        }
+        case "DRAGON_SOUL_GIVEN": {
+          const killerId = event.killerId ?? 0;
+          events.push({
+            id: `${baseId}-soul`,
+            ...base,
+            type: "OBJECTIVE",
+            position: toPoint(event.position, getFramePosition(killerId), basePosition),
+            teamId: event.teamId,
+            killerPuuid: participantIdToPuuid.get(killerId),
+            actorPuuid: participantIdToPuuid.get(killerId),
+            description: `${event.killerName ?? "Team"} secured Dragon Soul`,
           });
           break;
         }
@@ -407,4 +536,3 @@ export function summarizeMatches(matches: RiotMatch[], focusPuuid: string) {
 
   return { highlights, styleDNA };
 }
-
