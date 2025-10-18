@@ -477,7 +477,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Current Form</span>
-              <Badge variant={seasonStats.winRate >= 0.55 ? "good" : seasonStats.winRate >= 0.45 ? "default" : "destructive"}>
+              <Badge variant={seasonStats.winRate >= 0.55 ? "good" : seasonStats.winRate >= 0.45 ? "default" : "bad"}>
                 {seasonStats.winRate >= 0.55 ? "Hot" : seasonStats.winRate >= 0.45 ? "Stable" : "Cold"}
               </Badge>
             </div>
@@ -515,7 +515,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                       <div className="flex flex-col items-center gap-1 text-xs text-slate-400">
                         <span>{champ.games} games</span>
                         <Badge 
-                          variant={champ.winRate >= 0.55 ? "good" : champ.winRate >= 0.45 ? "default" : "destructive"}
+                          variant={champ.winRate >= 0.55 ? "good" : champ.winRate >= 0.45 ? "default" : "bad"}
                           className="text-xs"
                         >
                           {Math.round(champ.winRate * 100)}% WR
@@ -533,4 +533,3 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     </div>
   );
 }
-
