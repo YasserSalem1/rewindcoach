@@ -5,8 +5,11 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import type { SyntaxHighlighterProps } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { cn } from "@/lib/ui";
+
+const prismTheme = oneDark as SyntaxHighlighterProps["style"];
 
 interface ChatMessageProps {
   role: "user" | "coach";
@@ -30,7 +33,7 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
       if (!inline && match) {
         return (
           <SyntaxHighlighter
-            style={oneDark}
+            style={prismTheme}
             language={match[1]}
             PreTag="div"
             className="rounded-lg !bg-slate-900/80 !mt-2 !mb-2"
