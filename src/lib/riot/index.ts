@@ -28,6 +28,7 @@ import {
   type MatchBundle,
   type RiotMatch,
   type RiotMatchDto,
+  type RiotTimelineDto,
   type TimelineFrame,
   CDN_BASE,
 } from "./types";
@@ -205,12 +206,10 @@ export async function getMatchBundle(
   let timeline: TimelineFrame[] = [];
   try {
     const timelineResponse = await fetchTimeline(matchId);
-    // timelineResponse.timeline contains both metadata and info
-    // Extract the info object which has the frames
-    if (timelineResponse.timeline?.info?.frames) {
-      const timelineDto: RiotTimelineDto = {
-        info: timelineResponse.timeline.info,
-      };
+    const timelineInfo = timelineResponse.timeline;
+
+    if (timelineInfo?.frames?.length) {
+      const timelineDto: RiotTimelineDto = { info: timelineInfo };
       timeline = mapTimeline(timelineDto, matchDto);
     } else {
       console.warn(`[backend] Timeline for ${matchId} has no frames`);
