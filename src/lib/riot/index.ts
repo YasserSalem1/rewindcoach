@@ -198,15 +198,13 @@ export async function getMatchBundle(
   );
 
   // Fetch timeline separately (new API has separate /timeline endpoint)
-  let timeline: typeof MatchBundle.prototype.timeline = [];
+  let timeline: TimelineFrame[] = [];
   try {
     const timelineResponse = await fetchTimeline(matchId);
-    // timelineResponse.timeline contains both metadata and info
-    // Extract the info object which has the frames
-    if (timelineResponse.timeline?.info?.frames) {
-      const timelineDto: RiotTimelineDto = {
-        info: timelineResponse.timeline.info,
-      };
+    const timelineInfo = timelineResponse.timeline;
+
+    if (timelineInfo?.frames?.length) {
+      const timelineDto: RiotTimelineDto = { info: timelineInfo };
       timeline = mapTimeline(timelineDto, matchDto);
     } else {
       console.warn(`[backend] Timeline for ${matchId} has no frames`);

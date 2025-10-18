@@ -277,6 +277,7 @@ export function mapTimeline(
 
           makeEvent("kill", {
             type: "KILL",
+            position: toPoint(event.position, getFramePosition(killerId), basePosition),
             teamId: killerTeam,
             actorPuuid: killerPuuid,
             killerPuuid,
@@ -327,6 +328,7 @@ export function mapTimeline(
 
           makeEvent("objective", {
             type,
+            position: toPoint(event.position, getFramePosition(killerId), basePosition),
             teamId: participantIdToTeam.get(killerId),
             actorPuuid: killerPuuid,
             killerPuuid,
@@ -340,6 +342,7 @@ export function mapTimeline(
           const killerPuuid = participantIdToPuuid.get(killerId);
           makeEvent("tower", {
             type: "TOWER",
+            position: toPoint(event.position, getFramePosition(event.killerId), basePosition),
             teamId: event.teamId,
             actorPuuid: killerPuuid,
             killerPuuid,
@@ -371,6 +374,20 @@ export function mapTimeline(
             killerPuuid,
             description: `${event.killerName ?? "Team"} secured Dragon Soul`,
             positions: [getFramePosition(killerId)],
+          });
+          break;
+        }
+        case "DRAGON_SOUL_GIVEN": {
+          const killerId = event.killerId ?? 0;
+          events.push({
+            id: `${baseId}-soul`,
+            ...base,
+            type: "OBJECTIVE",
+            position: toPoint(event.position, getFramePosition(killerId), basePosition),
+            teamId: event.teamId,
+            killerPuuid: participantIdToPuuid.get(killerId),
+            actorPuuid: participantIdToPuuid.get(killerId),
+            description: `${event.killerName ?? "Team"} secured Dragon Soul`,
           });
           break;
         }

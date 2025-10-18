@@ -31,7 +31,7 @@ export function ReviewExperience({
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(
     new Set([match.primaryParticipantPuuid])
   );
-  const [showAllEvents, setShowAllEvents] = useState(false);
+  const [showAllEvents, setShowAllEvents] = useState(true);
 
   const events = useMemo(
     () =>
