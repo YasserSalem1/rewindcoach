@@ -28,6 +28,7 @@ import {
   type MatchBundle,
   type RiotMatch,
   type RiotMatchDto,
+  type TimelineFrame,
   CDN_BASE,
 } from "./types";
 
@@ -201,7 +202,7 @@ export async function getMatchBundle(
   );
 
   // Fetch timeline separately (new API has separate /timeline endpoint)
-  let timeline: typeof MatchBundle.prototype.timeline = [];
+  let timeline: TimelineFrame[] = [];
   try {
     const timelineResponse = await fetchTimeline(matchId);
     // timelineResponse.timeline contains both metadata and info
@@ -223,4 +224,3 @@ export async function getMatchBundle(
     timeline,
   };
 }
-
