@@ -1,5 +1,6 @@
 "use client";
 
+import type { HTMLAttributes, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -13,8 +14,15 @@ interface ChatMessageProps {
   isStreaming?: boolean;
 }
 
+type MarkdownCodeProps = HTMLAttributes<HTMLElement> & {
+  inline?: boolean;
+  className?: string;
+  children: ReactNode;
+  node?: unknown;
+};
+
 const markdownComponents: Components = {
-  code({ inline, className, children }) {
+  code({ inline, className, children }: MarkdownCodeProps) {
     const match = /language-(\w+)/.exec(className ?? "");
 
     if (!inline && match) {
@@ -30,11 +38,7 @@ const markdownComponents: Components = {
       );
     }
 
-    return (
-      <code className={className}>
-        {children}
-      </code>
-    );
+    return <code className={className}>{children}</code>;
   },
   h1: ({ children }) => (
     <h1 className="text-lg font-bold mb-2 mt-3 text-violet-100">

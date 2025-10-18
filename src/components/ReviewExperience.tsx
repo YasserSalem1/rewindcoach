@@ -245,13 +245,14 @@ export function ReviewExperience({
           />
         </div>
         {/* Chat - extends to cover map + timeline height */}
-        <div className="flex flex-col">
+        <div className="flex h-full flex-col min-h-0">
           <CoachChat
             matchId={match.id}
             currentTime={currentTime}
             puuid={activePuuid}
             gameName={focusGameName ?? focusParticipant?.summonerName}
             tagLine={focusTagLine}
+            className="flex-1 min-h-0"
           />
         </div>
       </div>

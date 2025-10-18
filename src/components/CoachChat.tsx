@@ -21,6 +21,7 @@ interface CoachChatProps {
   puuid?: string;
   gameName?: string;
   tagLine?: string;
+  className?: string;
 }
 
 const SUGGESTIONS = [
@@ -35,7 +36,14 @@ const SYSTEM_PROMPT = "You are a concise League of Legends coach.";
 
 const MAX_HISTORY = 8; // keep context small and cheap
 
-export function CoachChat({ matchId, currentTime, puuid, gameName, tagLine }: CoachChatProps) {
+export function CoachChat({
+  matchId,
+  currentTime,
+  puuid,
+  gameName,
+  tagLine,
+  className,
+}: CoachChatProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -171,10 +179,11 @@ export function CoachChat({ matchId, currentTime, puuid, gameName, tagLine }: Co
   return (
     <motion.div
       className={cn(
-        "flex flex-col rounded-3xl border transition-all duration-300",
+        "flex min-h-0 flex-col rounded-3xl border transition-all duration-300",
         isExpanded
           ? "fixed inset-4 z-50 border-violet-400/40 bg-slate-950/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/20"
-          : "h-full border-white/10 bg-slate-950/70 backdrop-blur-xl shadow-lg",
+          : "h-full max-h-[calc(100vh-12rem)] border-white/10 bg-slate-950/70 backdrop-blur-xl shadow-lg",
+        className,
       )}
       layout
     >
@@ -205,7 +214,7 @@ export function CoachChat({ matchId, currentTime, puuid, gameName, tagLine }: Co
 
       <div
         className={cn(
-          "flex-1 space-y-4 overflow-auto rounded-2xl bg-slate-900/45 p-4 mx-4 mb-3",
+          "flex-1 min-h-0 space-y-4 overflow-auto rounded-2xl bg-slate-900/45 p-4 mx-4 mb-3",
           "scrollbar-thin scrollbar-thumb-violet-500/20 scrollbar-track-transparent",
         )}
       >
