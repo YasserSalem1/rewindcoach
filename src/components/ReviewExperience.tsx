@@ -27,7 +27,7 @@ export function ReviewExperience({
   focusTagLine,
 }: ReviewExperienceProps) {
   const { match, timeline } = bundle;
-  // Initialize with primary player selected by default
+
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(
     new Set([match.primaryParticipantPuuid])
   );
@@ -45,38 +45,32 @@ export function ReviewExperience({
   const activePuuid = focusPuuid ?? match.primaryParticipantPuuid;
   const focusParticipant = useMemo(
     () =>
-      match.participants.find(
-        (participant) => participant.puuid === activePuuid,
-      ),
+      match.participants.find((p) => p.puuid === activePuuid),
     [activePuuid, match.participants],
   );
-  // Filter events based on selected players
+
   const filteredEvents = useMemo(() => {
-    if (showAllEvents || selectedPlayers.size === 0) {
-      return events;
-    }
-    return events.filter(
-      (event) =>
-        (event.killerPuuid && selectedPlayers.has(event.killerPuuid)) ||
-        (event.victimPuuid && selectedPlayers.has(event.victimPuuid))
-    );
+    if (showAllEvents || selectedPlayers.size === 0) return events;
+    return events.filter((event) => {
+      const related = new Set<string>();
+      if (event.actorPuuid) related.add(event.actorPuuid);
+      if (event.killerPuuid) related.add(event.killerPuuid);
+      if (event.victimPuuid) related.add(event.victimPuuid);
+      (event.assistingPuuids ?? []).forEach((puuid) => puuid && related.add(puuid));
+      for (const puuid of related) if (selectedPlayers.has(puuid)) return true;
+      return false;
+    });
   }, [events, selectedPlayers, showAllEvents]);
 
   const { currentTime, scrubTo, togglePlay } = useScrubber({
     duration: match.gameDuration,
-    onChange: () => {
-      // no-op placeholder for future analytics
-    },
+    onChange: () => {},
   });
 
   const togglePlayerSelection = useCallback((puuid: string) => {
     setSelectedPlayers((prev) => {
       const next = new Set(prev);
-      if (next.has(puuid)) {
-        next.delete(puuid);
-      } else {
-        next.add(puuid);
-      }
+      next.has(puuid) ? next.delete(puuid) : next.add(puuid);
       return next;
     });
   }, []);
@@ -85,33 +79,42 @@ export function ReviewExperience({
     setShowAllEvents((prev) => !prev);
   }, []);
 
+  // Shared card classes for both teams
+  const cardBase =
+    "relative shrink-0 flex items-center gap-3 rounded-2xl border transition-all backdrop-blur overflow-visible " +
+    "w-[200px] h-[70px] px-4 py-3"; // bigger boxes
+  const nameCls = "text-[15px] md:text-[16px] font-semibold leading-snug"; // bigger name
+  const subCls = "text-[20px] text-slate-300/85 truncate"; // bigger sub
+  const iconBase =
+    "relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border bg-slate-950/60 p-1 shadow-inner";
+  const iconImageCls = "object-contain";
+
   return (
     <div className="flex flex-col gap-6">
-      <ReviewHeader 
-        match={match} 
-        currentTime={currentTime}
+      <ReviewHeader
+        match={match}
         gameName={focusGameName}
         tagLine={focusTagLine}
         region={match.region}
       />
-      
-      {/* Champion Filter Buttons - Split by Team */}
-      <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-4">
+
+      {/* Champion Filter */}
+      <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300/75">
             Filter by Champion
           </h3>
           <Button
-            variant={showAllEvents ? "default" : "secondary"}
+            variant={showAllEvents ? "secondary" : "default"}
             size="sm"
             onClick={toggleShowAllEvents}
             className="text-xs"
           >
-            {showAllEvents ? "Show All" : "Show Selected"}
+            {showAllEvents ? "Focus Selected" : "Show All"}
           </Button>
         </div>
-        
-        <div className="space-y-4">
+
+        <div className="space-y-5">
           {/* Blue Team */}
           <div>
             <div className="mb-2 flex items-center gap-2">
@@ -120,54 +123,59 @@ export function ReviewExperience({
                 Blue Team
               </h4>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {match.participants
-                .filter((p) => p.teamId === 100)
-                .map((participant) => {
-                  const isSelected = selectedPlayers.has(participant.puuid);
-                  const isPrimary = participant.puuid === match.primaryParticipantPuuid;
-                  return (
-                    <motion.button
-                      key={participant.puuid}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => togglePlayerSelection(participant.puuid)}
-                      className={cn(
-                        "relative flex items-center gap-2 rounded-2xl border p-2 transition-all",
-                        isSelected
-                          ? "border-blue-400 bg-blue-500/20 shadow-lg shadow-blue-500/20"
-                          : "border-white/10 bg-slate-900/40 hover:border-blue-400/50",
-                        isPrimary && "ring-2 ring-yellow-400/50"
-                      )}
-                      title={`${participant.summonerName} (${participant.championName})`}
-                    >
-                      <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-blue-400/30">
-                        <Image
-                          src={participant.championIcon}
-                          alt={participant.championName}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-xs font-semibold text-slate-100">
-                          {participant.championName}
-                        </p>
-                        <p className="text-xs text-slate-300/60 max-w-[100px] truncate">
-                          {participant.summonerName}
-                        </p>
-                      </div>
-                      {isSelected && (
-                        <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-slate-950 bg-blue-400" />
-                      )}
-                      {isPrimary && (
-                        <div className="absolute -left-1 -top-1 h-4 w-4 rounded-full border-2 border-slate-950 bg-yellow-400 flex items-center justify-center">
-                          <span className="text-[8px] font-bold text-slate-900">★</span>
+
+            {/* Single-line row, tighter gap, bigger cards */}
+            <div className="overflow-x-auto">
+              <div className="flex flex-nowrap gap-2 min-w-max pr-1">
+                {match.participants
+                  .filter((p) => p.teamId === 100)
+                  .map((participant) => {
+                    const isSelected = selectedPlayers.has(participant.puuid);
+                    const isPrimary = participant.puuid === match.primaryParticipantPuuid;
+                    return (
+                      <motion.button
+                        key={participant.puuid}
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => togglePlayerSelection(participant.puuid)}
+                        className={cn(
+                          cardBase,
+                          isSelected
+                            ? "border-blue-200/80 bg-gradient-to-r from-blue-600/35 via-blue-500/25 to-blue-400/10 text-slate-100 shadow-[0_14px_30px_rgba(59,130,246,0.28)]"
+                            : "border-white/10 bg-slate-900/60 hover:border-blue-400/70 hover:bg-blue-500/10",
+                          isPrimary && "ring-2 ring-yellow-300/70 ring-offset-2 ring-offset-slate-950/70"
+                        )}
+                        aria-pressed={isSelected}
+                        title={`${participant.summonerName} (${participant.championName})`}
+                      >
+                        <div className={cn(iconBase, "border-blue-200/70")}>
+                          <Image
+                            src={participant.championIcon}
+                            alt={participant.championName}
+                            fill
+                            className={iconImageCls}
+                          />
                         </div>
-                      )}
-                    </motion.button>
-                  );
-                })}
+                        <div className="min-w-0 text-left leading-tight">
+                          <p className={nameCls}>{participant.championName}</p>
+                          <p className={subCls}>{participant.summonerName}</p>
+                        </div>
+
+                        {isSelected && (
+                          <>
+                            <div className="pointer-events-none absolute inset-0 rounded-2xl border border-blue-100/60 shadow-[0_0_20px_rgba(59,130,246,0.45)]" />
+                            <div className="pointer-events-none absolute right-1 top-1 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-blue-400 shadow" />
+                          </>
+                        )}
+                        {isPrimary && (
+                          <div className="pointer-events-none absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-slate-950 bg-yellow-400 shadow">
+                            <span className="text-[8px] font-bold text-slate-900">★</span>
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+              </div>
             </div>
           </div>
 
@@ -179,84 +187,91 @@ export function ReviewExperience({
                 Red Team
               </h4>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {match.participants
-                .filter((p) => p.teamId === 200)
-                .map((participant) => {
-                  const isSelected = selectedPlayers.has(participant.puuid);
-                  const isPrimary = participant.puuid === match.primaryParticipantPuuid;
-                  return (
-                    <motion.button
-                      key={participant.puuid}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => togglePlayerSelection(participant.puuid)}
-                      className={cn(
-                        "relative flex items-center gap-2 rounded-2xl border p-2 transition-all",
-                        isSelected
-                          ? "border-red-400 bg-red-500/20 shadow-lg shadow-red-500/20"
-                          : "border-white/10 bg-slate-900/40 hover:border-red-400/50",
-                        isPrimary && "ring-2 ring-yellow-400/50"
-                      )}
-                      title={`${participant.summonerName} (${participant.championName})`}
-                    >
-                      <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-red-400/30">
-                        <Image
-                          src={participant.championIcon}
-                          alt={participant.championName}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-xs font-semibold text-slate-100">
-                          {participant.championName}
-                        </p>
-                        <p className="text-xs text-slate-300/60 max-w-[100px] truncate">
-                          {participant.summonerName}
-                        </p>
-                      </div>
-                      {isSelected && (
-                        <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-slate-950 bg-red-400" />
-                      )}
-                      {isPrimary && (
-                        <div className="absolute -left-1 -top-1 h-4 w-4 rounded-full border-2 border-slate-950 bg-yellow-400 flex items-center justify-center">
-                          <span className="text-[8px] font-bold text-slate-900">★</span>
+
+            <div className="overflow-x-auto">
+              <div className="flex flex-nowrap gap-2 min-w-max pr-1">
+                {match.participants
+                  .filter((p) => p.teamId === 200)
+                  .map((participant) => {
+                    const isSelected = selectedPlayers.has(participant.puuid);
+                    const isPrimary = participant.puuid === match.primaryParticipantPuuid;
+                    return (
+                      <motion.button
+                        key={participant.puuid}
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => togglePlayerSelection(participant.puuid)}
+                        className={cn(
+                          cardBase,
+                          isSelected
+                            ? "border-red-200/80 bg-gradient-to-r from-red-600/35 via-red-500/25 to-red-400/10 text-slate-100 shadow-[0_14px_30px_rgba(248,113,113,0.28)]"
+                            : "border-white/10 bg-slate-900/60 hover:border-red-400/70 hover:bg-red-500/10",
+                          isPrimary && "ring-2 ring-yellow-300/70 ring-offset-2 ring-offset-slate-950/70"
+                        )}
+                        aria-pressed={isSelected}
+                        title={`${participant.summonerName} (${participant.championName})`}
+                      >
+                        <div className={cn(iconBase, "border-red-200/70")}>
+                          <Image
+                            src={participant.championIcon}
+                            alt={participant.championName}
+                            fill
+                            className={iconImageCls}
+                          />
                         </div>
-                      )}
-                    </motion.button>
-                  );
-                })}
+                        <div className="min-w-0 text-left leading-tight">
+                          <p className={nameCls}>{participant.championName}</p>
+                          <p className={subCls}>{participant.summonerName}</p>
+                        </div>
+
+                        {isSelected && (
+                          <>
+                            <div className="pointer-events-none absolute inset-0 rounded-2xl border border-red-100/60 shadow-[0_0_20px_rgba(248,113,113,0.45)]" />
+                            <div className="pointer-events-none absolute right-1 top-1 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-red-400 shadow" />
+                          </>
+                        )}
+                        {isPrimary && (
+                          <div className="pointer-events-none absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-slate-950 bg-yellow-400 shadow">
+                            <span className="text-[8px] font-bold text-slate-900">★</span>
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Map and Chat Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Square Map Container */}
-        <div className="aspect-square w-full lg:col-span-2">
-          <RiftMap
-            events={filteredEvents}
-            currentTime={currentTime}
-            participants={match.participants}
-            primaryPuuid={match.primaryParticipantPuuid}
-            selectedPlayers={selectedPlayers}
-          />
-        </div>
-        {/* Chat - extends to cover map + timeline height */}
+      {/* Map + Chat */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-stretch">
         <div className="flex flex-col">
+          <div className="relative w-full min-h-[360px] max-lg:aspect-video lg:aspect-square">
+            <RiftMap
+              events={filteredEvents}
+              currentTime={currentTime}
+              participants={match.participants}
+              primaryPuuid={match.primaryParticipantPuuid}
+              selectedPlayers={selectedPlayers}
+              focusSelection={!showAllEvents}
+              className="h-full w-full"
+            />
+          </div>
+        </div>
+        <div className="flex h-full flex-col">
           <CoachChat
             matchId={match.id}
             currentTime={currentTime}
             puuid={activePuuid}
             gameName={focusGameName ?? focusParticipant?.summonerName}
             tagLine={focusTagLine}
+            className="h-full"
           />
         </div>
       </div>
 
-      {/* Timeline spans full width below */}
+      {/* Timeline */}
       <Timeline
         events={filteredEvents}
         duration={match.gameDuration}

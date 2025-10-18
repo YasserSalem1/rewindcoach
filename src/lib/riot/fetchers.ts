@@ -13,7 +13,6 @@ import {
   type RankedInfoResult,
   type Region,
   REGION_CONFIG,
-  type RankedQueueEntry,
 } from "./types";
 
 // ============================================================================
@@ -336,4 +335,3 @@ export async function fetchTimeline(matchId: string) {
     `/timeline?${search.toString()}`,
   );
 }
-

@@ -21,6 +21,7 @@ interface CoachChatProps {
   puuid?: string;
   gameName?: string;
   tagLine?: string;
+  className?: string;
 }
 
 const SUGGESTIONS = [
@@ -28,14 +29,9 @@ const SUGGESTIONS = [
   "How can I snowball my lead?",
 ];
 
-// IMPORTANT: do NOT send this inside messages[].
-// Send it separately as payload.system so the server can map it
-// to Bedrock's `system` field.
-const SYSTEM_PROMPT = "You are a concise League of Legends coach.";
-
 const MAX_HISTORY = 8; // keep context small and cheap
 
-export function CoachChat({ matchId, currentTime, puuid, gameName, tagLine }: CoachChatProps) {
+export function CoachChat({ matchId, currentTime, puuid, gameName, tagLine, className }: CoachChatProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -168,14 +164,19 @@ export function CoachChat({ matchId, currentTime, puuid, gameName, tagLine }: Co
     [isStreaming, sendMessage],
   );
 
-  return (
-    <motion.div
-      className={cn(
-        "flex flex-col rounded-3xl border transition-all duration-300",
-        isExpanded
-          ? "fixed inset-4 z-50 border-violet-400/40 bg-slate-950/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/20"
-          : "h-full border-white/10 bg-slate-950/70 backdrop-blur-xl shadow-lg",
-      )}
+const collapsedClasses = cn(
+  "border-white/10 bg-slate-950/70 backdrop-blur-xl shadow-lg max-h-[46rem] min-h-[360px] w-full",
+  className,
+);
+
+return (
+  <motion.div
+    className={cn(
+      "relative flex h-full max-h-full flex-col rounded-3xl border transition-all duration-300",
+      isExpanded
+        ? "fixed inset-4 z-50 border-violet-400/40 bg-slate-950/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/20"
+        : collapsedClasses,
+    )}
       layout
     >
       <div className="flex items-center justify-between p-4 pb-3">
@@ -205,8 +206,8 @@ export function CoachChat({ matchId, currentTime, puuid, gameName, tagLine }: Co
 
       <div
         className={cn(
-          "flex-1 space-y-4 overflow-auto rounded-2xl bg-slate-900/45 p-4 mx-4 mb-3",
-          "scrollbar-thin scrollbar-thumb-violet-500/20 scrollbar-track-transparent",
+          "flex-1 min-h-0 space-y-4 overflow-y-auto rounded-2xl bg-slate-900/45 p-4 mx-4 mb-3",
+          "scrollbar-thin scrollbar-thumb-violet-500/30 scrollbar-track-transparent",
         )}
       >
         {messages.length === 0 ? (
