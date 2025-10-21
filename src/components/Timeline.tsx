@@ -1,100 +1,72 @@
 "use client";
 
-import type { ComponentType } from "react";
 import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { Sword, Skull, UserPlus, Castle, Flame, Crown, Mountain, Target, Circle } from "lucide-react";
 
-import type { TimelineEvent, TimelineEventType } from "@/lib/riot";
+import type { CoachParsedEvent, CoachEventCategory } from "@/lib/parseReviewOutput";
 import { formatDuration, cn } from "@/lib/ui";
 
+type TimelineEventItem = CoachParsedEvent & { sourceIndex: number };
+
 interface TimelineProps {
-  events: TimelineEvent[];
+  events: TimelineEventItem[];
   duration: number;
   currentTime: number;
+  currentEventIndex: number | null;
   onScrub: (time: number) => void;
+  onSelectEvent: (sourceIndex: number) => void;
 }
 
-type TimelineIconMeta = {
-  label: string;
-  Icon: ComponentType<{ className?: string }>;
-  chip: string;
-  icon: string;
+type CategoryTone = {
+  base: string;
+  active: string;
+  past: string;
 };
 
-const EVENT_META: Record<TimelineEventType, TimelineIconMeta> = {
-  KILL: {
-    label: "Kill",
-    Icon: Sword,
-    chip: "bg-emerald-500/20",
-    icon: "text-emerald-300",
+const CATEGORY_TONES: Record<CoachEventCategory, CategoryTone> = {
+  kill: {
+    base: "bg-emerald-500/35 border-emerald-400/60",
+    active: "bg-emerald-400 border-emerald-200 shadow-[0_0_14px_rgba(52,211,153,0.45)]",
+    past: "bg-emerald-500/55 border-emerald-300/70",
   },
-  ASSIST: {
-    label: "Assist",
-    Icon: UserPlus,
-    chip: "bg-sky-500/20",
-    icon: "text-sky-300",
+  objective: {
+    base: "bg-orange-500/35 border-orange-400/55",
+    active: "bg-orange-400 border-orange-200 shadow-[0_0_14px_rgba(253,186,116,0.45)]",
+    past: "bg-orange-500/55 border-orange-300/70",
   },
-  DEATH: {
-    label: "Death",
-    Icon: Skull,
-    chip: "bg-rose-500/20",
-    icon: "text-rose-300",
+  turret: {
+    base: "bg-amber-500/30 border-amber-400/55",
+    active: "bg-amber-400 border-amber-200 shadow-[0_0_14px_rgba(251,191,36,0.45)]",
+    past: "bg-amber-500/55 border-amber-300/70",
   },
-  TOWER: {
-    label: "Tower",
-    Icon: Castle,
-    chip: "bg-amber-500/20",
-    icon: "text-amber-300",
+  inhibitor: {
+    base: "bg-rose-500/30 border-rose-400/50",
+    active: "bg-rose-400 border-rose-200 shadow-[0_0_14px_rgba(251,113,133,0.45)]",
+    past: "bg-rose-500/55 border-rose-300/70",
   },
-  DRAGON: {
-    label: "Dragon",
-    Icon: Flame,
-    chip: "bg-orange-500/20",
-    icon: "text-orange-300",
+  nexus: {
+    base: "bg-violet-500/35 border-violet-400/55",
+    active: "bg-violet-400 border-violet-200 shadow-[0_0_14px_rgba(167,139,250,0.45)]",
+    past: "bg-violet-500/55 border-violet-300/70",
   },
-  BARON: {
-    label: "Baron",
-    Icon: Crown,
-    chip: "bg-purple-500/20",
-    icon: "text-purple-300",
-  },
-  HERALD: {
-    label: "Herald",
-    Icon: Mountain,
-    chip: "bg-indigo-500/20",
-    icon: "text-indigo-300",
-  },
-  OBJECTIVE: {
-    label: "Objective",
-    Icon: Target,
-    chip: "bg-lime-500/20",
-    icon: "text-lime-300",
-  },
-  MOVE: {
-    label: "Moment",
-    Icon: Circle,
-    chip: "bg-slate-500/20",
-    icon: "text-slate-300",
+  unknown: {
+    base: "bg-slate-500/25 border-slate-400/40",
+    active: "bg-slate-300 border-slate-200 shadow-[0_0_14px_rgba(148,163,184,0.35)]",
+    past: "bg-slate-500/45 border-slate-300/55",
   },
 };
+
+const clampPercent = (value: number) => Math.min(100, Math.max(0, value));
 
 export function Timeline({
   events,
   duration,
   currentTime,
+  currentEventIndex,
   onScrub,
+  onSelectEvent,
 }: TimelineProps) {
-  const orderedEvents = useMemo(
-    () =>
-      [...events]
-        .filter((event) => EVENT_META[event.type])
-        .sort((a, b) => a.timestamp - b.timestamp),
-    [events],
-  );
-
   const minuteMarkers = useMemo(() => {
-    if (duration <= 0) return [] as Array<{ minute: number; time: number; position: number }>;
+    if (duration <= 0) return [];
     const totalMinutes = Math.ceil(duration / 60);
     return Array.from({ length: totalMinutes + 1 }, (_, minute) => {
       const time = Math.min(minute * 60, duration);
@@ -103,54 +75,19 @@ export function Timeline({
     });
   }, [duration]);
 
-  const currentPercent = duration ? Math.min(Math.max((currentTime / duration) * 100, 0), 100) : 0;
+  const currentPercent = duration ? clampPercent((currentTime / duration) * 100) : 0;
 
-  const activeEvent = useMemo(() => {
-    if (!orderedEvents.length) return null;
-    let closest = orderedEvents[0];
-    let diff = Math.abs(closest.timestamp - currentTime);
-    for (let i = 1; i < orderedEvents.length; i += 1) {
-      const candidate = orderedEvents[i];
-      const candidateDiff = Math.abs(candidate.timestamp - currentTime);
-      if (candidateDiff < diff) {
-        closest = candidate;
-        diff = candidateDiff;
-      }
-    }
-    return closest;
-  }, [currentTime, orderedEvents]);
-
-  const activeEventIds = useMemo(() => {
-    if (!activeEvent) return new Set<string>();
-    const tolerance = 1;
-    return new Set(
-      orderedEvents
-        .filter((event) => Math.abs(event.timestamp - activeEvent.timestamp) <= tolerance)
-        .map((event) => event.id),
-    );
-  }, [activeEvent, orderedEvents]);
-
-  const stackedPositions = useMemo(() => {
-    const buckets = new Map<number, TimelineEvent[]>();
-    const bucketSize = Math.max(duration, 1);
-    orderedEvents.forEach((event) => {
-      const key = Math.round((event.timestamp / bucketSize) * 1000);
-      const list = buckets.get(key) ?? [];
-      list.push(event);
-      buckets.set(key, list);
+  const groupSizes = useMemo(() => {
+    const map = new Map<number, number>();
+    events.forEach((event) => {
+      const key = Math.round(event.timestampSeconds * 10);
+      map.set(key, (map.get(key) ?? 0) + 1);
     });
-    const indexes = new Map<string, number>();
-    const sizes = new Map<string, number>();
-    buckets.forEach((events) => {
-      events.forEach((event, index) => {
-        indexes.set(event.id, index);
-        sizes.set(event.id, events.length);
-      });
-    });
-    return { indexes, sizes };
-  }, [orderedEvents, duration]);
+    return map;
+  }, [events]);
 
-  const clampPercent = (value: number) => Math.min(100, Math.max(0, value));
+  const activeIndex = currentEventIndex ?? -1;
+  const offsetsSeen = new Map<number, number>();
 
   return (
     <div className="relative flex w-full flex-col gap-6 rounded-3xl border border-white/10 bg-slate-950/85 p-6 backdrop-blur-xl">
@@ -170,9 +107,9 @@ export function Timeline({
       <div className="relative space-y-5">
         <div className="relative h-10">
           <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-slate-800/90" />
-          <motion.div
+          <div
             className="absolute left-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-violet-500"
-            style={{ width: `${clampPercent(currentPercent)}%` }}
+            style={{ width: `${currentPercent}%` }}
           />
           {minuteMarkers.map((marker) => (
             <div
@@ -199,37 +136,45 @@ export function Timeline({
           />
         </div>
 
-        <div className="relative h-20">
-          {orderedEvents.map((event) => {
-            const meta = EVENT_META[event.type] ?? EVENT_META.OBJECTIVE;
-            const position = clampPercent(duration ? (event.timestamp / duration) * 100 : 0);
-            const isPast = currentTime >= event.timestamp;
-            const isActive = activeEventIds.has(event.id);
-            const Icon = meta.Icon;
-            const stackSize = stackedPositions.sizes.get(event.id) ?? 1;
-            const stackIndex = stackedPositions.indexes.get(event.id) ?? 0;
-            const offset = (stackIndex - (stackSize - 1) / 2) * 26;
+        <div className="relative h-16">
+          {events.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-400">
+              Coach timeline events will appear here once available.
+            </div>
+          ) : null}
+          {events.map((event) => {
+            const category = CATEGORY_TONES[event.category] ?? CATEGORY_TONES.unknown;
+            const position = clampPercent(duration ? (event.timestampSeconds / duration) * 100 : 0);
+            const isPast = currentTime >= event.timestampSeconds;
+            const isActive = event.sourceIndex === activeIndex;
+
+            const offsetKey = Math.round(event.timestampSeconds * 10);
+            const offsetIndex = offsetsSeen.get(offsetKey) ?? 0;
+            offsetsSeen.set(offsetKey, offsetIndex + 1);
+            const groupSize = groupSizes.get(offsetKey) ?? 1;
+            const offset = (offsetIndex - (groupSize - 1) / 2) * 12;
 
             return (
-              <motion.button
+              <button
                 key={event.id}
-                whileHover={{ scale: 1.1, y: -4 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => onScrub(event.timestamp)}
-                style={{ left: `${position}%`, top: `calc(50% + ${offset}px)` }}
+              onClick={() => onSelectEvent(event.sourceIndex)}
                 className={cn(
-                  "absolute -translate-x-1/2 -translate-y-1/2 rounded-full px-2 py-1 shadow-sm transition-all",
-                  meta.chip,
+                  "group absolute -translate-x-1/2 -translate-y-1/2 rounded-full border px-2 py-2 transition",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/80",
                   isActive
-                    ? "ring-2 ring-violet-200/80 shadow-lg shadow-violet-500/35"
+                    ? category.active
                     : isPast
-                      ? "ring-2 ring-violet-400/60"
-                      : "ring-1 ring-white/10 hover:ring-violet-300/50",
+                      ? category.past
+                      : category.base,
                 )}
-                title={`${meta.label} • ${event.description} (${formatDuration(Math.floor(event.timestamp))})`}
+                style={{
+                  left: `${position}%`,
+                  top: `calc(50% + ${offset}px)`,
+                }}
+                title={`${formatDuration(Math.floor(event.timestampSeconds))} • ${event.description}`}
               >
-                <Icon className={cn("h-4 w-4", meta.icon)} />
-              </motion.button>
+                <span className="block h-2 w-2 rounded-full bg-white/90 group-hover:bg-white" />
+              </button>
             );
           })}
         </div>

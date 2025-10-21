@@ -149,6 +149,7 @@ export interface RuneSelection {
 }
 
 export interface RiotParticipant {
+  participantId: number;
   puuid: string;
   summonerName: string;
   championId: string;
@@ -158,6 +159,7 @@ export interface RiotParticipant {
   deaths: number;
   assists: number;
   cs: number;
+  level: number;
   goldEarned: number;
   role: string;
   lane: string;
@@ -227,16 +229,37 @@ export interface TimelineEvent {
   actorPuuid?: string;
   assistingPuuids?: string[];
   description: string;
+  participantsSnapshot?: TimelineParticipantSnapshot[];
 }
 
 export interface TimelineFrame {
   timestamp: number; // seconds
   events: TimelineEvent[];
+  participants: Record<string, TimelineParticipantState>;
 }
 
 export interface MatchBundle {
   match: RiotMatch;
   timeline: TimelineFrame[];
+}
+
+export interface TimelineParticipantSnapshot {
+  puuid: string;
+  summonerName?: string;
+  championName?: string;
+  teamId?: number;
+  position?: TimelinePosition;
+}
+
+export interface TimelineParticipantState {
+  puuid: string;
+  participantId: number;
+  teamId: number;
+  level: number;
+  cs: number;
+  gold: number;
+  position?: TimelinePosition;
+  items: number[];
 }
 
 // ============================================================================
@@ -280,6 +303,8 @@ export interface RiotMatchParticipantDto {
   summonerName: string;
   championId: number;
   championName: string;
+  participantId?: number;
+  champLevel?: number;
   kills: number;
   deaths: number;
   assists: number;

@@ -1,23 +1,24 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 
-import type { MatchBundle, TimelineEvent } from "@/lib/riot";
+import type { MatchBundle, TimelineEvent, TimelineFrame } from "@/lib/riot";
+import { parseReviewTimeline, type CoachParsedEvent } from "@/lib/parseReviewOutput";
 import { useScrubber } from "@/hooks/useScrubber";
 import { CoachChat } from "@/components/CoachChat";
-import { ReviewHeader } from "@/components/ReviewHeader";
 import { RiftMap } from "@/components/RiftMap";
 import { Timeline } from "@/components/Timeline";
+import { ChampionMatchups } from "@/components/ChampionMatchups";
+import { MinuteNavigator } from "@/components/MinuteNavigator";
 import { cn } from "@/lib/ui";
-import { Button } from "@/components/ui/button";
 
 interface ReviewExperienceProps {
   bundle: MatchBundle;
   focusPuuid?: string;
   focusGameName?: string;
   focusTagLine?: string;
+  coachReviewText?: string;
 }
 
 export function ReviewExperience({
@@ -25,13 +26,42 @@ export function ReviewExperience({
   focusPuuid,
   focusGameName,
   focusTagLine,
+  coachReviewText,
 }: ReviewExperienceProps) {
   const { match, timeline } = bundle;
+  const participants = match.participants;
+  const gameDuration = match.gameDuration;
 
-  const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(
-    new Set([match.primaryParticipantPuuid])
-  );
-  const [showAllEvents, setShowAllEvents] = useState(false);
+  const coachEvents = useMemo<CoachParsedEvent[]>(() => {
+    if (!coachReviewText) return [];
+    try {
+      return parseReviewTimeline(coachReviewText, participants);
+    } catch (error) {
+      console.warn("[ReviewExperience] Failed to parse coach review timeline", error);
+      return [];
+    }
+  }, [coachReviewText, participants]);
+
+  const activePuuid = focusPuuid ?? match.primaryParticipantPuuid;
+  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(activePuuid);
+  const [currentEventIndex, setCurrentEventIndex] = useState<number | null>(null);
+  const manualEventRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setSelectedPlayer(activePuuid);
+  }, [activePuuid]);
+
+  useEffect(() => {
+    if (!coachEvents.length) {
+      setCurrentEventIndex(null);
+      manualEventRef.current = null;
+      return;
+    }
+    setCurrentEventIndex((prev) => {
+      if (prev === null) return 0;
+      return Math.min(prev, coachEvents.length - 1);
+    });
+  }, [coachEvents]);
 
   const events = useMemo(
     () =>
@@ -42,223 +72,547 @@ export function ReviewExperience({
     [timeline],
   );
 
-  const activePuuid = focusPuuid ?? match.primaryParticipantPuuid;
-  const focusParticipant = useMemo(
-    () =>
-      match.participants.find((p) => p.puuid === activePuuid),
-    [activePuuid, match.participants],
+  const selectedPlayersSet = useMemo(() => {
+    if (!selectedPlayer) return new Set<string>();
+    return new Set<string>([selectedPlayer]);
+  }, [selectedPlayer]);
+
+  const selectedParticipantMeta = useMemo(
+    () => (selectedPlayer ? participants.find((p) => p.puuid === selectedPlayer) : null),
+    [participants, selectedPlayer],
   );
 
-  const filteredEvents = useMemo(() => {
-    if (showAllEvents || selectedPlayers.size === 0) return events;
-    return events.filter((event) => {
-      const related = new Set<string>();
-      if (event.actorPuuid) related.add(event.actorPuuid);
-      if (event.killerPuuid) related.add(event.killerPuuid);
-      if (event.victimPuuid) related.add(event.victimPuuid);
-      (event.assistingPuuids ?? []).forEach((puuid) => puuid && related.add(puuid));
-      for (const puuid of related) if (selectedPlayers.has(puuid)) return true;
+  const normalizeText = useCallback(
+    (value?: string | null) => (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, ""),
+    [],
+  );
+
+  const involvesSelected = useCallback(
+    (event: CoachParsedEvent) => {
+      if (!selectedPlayer) return true;
+      const matchActor = (actor?: { puuid?: string; summonerName?: string; championName?: string }) => {
+        if (!actor) return false;
+        if (actor.puuid && actor.puuid === selectedPlayer) return true;
+        if (selectedParticipantMeta?.summonerName && actor.summonerName) {
+          if (normalizeText(actor.summonerName) === normalizeText(selectedParticipantMeta.summonerName)) {
+            return true;
+          }
+        }
+        if (selectedParticipantMeta?.championName && actor.championName) {
+          if (normalizeText(actor.championName) === normalizeText(selectedParticipantMeta.championName)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      if (matchActor(event.killer)) return true;
+      if (matchActor(event.victim)) return true;
+      if (event.assists.some((assist) => matchActor(assist))) return true;
+      if (matchActor(event.objectiveActor)) return true;
       return false;
+    },
+    [normalizeText, selectedParticipantMeta, selectedPlayer],
+  );
+
+  const visibleCoachEvents = useMemo(
+    () =>
+      coachEvents
+        .map((event, index) => ({ ...event, sourceIndex: index }))
+        .filter((event) => involvesSelected(event)),
+    [coachEvents, involvesSelected],
+  );
+
+  const findNearestVisibleEventIndex = useCallback(
+    (time: number) => {
+      if (!visibleCoachEvents.length) return null;
+      let bestEvent = visibleCoachEvents[0];
+      let bestDiff = Math.abs(coachEvents[bestEvent.sourceIndex].timestampSeconds - time);
+      for (let i = 1; i < visibleCoachEvents.length; i += 1) {
+        const candidate = visibleCoachEvents[i];
+        const diff = Math.abs(coachEvents[candidate.sourceIndex].timestampSeconds - time);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestEvent = candidate;
+        }
+      }
+      return bestEvent.sourceIndex;
+    },
+    [coachEvents, visibleCoachEvents],
+  );
+
+  const { statsByMinute, totalMinutes, objectivesByMinute } = useMemo(() => {
+    const totalMinutes = Math.max(0, Math.ceil(gameDuration / 60));
+    const sortedEvents = [...events].sort((a, b) => a.timestamp - b.timestamp);
+    const running = new Map<string, { kills: number; deaths: number; assists: number }>();
+
+    const participantMeta = new Map<string, (typeof participants)[number]>();
+    participants.forEach((participant) => {
+      running.set(participant.puuid, { kills: 0, deaths: 0, assists: 0 });
+      participantMeta.set(participant.puuid, participant);
     });
-  }, [events, selectedPlayers, showAllEvents]);
+
+    const framesByMinute = new Map<number, TimelineFrame>();
+    timeline?.forEach((frame) => {
+      const minute = Math.max(0, Math.floor(frame.timestamp / 60));
+      framesByMinute.set(minute, frame);
+    });
+
+    const minuteSnapshots: Array<
+      Record<
+        string,
+        {
+          kills: number;
+          deaths: number;
+          assists: number;
+          cs: number;
+          level: number;
+          items: number[];
+        }
+      >
+    > = [];
+    const objectiveSnapshots: Array<{
+      blue: { towers: number; dragons: number; heralds: number; barons: number };
+      red: { towers: number; dragons: number; heralds: number; barons: number };
+    }> = [];
+
+    const objectiveRunning = {
+      blue: { towers: 0, dragons: 0, heralds: 0, barons: 0 },
+      red: { towers: 0, dragons: 0, heralds: 0, barons: 0 },
+    };
+
+    let eventIndex = 0;
+    const previousState = new Map<string, { cs: number; level: number; items: number[] }>();
+
+    for (let minute = 0; minute <= totalMinutes; minute++) {
+      while (
+        eventIndex < sortedEvents.length &&
+        Math.floor(sortedEvents[eventIndex].timestamp / 60) <= minute
+      ) {
+        const event = sortedEvents[eventIndex];
+        const desc = event.description?.toLowerCase?.() ?? "";
+        if (event.type === "KILL" && event.killerPuuid) {
+          const stats = running.get(event.killerPuuid);
+          if (stats) stats.kills += 1;
+        } else if (event.type === "DEATH" && event.victimPuuid) {
+          const stats = running.get(event.victimPuuid);
+          if (stats) stats.deaths += 1;
+        } else if (event.type === "ASSIST" && event.actorPuuid) {
+          const stats = running.get(event.actorPuuid);
+          if (stats) stats.assists += 1;
+        } else if (
+          (event.type === "TOWER" && !desc.includes("plate")) ||
+          event.type === "DRAGON" ||
+          event.type === "HERALD" ||
+          event.type === "BARON"
+        ) {
+          const eventParticipant = event.actorPuuid
+            ? participantMeta.get(event.actorPuuid)
+            : undefined;
+          const teamId = eventParticipant?.teamId ?? event.teamId;
+          const teamKey = teamId === 100 ? "blue" : teamId === 200 ? "red" : null;
+          if (teamKey) {
+            if (event.type === "TOWER") {
+              objectiveRunning[teamKey].towers = Math.min(
+                objectiveRunning[teamKey].towers + 1,
+                11,
+              );
+            }
+            if (event.type === "DRAGON") {
+              objectiveRunning[teamKey].dragons = Math.min(
+                objectiveRunning[teamKey].dragons + 1,
+                6,
+              );
+            }
+            if (event.type === "HERALD") {
+              objectiveRunning[teamKey].heralds = Math.min(
+                objectiveRunning[teamKey].heralds + 1,
+                2,
+              );
+            }
+            if (event.type === "BARON") {
+              objectiveRunning[teamKey].barons = Math.min(
+                objectiveRunning[teamKey].barons + 1,
+                3,
+              );
+            }
+          }
+        }
+        eventIndex += 1;
+      }
+
+      const frame = framesByMinute.get(minute);
+      const snapshot: Record<
+        string,
+        { kills: number; deaths: number; assists: number; cs: number; level: number; items: number[] }
+      > = {};
+      running.forEach((value, puuid) => {
+        const prior = previousState.get(puuid);
+        const participantFrame = frame?.participants?.[puuid];
+        const participant = participantMeta.get(puuid);
+        const cs =
+          participantFrame?.cs ??
+          prior?.cs ??
+          (minute >= totalMinutes ? participant?.cs ?? 0 : 0);
+        const level =
+          participantFrame?.level ??
+          prior?.level ??
+          participant?.level ??
+          1;
+        const frameItems =
+          participantFrame?.items?.map((item) =>
+            typeof item === "number" ? item : 0,
+          ) ?? [];
+        const items =
+          minute === 0
+            ? []
+            : frameItems.length
+              ? [...frameItems]
+              : prior?.items
+                ? [...prior.items]
+                : [];
+
+        previousState.set(puuid, { cs, level, items });
+
+        snapshot[puuid] = { ...value, cs, level, items };
+      });
+      minuteSnapshots[minute] = snapshot;
+      objectiveSnapshots[minute] = {
+        blue: { ...objectiveRunning.blue },
+        red: { ...objectiveRunning.red },
+      };
+    }
+
+    if (minuteSnapshots.length === 0) {
+      const baseline: Record<
+        string,
+        { kills: number; deaths: number; assists: number; cs: number; level: number; items: number[] }
+      > = {};
+      running.forEach((value, puuid) => {
+        const participant = participantMeta.get(puuid);
+        baseline[puuid] = {
+          ...value,
+          cs: participant?.cs ?? 0,
+          level: participant?.level ?? 1,
+          items: [],
+        };
+        previousState.set(puuid, {
+          cs: participant?.cs ?? 0,
+          level: participant?.level ?? 1,
+          items: [],
+        });
+      });
+      minuteSnapshots[0] = baseline;
+      objectiveSnapshots[0] = {
+        blue: { towers: 0, dragons: 0, heralds: 0, barons: 0 },
+        red: { towers: 0, dragons: 0, heralds: 0, barons: 0 },
+      };
+    }
+
+    return { statsByMinute: minuteSnapshots, totalMinutes, objectivesByMinute: objectiveSnapshots };
+  }, [events, gameDuration, participants, timeline]);
 
   const { currentTime, scrubTo, togglePlay } = useScrubber({
     duration: match.gameDuration,
     onChange: () => {},
   });
 
-  const togglePlayerSelection = useCallback((puuid: string) => {
-    setSelectedPlayers((prev) => {
-      const next = new Set(prev);
-      if (next.has(puuid)) {
-        next.delete(puuid);
-      } else {
-        next.add(puuid);
+  useEffect(() => {
+    if (!visibleCoachEvents.length) {
+      if (currentEventIndex !== null) {
+        setCurrentEventIndex(null);
       }
-      return next;
-    });
+      manualEventRef.current = null;
+      return;
+    }
+
+    const manualIndex = manualEventRef.current;
+    if (
+      manualIndex !== null &&
+      visibleCoachEvents.some((event) => event.sourceIndex === manualIndex)
+    ) {
+      const manualEvent = coachEvents[manualIndex];
+      if (
+        manualEvent &&
+        Math.abs(manualEvent.timestampSeconds - currentTime) <= 0.35
+      ) {
+        return;
+      }
+    }
+
+    manualEventRef.current = null;
+    const nearest = findNearestVisibleEventIndex(currentTime);
+    if (nearest !== null && nearest !== currentEventIndex) {
+      setCurrentEventIndex(nearest);
+    }
+  }, [
+    coachEvents,
+    currentEventIndex,
+    currentTime,
+    findNearestVisibleEventIndex,
+    visibleCoachEvents,
+  ]);
+
+  useEffect(() => {
+    if (!visibleCoachEvents.length) {
+      manualEventRef.current = null;
+      if (currentEventIndex !== null) {
+        setCurrentEventIndex(null);
+      }
+      return;
+    }
+    if (currentEventIndex === null) {
+      manualEventRef.current = null;
+      setCurrentEventIndex(visibleCoachEvents[0].sourceIndex);
+      return;
+    }
+    const isCurrentVisible = visibleCoachEvents.some((event) => event.sourceIndex === currentEventIndex);
+    if (!isCurrentVisible) {
+      manualEventRef.current = null;
+      setCurrentEventIndex(visibleCoachEvents[0].sourceIndex);
+    }
+  }, [visibleCoachEvents, currentEventIndex]);
+
+  const currentMinute = Math.min(
+    totalMinutes,
+    Math.max(0, Math.floor(currentTime / 60)),
+  );
+
+  const fallbackMinuteStats =
+    statsByMinute.length > 0 ? statsByMinute[statsByMinute.length - 1] : {};
+
+  const currentMinuteStats =
+    statsByMinute[currentMinute] ?? fallbackMinuteStats;
+
+  const zeroObjectives = {
+    blue: { towers: 0, dragons: 0, heralds: 0, barons: 0 },
+    red: { towers: 0, dragons: 0, heralds: 0, barons: 0 },
+  };
+
+  const currentObjectives =
+    objectivesByMinute[currentMinute] ??
+    objectivesByMinute[objectivesByMinute.length - 1] ??
+    zeroObjectives;
+
+  const focusParticipant = useMemo(
+    () =>
+      match.participants.find((p) => p.puuid === activePuuid),
+    [activePuuid, match.participants],
+  );
+
+  const currentCoachEvent =
+    currentEventIndex !== null ? coachEvents[currentEventIndex] ?? null : null;
+
+  const handleChampionClick = useCallback((puuid: string) => {
+    setSelectedPlayer((prev) => (prev === puuid ? null : puuid));
   }, []);
 
-  const toggleShowAllEvents = useCallback(() => {
-    setShowAllEvents((prev) => !prev);
+  const clearChampionSelection = useCallback(() => {
+    setSelectedPlayer(null);
   }, []);
 
-  // Shared card classes for both teams
-  const cardBase =
-    "relative shrink-0 flex items-center gap-3 rounded-2xl border transition-all backdrop-blur overflow-visible " +
-    "w-[200px] h-[70px] px-4 py-3"; // bigger boxes
-  const nameCls = "text-[15px] md:text-[16px] font-semibold leading-snug"; // bigger name
-  const subCls = "text-[20px] text-slate-300/85 truncate"; // bigger sub
-  const iconBase =
-    "relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border bg-slate-950/60 p-1 shadow-inner";
-  const iconImageCls = "object-contain";
+  const handleMinuteSelect = useCallback(
+    (minute: number) => {
+      togglePlay(false);
+      const target = Math.min(gameDuration, Math.max(0, minute * 60));
+      scrubTo(target);
+    },
+    [gameDuration, scrubTo, togglePlay],
+  );
+
+  const handleScrub = useCallback(
+    (time: number) => {
+      togglePlay(false);
+      scrubTo(time);
+    },
+    [scrubTo, togglePlay],
+  );
+
+  const handleCoachEventSelect = useCallback(
+    (sourceIndex: number) => {
+      const event = coachEvents[sourceIndex];
+      if (!event) return;
+      manualEventRef.current = sourceIndex;
+      togglePlay(false);
+      scrubTo(event.timestampSeconds);
+      setCurrentEventIndex(sourceIndex);
+    },
+    [coachEvents, scrubTo, togglePlay],
+  );
+
+  useEffect(() => {
+    const isEditingElement = (element: EventTarget | null) => {
+      if (!(element instanceof HTMLElement)) return false;
+      const tag = element.tagName;
+      if (element.isContentEditable) return true;
+      return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isEditingElement(event.target)) return;
+
+      if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+        if (!visibleCoachEvents.length) return;
+        const visibleIndex = currentEventIndex !== null
+          ? visibleCoachEvents.findIndex((item) => item.sourceIndex === currentEventIndex)
+          : -1;
+        if (event.key === "ArrowRight") {
+          const nextIndex = visibleIndex >= 0
+            ? Math.min(visibleIndex + 1, visibleCoachEvents.length - 1)
+            : 0;
+          event.preventDefault();
+          handleCoachEventSelect(visibleCoachEvents[nextIndex].sourceIndex);
+        } else if (event.key === "ArrowLeft") {
+          const prevIndex = visibleIndex >= 0
+            ? Math.max(visibleIndex - 1, 0)
+            : visibleCoachEvents.length - 1;
+          event.preventDefault();
+          handleCoachEventSelect(visibleCoachEvents[prevIndex].sourceIndex);
+        }
+        return;
+      }
+
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        if (totalMinutes <= 0) return;
+        if (event.key === "ArrowUp") {
+          const previousMinute = Math.max(0, currentMinute - 1);
+          if (previousMinute !== currentMinute) {
+            event.preventDefault();
+            handleMinuteSelect(previousMinute);
+          }
+        } else {
+          const nextMinute = Math.min(totalMinutes, currentMinute + 1);
+          if (nextMinute !== currentMinute) {
+            event.preventDefault();
+            handleMinuteSelect(nextMinute);
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    currentEventIndex,
+    currentMinute,
+    handleCoachEventSelect,
+    handleMinuteSelect,
+    totalMinutes,
+    visibleCoachEvents,
+  ]);
+
+  const itemIconBase = useMemo(() => {
+    for (const participant of participants) {
+      for (const item of participant.items ?? []) {
+        if (item?.icon) {
+          const idx = item.icon.lastIndexOf("/");
+          if (idx > 0) {
+            return item.icon.slice(0, idx);
+          }
+        }
+      }
+      if (participant.trinket?.icon) {
+        const idx = participant.trinket.icon.lastIndexOf("/");
+        if (idx > 0) {
+          return participant.trinket.icon.slice(0, idx);
+        }
+      }
+    }
+    return "https://ddragon.leagueoflegends.com/cdn/latest/img/item";
+  }, [participants]);
+
+  const resolveItemIcon = useCallback(
+    (itemId: number) => {
+      if (!itemId) return null;
+      return `${itemIconBase}/${itemId}.png`;
+    },
+    [itemIconBase],
+  );
+
+  const matchTypeLabel = (match.queueType ?? "Match").toUpperCase();
+  const outcomeText = focusParticipant?.win ? "Victory" : "Defeat";
+  const heroCardClass = focusParticipant?.win
+    ? "border-emerald-500/20 bg-gradient-to-br from-emerald-900/35 via-slate-950/70 to-slate-950/50"
+    : "border-rose-500/40 bg-gradient-to-br from-rose-900/65 via-rose-800/35 to-slate-950/55";
 
   return (
     <div className="flex flex-col gap-6">
-      <ReviewHeader
-        match={match}
-        gameName={focusGameName}
-        tagLine={focusTagLine}
-        region={match.region}
-      />
-
-      {/* Champion Filter */}
-      <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300/75">
-            Filter by Champion
-          </h3>
-          <Button
-            variant={showAllEvents ? "secondary" : "default"}
-            size="sm"
-            onClick={toggleShowAllEvents}
-            className="text-xs"
+      <div className={cn("rounded-3xl border p-6 shadow-lg shadow-violet-900/25", heroCardClass)}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-300/80">
+              Match Type
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-100">
+              {matchTypeLabel}
+            </h2>
+          </div>
+          <div
+            className={cn(
+              "rounded-full border px-4 py-1 text-sm font-semibold uppercase tracking-wide",
+              focusParticipant?.win
+                ? "border-emerald-500/60 bg-emerald-500/25 text-emerald-100"
+                : "border-rose-500/80 bg-rose-500/35 text-rose-100",
+            )}
           >
-            {showAllEvents ? "Focus Selected" : "Show All"}
-          </Button>
+            {outcomeText}
+          </div>
         </div>
 
-        <div className="space-y-5">
-          {/* Blue Team */}
+        <div className="mt-5 flex items-center gap-4">
+          {focusParticipant?.championIcon ? (
+            <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-white/15 bg-slate-900/80 shadow">
+              <Image
+                src={focusParticipant.championIcon}
+                alt={focusParticipant.championName}
+                fill
+                className="object-cover"
+              />
+            </div>
+          ) : null}
           <div>
-            <div className="mb-2 flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-blue-500" />
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-400">
-                Blue Team
-              </h4>
-            </div>
-
-            {/* Single-line row, tighter gap, bigger cards */}
-            <div className="overflow-x-auto">
-              <div className="flex flex-nowrap gap-2 min-w-max pr-1">
-                {match.participants
-                  .filter((p) => p.teamId === 100)
-                  .map((participant) => {
-                    const isSelected = selectedPlayers.has(participant.puuid);
-                    const isPrimary = participant.puuid === match.primaryParticipantPuuid;
-                    return (
-                      <motion.button
-                        key={participant.puuid}
-                        whileHover={{ scale: 1.02, y: -1 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => togglePlayerSelection(participant.puuid)}
-                        className={cn(
-                          cardBase,
-                          isSelected
-                            ? "border-blue-200/80 bg-gradient-to-r from-blue-600/35 via-blue-500/25 to-blue-400/10 text-slate-100 shadow-[0_14px_30px_rgba(59,130,246,0.28)]"
-                            : "border-white/10 bg-slate-900/60 hover:border-blue-400/70 hover:bg-blue-500/10",
-                          isPrimary && "ring-2 ring-yellow-300/70 ring-offset-2 ring-offset-slate-950/70"
-                        )}
-                        aria-pressed={isSelected}
-                        title={`${participant.summonerName} (${participant.championName})`}
-                      >
-                        <div className={cn(iconBase, "border-blue-200/70")}>
-                          <Image
-                            src={participant.championIcon}
-                            alt={participant.championName}
-                            fill
-                            className={iconImageCls}
-                          />
-                        </div>
-                        <div className="min-w-0 text-left leading-tight">
-                          <p className={nameCls}>{participant.championName}</p>
-                          <p className={subCls}>{participant.summonerName}</p>
-                        </div>
-
-                        {isSelected && (
-                          <>
-                            <div className="pointer-events-none absolute inset-0 rounded-2xl border border-blue-100/60 shadow-[0_0_20px_rgba(59,130,246,0.45)]" />
-                            <div className="pointer-events-none absolute right-1 top-1 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-blue-400 shadow" />
-                          </>
-                        )}
-                        {isPrimary && (
-                          <div className="pointer-events-none absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-slate-950 bg-yellow-400 shadow">
-                            <span className="text-[8px] font-bold text-slate-900">★</span>
-                          </div>
-                        )}
-                      </motion.button>
-                    );
-                  })}
-              </div>
-            </div>
-          </div>
-
-          {/* Red Team */}
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-red-500" />
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-red-400">
-                Red Team
-              </h4>
-            </div>
-
-            <div className="overflow-x-auto">
-              <div className="flex flex-nowrap gap-2 min-w-max pr-1">
-                {match.participants
-                  .filter((p) => p.teamId === 200)
-                  .map((participant) => {
-                    const isSelected = selectedPlayers.has(participant.puuid);
-                    const isPrimary = participant.puuid === match.primaryParticipantPuuid;
-                    return (
-                      <motion.button
-                        key={participant.puuid}
-                        whileHover={{ scale: 1.02, y: -1 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => togglePlayerSelection(participant.puuid)}
-                        className={cn(
-                          cardBase,
-                          isSelected
-                            ? "border-red-200/80 bg-gradient-to-r from-red-600/35 via-red-500/25 to-red-400/10 text-slate-100 shadow-[0_14px_30px_rgba(248,113,113,0.28)]"
-                            : "border-white/10 bg-slate-900/60 hover:border-red-400/70 hover:bg-red-500/10",
-                          isPrimary && "ring-2 ring-yellow-300/70 ring-offset-2 ring-offset-slate-950/70"
-                        )}
-                        aria-pressed={isSelected}
-                        title={`${participant.summonerName} (${participant.championName})`}
-                      >
-                        <div className={cn(iconBase, "border-red-200/70")}>
-                          <Image
-                            src={participant.championIcon}
-                            alt={participant.championName}
-                            fill
-                            className={iconImageCls}
-                          />
-                        </div>
-                        <div className="min-w-0 text-left leading-tight">
-                          <p className={nameCls}>{participant.championName}</p>
-                          <p className={subCls}>{participant.summonerName}</p>
-                        </div>
-
-                        {isSelected && (
-                          <>
-                            <div className="pointer-events-none absolute inset-0 rounded-2xl border border-red-100/60 shadow-[0_0_20px_rgba(248,113,113,0.45)]" />
-                            <div className="pointer-events-none absolute right-1 top-1 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-red-400 shadow" />
-                          </>
-                        )}
-                        {isPrimary && (
-                          <div className="pointer-events-none absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-slate-950 bg-yellow-400 shadow">
-                            <span className="text-[8px] font-bold text-slate-900">★</span>
-                          </div>
-                        )}
-                      </motion.button>
-                    );
-                  })}
-              </div>
-            </div>
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+              Played As
+            </p>
+            <p className="text-lg font-semibold text-slate-100">
+              {focusParticipant?.championName ?? "Unknown"}
+            </p>
+            <p className="text-sm text-slate-400">
+              {focusParticipant?.summonerName ?? focusGameName ?? "—"}
+            </p>
           </div>
         </div>
       </div>
+
+      <ChampionMatchups
+        participants={match.participants}
+        currentMinuteStats={currentMinuteStats}
+        currentMinute={currentMinute}
+        totalMinutes={totalMinutes}
+        selectedPuuid={selectedPlayer}
+        primaryPuuid={match.primaryParticipantPuuid}
+        objectives={currentObjectives}
+        resolveItemIcon={resolveItemIcon}
+        onChampionClick={handleChampionClick}
+        onClearSelection={clearChampionSelection}
+      />
+
+      <MinuteNavigator
+        totalMinutes={totalMinutes}
+        currentMinute={currentMinute}
+        onSelect={handleMinuteSelect}
+      />
 
       {/* Map + Chat */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-stretch">
         <div className="flex flex-col">
           <div className="relative w-full min-h-[360px] max-lg:aspect-video lg:aspect-square">
             <RiftMap
-              events={filteredEvents}
-              currentTime={currentTime}
               participants={match.participants}
               primaryPuuid={match.primaryParticipantPuuid}
-              selectedPlayers={selectedPlayers}
-              focusSelection={!showAllEvents}
+              selectedPlayers={selectedPlayersSet}
+              currentEvent={currentCoachEvent}
+              focusSelection={Boolean(selectedPlayer)}
               className="h-full w-full"
             />
           </div>
@@ -276,14 +630,13 @@ export function ReviewExperience({
       </div>
 
       {/* Timeline */}
-      <Timeline
-        events={filteredEvents}
+  <Timeline
+        events={visibleCoachEvents}
         duration={match.gameDuration}
         currentTime={currentTime}
-        onScrub={(time) => {
-          togglePlay(false);
-          scrubTo(time);
-        }}
+        currentEventIndex={currentEventIndex}
+        onScrub={handleScrub}
+        onSelectEvent={handleCoachEventSelect}
       />
     </div>
   );

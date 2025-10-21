@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { ReviewExperience } from "@/components/ReviewExperience";
 import { getMatchBundle } from "@/lib/riot";
+import { fetchCoachReview } from "@/lib/coach/fetchReview";
 
 interface ReviewPageProps {
   params: Promise<{
@@ -30,6 +31,13 @@ export default async function ReviewPage({ params, searchParams }: ReviewPagePro
     notFound();
   }
 
+  let coachReviewText: string | null = null;
+  try {
+    coachReviewText = await fetchCoachReview(matchId);
+  } catch (error) {
+    console.warn("[ReviewPage] Failed to load coach review text:", error);
+  }
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <ReviewExperience
@@ -37,6 +45,7 @@ export default async function ReviewPage({ params, searchParams }: ReviewPagePro
         focusPuuid={searchParamsResolved?.puuid ?? bundle.match.primaryParticipantPuuid}
         focusGameName={searchParamsResolved?.gameName ?? undefined}
         focusTagLine={searchParamsResolved?.tagLine ?? undefined}
+        coachReviewText={coachReviewText ?? undefined}
       />
     </div>
   );
