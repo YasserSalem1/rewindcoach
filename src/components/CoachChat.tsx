@@ -205,7 +205,7 @@ export function CoachChat({ matchId, currentTime, puuid, gameName, tagLine }: Co
 
       <div
         className={cn(
-          "flex-1 space-y-4 overflow-auto rounded-2xl bg-slate-900/45 p-4 mx-4 mb-3",
+          "flex-1 space-y-4 overflow-y-auto overflow-x-hidden rounded-2xl bg-slate-900/45 p-4 mx-4 mb-3 min-h-0",
           "scrollbar-thin scrollbar-thumb-violet-500/20 scrollbar-track-transparent",
         )}
       >

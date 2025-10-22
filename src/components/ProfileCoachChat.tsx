@@ -201,9 +201,9 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
 
       <div
         className={cn(
-          "space-y-4 overflow-auto rounded-2xl bg-slate-900/45 p-4",
+          "space-y-4 overflow-y-auto overflow-x-hidden rounded-2xl bg-slate-900/45 p-4",
           "scrollbar-thin scrollbar-thumb-violet-500/20 scrollbar-track-transparent",
-          isExpanded ? "flex-1" : "min-h-[200px] max-h-[250px]",
+          isExpanded ? "flex-1 min-h-0" : "min-h-[200px] max-h-[250px]",
         )}
       >
         {messages.length === 0 ? (

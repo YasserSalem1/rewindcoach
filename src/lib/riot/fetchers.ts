@@ -326,14 +326,48 @@ export async function fetchMatch(matchId: string) {
 
 /**
  * Fetches timeline for a match
- * This is a separate endpoint from /match in the new API
+ * Uses the coach_match endpoint which returns text format
  */
-export async function fetchTimeline(matchId: string) {
+export async function fetchTimeline(matchId: string, puuid?: string): Promise<string> {
   const search = new URLSearchParams();
   search.set("matchId", matchId);
+  if (puuid) {
+    search.set("puuid", puuid);
+  }
   
-  return backendFetch<BackendTimelineResponse>(
-    `/timeline?${search.toString()}`,
+  const url = `https://0vsr7n9vj1.execute-api.us-east-1.amazonaws.com/coach_match?${search.toString()}`;
+  
+  const resp = await fetch(url, {
+    headers: BACKEND_API_KEY ? { "x-api-key": BACKEND_API_KEY } : undefined,
+    cache: "no-store",
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text().catch(() => "");
+    throw new Error(`Timeline API error (${resp.status}) for ${url}: ${body}`);
+  }
+
+  // Return text format
+  return await resp.text();
+}
+
+/**
+ * Fetches season stats for a summoner
+ */
+export async function fetchSeasonStats(
+  puuid: string,
+  region: string,
+  summonerName: string,
+  opggRegion: string,
+) {
+  const search = new URLSearchParams();
+  search.set("puuid", puuid);
+  search.set("region", region);
+  search.set("summonerName", summonerName);
+  search.set("opggRegion", opggRegion);
+  
+  return backendFetch<import("./types").SeasonStatsResponse>(
+    `/seasonstats?${search.toString()}`,
   );
 }
 

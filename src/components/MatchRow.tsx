@@ -70,8 +70,9 @@ export function MatchRow({
       animate="animate"
       className="flex flex-col gap-4 rounded-2xl border border-white/5 bg-slate-900/45 p-4 transition hover:border-violet-400/40 hover:bg-slate-900/65 sm:flex-row sm:items-center"
     >
-      <div className="flex items-center gap-4">
-        <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-violet-400/45">
+      {/* Champion Info Section - Fixed Width */}
+      <div className="flex items-center gap-4 sm:w-[280px] sm:flex-shrink-0">
+        <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-violet-400/45 flex-shrink-0">
           <Image
             src={participant.championIcon}
             alt={participant.championName}
@@ -79,28 +80,32 @@ export function MatchRow({
             className="object-cover"
           />
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-slate-100">
+            <h3 className="text-lg font-semibold text-slate-100 truncate">
               {participant.championName}
             </h3>
             <Badge variant={resultTone}>{resultLabel}</Badge>
           </div>
-          <p className="text-sm text-slate-300/75">
+          <p className="text-sm text-slate-300/75 truncate">
             {match.queueType} • {formatDuration(match.gameDuration)} •{" "}
             {formatRelativeDate(new Date(match.gameCreation))}
           </p>
         </div>
       </div>
-      <div className="flex flex-1 flex-wrap items-center gap-4">
-        <div className="flex min-w-[120px] flex-col">
+
+      {/* Stats Section - Fixed Widths for Each Element */}
+      <div className="flex flex-1 items-center gap-3 overflow-x-auto sm:overflow-visible">
+        {/* K/D/A - Fixed Width */}
+        <div className="flex w-[100px] flex-col flex-shrink-0">
           <span className="text-base font-semibold text-slate-100">{kda}</span>
           <span className="text-xs uppercase tracking-wide text-slate-300/65">
             K / D / A
           </span>
         </div>
-        {/* Summoner Spells - stacked vertically */}
-        <div className="flex flex-col gap-1.5">
+
+        {/* Summoner Spells - Fixed Width */}
+        <div className="flex flex-col gap-1.5 flex-shrink-0">
           {participant.spells && participant.spells[0] ? (
             <Image
               src={participant.spells[0]}
@@ -130,8 +135,9 @@ export function MatchRow({
             />
           )}
         </div>
-        {/* Items row, always fixed slots */}
-        <div className="flex flex-col gap-2">
+
+        {/* Items - Fixed Width */}
+        <div className="flex flex-col gap-2 flex-shrink-0">
           <span className="text-xs uppercase text-slate-300/65">Items</span>
           <div className="flex items-center gap-1.5">
             {items.some((item) => item) ? (
@@ -161,7 +167,7 @@ export function MatchRow({
                     className="w-7 h-7 rounded-lg border border-white/10 bg-slate-900/30 p-0.5 opacity-40"
                   />
                 ))}
-                <span className="ml-2 text-xs text-slate-400/60">No build data</span>
+                <span className="ml-2 text-xs text-slate-400/60 whitespace-nowrap">No build data</span>
               </>
             )}
             {/* Always reserve the next slot for trinket, even if null */}
@@ -181,8 +187,9 @@ export function MatchRow({
             )}
           </div>
         </div>
-        {/* Runes row, always fixed location on the row */}
-        <div className="flex flex-col gap-2">
+
+        {/* Runes - Fixed Width */}
+        <div className="flex flex-col gap-2 flex-shrink-0">
           <span className="text-xs uppercase text-slate-300/65">Runes</span>
           <div className="flex items-center gap-1.5">
             {participant.runes && participant.runes.primary ? (

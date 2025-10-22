@@ -203,6 +203,7 @@ export interface RiotMatch {
 export type TimelineEventType =
   | "KILL"
   | "DEATH"
+  | "ASSIST"
   | "TOWER"
   | "DRAGON"
   | "BARON"
@@ -226,6 +227,14 @@ export interface TimelineEvent {
   killerPuuid?: string;
   victimPuuid?: string;
   description: string;
+  playerPositions?: Array<{
+    puuid: string;
+    x: number;
+    y: number;
+    summonerName: string;
+    championName: string;
+    team: "Blue" | "Red";
+  }>;
 }
 
 export interface TimelineFrame {
@@ -436,6 +445,43 @@ export interface BackendTimelineResponse {
   matchId: string;
   region: string;
   timeline: RiotTimelineDto["info"];
+}
+
+// ============================================================================
+// Season Stats Types
+// ============================================================================
+
+export interface SummonerSpellStats {
+  totalCasts: number;
+  gamesUsed: number;
+  avgCastsPerGame: number;
+}
+
+export interface ChampionSeasonStats {
+  gamesPlayed: number;
+  totalTakedowns: number;
+  totalDamage: number;
+  doubleKills: number;
+  tripleKills: number;
+  quadraKills: number;
+  pentaKills: number;
+}
+
+export interface SeasonStatsResponse {
+  puuid: string;
+  region: string;
+  statsPeriodStart: number;
+  totalMatchesAttempted: number;
+  totalMatchesAnalyzed: number;
+  overallStats: {
+    totalMatches: number;
+    mostPlayedChampions: Record<string, number>;
+    mostPlayedWith: Record<string, number>;
+    wins: number;
+    losses: number;
+    topSummonerSpells: Record<string, SummonerSpellStats>;
+  };
+  championStats: Record<string, ChampionSeasonStats>;
 }
 
 // ============================================================================

@@ -15,7 +15,7 @@ export * from "./types";
 // Re-export utility functions that might be needed
 // ============================================================================
 
-export { getAccountInfo, getRankedInfo, fetchTimeline } from "./fetchers";
+export { getAccountInfo, getRankedInfo, fetchTimeline, fetchSeasonStats } from "./fetchers";
 export { mapParticipantData, summarizeMatches } from "./transformers";
 
 // ============================================================================
@@ -28,6 +28,7 @@ import {
   type MatchBundle,
   type RiotMatch,
   type RiotMatchDto,
+  type TimelineFrame,
   CDN_BASE,
 } from "./types";
 
@@ -47,6 +48,8 @@ import {
   mapTimeline,
   summarizeMatches,
 } from "./transformers";
+
+import { parseTimelineText } from "./timelineParser";
 
 // ============================================================================
 // High-Level API Functions
@@ -200,20 +203,12 @@ export async function getMatchBundle(
     focusPuuid ?? matchDto.metadata.participants[0],
   );
 
-  // Fetch timeline separately (new API has separate /timeline endpoint)
-  let timeline: typeof MatchBundle.prototype.timeline = [];
+  // Fetch timeline separately (new API returns text format)
+  let timeline: TimelineFrame[] = [];
   try {
-    const timelineResponse = await fetchTimeline(matchId);
-    // timelineResponse.timeline contains both metadata and info
-    // Extract the info object which has the frames
-    if (timelineResponse.timeline?.info?.frames) {
-      const timelineDto: RiotTimelineDto = {
-        info: timelineResponse.timeline.info,
-      };
-      timeline = mapTimeline(timelineDto, matchDto);
-    } else {
-      console.warn(`[backend] Timeline for ${matchId} has no frames`);
-    }
+    const timelineText = await fetchTimeline(matchId, focusPuuid);
+    // Parse text format timeline
+    timeline = parseTimelineText(timelineText, matchDto);
   } catch (error) {
     console.warn(`[backend] Failed to load timeline for ${matchId}`, error);
   }

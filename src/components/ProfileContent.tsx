@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { HighlightsCard } from "@/components/HighlightsCard";
+
 import { MatchList } from "@/components/MatchList";
 import { StyleDNA } from "@/components/StyleDNA";
 import { ProfileCoachChat } from "@/components/ProfileCoachChat";
@@ -129,15 +129,6 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
         </div>
       </section>
 
-      {/* Profile Coach Chat - Full Width, Compact Height */}
-      <section>
-        <ProfileCoachChat
-          puuid={puuid}
-          gameName={summoner.summonerName}
-          tagLine={summoner.tagline}
-          profileSummary={`Player: ${summoner.summonerName}#${summoner.tagline}, Rank: ${rankDisplay} ${summoner.rankedLp} LP, Level: ${summoner.level}, Win Rate: ${highlights.last20WinRate ? Math.round(highlights.last20WinRate * 100) : 0}%, Average KDA: ${highlights.averageKda}, CS/min: ${highlights.csPerMinute}`}
-        />
-      </section>
 
       {/* Main Content Grid */}
       <section className="grid gap-6 lg:grid-cols-[1.1fr,1.8fr,1fr]">
@@ -153,7 +144,16 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
           region={region}
           onMatchesUpdate={handleMatchesUpdate}
         />
-        <HighlightsCard highlights={highlights} />
+
+      </section>
+      {/* Profile Coach Chat - Full Width, Compact Height */}
+      <section>
+        <ProfileCoachChat
+          puuid={puuid}
+          gameName={summoner.summonerName}
+          tagLine={summoner.tagline}
+          profileSummary={`Player: ${summoner.summonerName}#${summoner.tagline}, Rank: ${rankDisplay} ${summoner.rankedLp} LP, Level: ${summoner.level}, Win Rate: ${highlights.last20WinRate ? Math.round(highlights.last20WinRate * 100) : 0}%, Average KDA: ${highlights.averageKda}, CS/min: ${highlights.csPerMinute}`}
+        />
       </section>
     </div>
   );

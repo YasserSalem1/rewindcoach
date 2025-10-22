@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Sword, Skull, Castle, Flame, Crown, Mountain, Eye, EyeOff } from "lucide-react";
+import { Sword, Skull, Castle, Flame, Crown, Mountain, Eye, EyeOff, Users } from "lucide-react";
 
 import type { TimelineEvent, TimelineEventType } from "@/lib/riot";
 import { formatDuration, cn } from "@/lib/ui";
@@ -20,6 +20,8 @@ function getEventIcon(type: TimelineEventType) {
       return Sword;
     case "DEATH":
       return Skull;
+    case "ASSIST":
+      return Users;
     case "TOWER":
       return Castle;
     case "DRAGON":
@@ -43,6 +45,8 @@ function getEventColor(type: TimelineEventType) {
       return "text-green-400";
     case "DEATH":
       return "text-red-400";
+    case "ASSIST":
+      return "text-blue-400";
     case "TOWER":
       return "text-amber-400";
     case "DRAGON":

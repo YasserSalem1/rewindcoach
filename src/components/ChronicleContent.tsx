@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import { ArrowLeft, Trophy, Target, Swords, Eye, TrendingUp, Calendar, Zap, Shield, Flame } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -23,19 +23,61 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { ProfileBundle } from "@/lib/riot";
+import type { ProfileBundle, SeasonStatsResponse } from "@/lib/riot";
+import { REGION_CONFIG, fetchSeasonStats } from "@/lib/riot";
 
 interface ChronicleContentProps {
   bundle: ProfileBundle;
   region: string;
 }
 
+// Summoner spell name to ID mapping for DDragon
+const SUMMONER_SPELL_IDS: Record<string, string> = {
+  "Flash": "SummonerFlash",
+  "Teleport": "SummonerTeleport",
+  "Ignite": "SummonerDot",
+  "Heal": "SummonerHeal",
+  "Barrier": "SummonerBarrier",
+  "Exhaust": "SummonerExhaust",
+  "Cleanse": "SummonerBoost",
+  "Smite": "SummonerSmite",
+  "Ghost": "SummonerHaste",
+  "Mark": "SummonerSnowball",
+};
+
 export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   const router = useRouter();
   const { profile: summoner, styleDNA, highlights, matches, puuid } = bundle;
+  const [seasonStats, setSeasonStats] = useState<SeasonStatsResponse | null>(null);
+  const [isLoadingSeasonStats, setIsLoadingSeasonStats] = useState(true);
 
-  // Calculate season stats (season starts at beginning of year)
-  const seasonStats = useMemo(() => {
+  // Fetch season stats from API
+  useEffect(() => {
+    const loadSeasonStats = async () => {
+      try {
+        const summonerName = `${summoner.summonerName}-${summoner.tagline}`;
+        const regionRouting = REGION_CONFIG[region as keyof typeof REGION_CONFIG]?.routing || region.toLowerCase();
+        
+        const data = await fetchSeasonStats(
+          puuid,
+          regionRouting,
+          summonerName,
+          region.toLowerCase()
+        );
+        
+        setSeasonStats(data);
+      } catch (error) {
+        console.error("Error fetching season stats:", error);
+      } finally {
+        setIsLoadingSeasonStats(false);
+      }
+    };
+
+    loadSeasonStats();
+  }, [puuid, region, summoner.summonerName, summoner.tagline]);
+
+  // Calculate fallback season stats from matches (season starts at beginning of year)
+  const calculatedSeasonStats = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const seasonStart = new Date(currentYear, 0, 1); // January 1st
 
@@ -143,6 +185,13 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
         ...stats,
         winRate: stats.wins / stats.games,
         kda: stats.deaths === 0 ? (stats.kills + stats.assists) : (stats.kills + stats.assists) / stats.deaths,
+        totalTakedowns: stats.kills + stats.assists,
+        totalDamage: 0, // Not available in calculated stats
+        avgDamage: 0, // Not available in calculated stats
+        doubleKills: 0,
+        tripleKills: 0,
+        quadraKills: 0,
+        pentaKills: 0,
       }));
 
     // Most played role
@@ -179,6 +228,83 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
       seasonStart: seasonStart.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
     };
   }, [matches, puuid]);
+
+  // Transform API season stats data for display
+  const displaySeasonStats = useMemo(() => {
+    if (!seasonStats || !seasonStats.championStats) {
+      // Use calculated stats as fallback
+      return calculatedSeasonStats;
+    }
+
+    // Get champions directly from championStats and sort by games played
+    const topChampions = Object.entries(seasonStats.championStats)
+      .sort((a, b) => b[1].gamesPlayed - a[1].gamesPlayed) // Sort by games played descending
+      .slice(0, 5) // Take top 5
+      .map(([name, champStats]) => {
+        // Calculate win rate estimate based on overall stats
+        const wins = Math.round((champStats.gamesPlayed / seasonStats.overallStats.totalMatches) * seasonStats.overallStats.wins);
+        
+        return {
+          name,
+          games: champStats.gamesPlayed,
+          wins,
+          winRate: wins / champStats.gamesPlayed,
+          totalTakedowns: champStats.totalTakedowns,
+          totalDamage: champStats.totalDamage,
+          doubleKills: champStats.doubleKills,
+          tripleKills: champStats.tripleKills,
+          quadraKills: champStats.quadraKills,
+          pentaKills: champStats.pentaKills,
+          avgDamage: champStats.totalDamage / champStats.gamesPlayed,
+          icon: `https://ddragon.leagueoflegends.com/cdn/14.23.1/img/champion/${name}.png`,
+        };
+      });
+
+    return {
+      ...calculatedSeasonStats,
+      gamesPlayed: seasonStats.overallStats.totalMatches,
+      wins: seasonStats.overallStats.wins,
+      losses: seasonStats.overallStats.losses,
+      winRate: seasonStats.overallStats.wins / seasonStats.overallStats.totalMatches,
+      topChampions,
+    };
+  }, [seasonStats, calculatedSeasonStats]);
+
+  // Get top 3 summoner spells from API
+  const topSummonerSpells = useMemo(() => {
+    if (!seasonStats?.overallStats?.topSummonerSpells) {
+      return [];
+    }
+
+    return Object.entries(seasonStats.overallStats.topSummonerSpells)
+      .slice(0, 3)
+      .map(([name, stats]) => ({
+        name,
+        id: SUMMONER_SPELL_IDS[name] || name,
+        totalCasts: stats.totalCasts,
+        icon: `/images/spells/${name.toLowerCase()}.png`,
+      }));
+  }, [seasonStats]);
+
+  // Get top 3 most played with players from API
+  const topPlayedWith = useMemo(() => {
+    if (!seasonStats?.overallStats?.mostPlayedWith) {
+      return [];
+    }
+
+    return Object.entries(seasonStats.overallStats.mostPlayedWith)
+      .sort((a, b) => b[1] - a[1]) // Sort by games count descending
+      .slice(0, 3)
+      .map(([riotId, games]) => {
+        // Extract summoner name from the riotId (format: "name#tag_encodedPuuid")
+        const summonerName = riotId.split('#')[0];
+        return {
+          riotId,
+          summonerName,
+          gamesPlayed: games,
+        };
+      });
+  }, [seasonStats]);
 
   const handleBack = () => {
     router.push(`/profile/${region}/${encodeURIComponent(summoner.summonerName)}/${encodeURIComponent(summoner.tagline)}`);
@@ -223,7 +349,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
               {summoner.summonerName}<span className="text-slate-400">#{summoner.tagline}</span>
             </p>
             <p className="text-sm text-slate-400">
-              Season started: {seasonStats.seasonStart}
+              Season started: {displaySeasonStats.seasonStart}
             </p>
           </div>
         </div>
@@ -240,10 +366,10 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-slate-100">
-              {Math.round(seasonStats.winRate * 100)}%
+              {Math.round(displaySeasonStats.winRate * 100)}%
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              {seasonStats.wins}W / {seasonStats.losses}L
+              {displaySeasonStats.wins}W / {displaySeasonStats.losses}L
             </p>
           </CardContent>
         </Card>
@@ -257,10 +383,10 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-slate-100">
-              {seasonStats.avgKda.toFixed(2)}
+              {displaySeasonStats.avgKda.toFixed(2)}
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              {seasonStats.avgKills.toFixed(1)} / {seasonStats.avgDeaths.toFixed(1)} / {seasonStats.avgAssists.toFixed(1)}
+              {displaySeasonStats.avgKills.toFixed(1)} / {displaySeasonStats.avgDeaths.toFixed(1)} / {displaySeasonStats.avgAssists.toFixed(1)}
             </p>
           </CardContent>
         </Card>
@@ -274,7 +400,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-slate-100">
-              {seasonStats.gamesPlayed}
+              {displaySeasonStats.gamesPlayed}
             </div>
             <p className="text-xs text-slate-400 mt-1">
               {rankDisplay}
@@ -291,7 +417,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-slate-100">
-              {seasonStats.avgVision.toFixed(1)}
+              {displaySeasonStats.avgVision.toFixed(1)}
             </div>
             <p className="text-xs text-slate-400 mt-1">
               Per game
@@ -350,7 +476,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           <CardContent>
             <div className="h-64 w-full">
               <ResponsiveContainer>
-                <LineChart data={seasonStats.monthlyChartData}>
+                <LineChart data={displaySeasonStats.monthlyChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                   <XAxis dataKey="month" stroke="#94a3b8" />
                   <YAxis stroke="#94a3b8" />
@@ -397,23 +523,23 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <span className="text-slate-400">Avg Kills</span>
-              <span className="font-semibold text-slate-100">{seasonStats.avgKills.toFixed(1)}</span>
+              <span className="font-semibold text-slate-100">{displaySeasonStats.avgKills.toFixed(1)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Avg Deaths</span>
-              <span className="font-semibold text-slate-100">{seasonStats.avgDeaths.toFixed(1)}</span>
+              <span className="font-semibold text-slate-100">{displaySeasonStats.avgDeaths.toFixed(1)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Avg Assists</span>
-              <span className="font-semibold text-slate-100">{seasonStats.avgAssists.toFixed(1)}</span>
+              <span className="font-semibold text-slate-100">{displaySeasonStats.avgAssists.toFixed(1)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Penta Kills</span>
-              <span className="font-semibold text-yellow-400">{seasonStats.pentaKills}</span>
+              <span className="font-semibold text-yellow-400">{displaySeasonStats.pentaKills}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Quadra Kills</span>
-              <span className="font-semibold text-purple-400">{seasonStats.quadraKills}</span>
+              <span className="font-semibold text-purple-400">{displaySeasonStats.quadraKills}</span>
             </div>
           </CardContent>
         </Card>
@@ -429,23 +555,23 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <span className="text-slate-400">Avg Gold</span>
-              <span className="font-semibold text-slate-100">{seasonStats.avgGold.toFixed(0)}g</span>
+              <span className="font-semibold text-slate-100">{displaySeasonStats.avgGold.toFixed(0)}g</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Avg CS</span>
-              <span className="font-semibold text-slate-100">{seasonStats.avgCs.toFixed(0)}</span>
+              <span className="font-semibold text-slate-100">{displaySeasonStats.avgCs.toFixed(0)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">CS per Min</span>
-              <span className="font-semibold text-slate-100">{seasonStats.avgCsPerMin.toFixed(1)}</span>
+              <span className="font-semibold text-slate-100">{displaySeasonStats.avgCsPerMin.toFixed(1)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Total Dragons</span>
-              <span className="font-semibold text-red-400">{seasonStats.totalDragons}</span>
+              <span className="font-semibold text-red-400">{displaySeasonStats.totalDragons}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Total Barons</span>
-              <span className="font-semibold text-purple-400">{seasonStats.totalBarons}</span>
+              <span className="font-semibold text-purple-400">{displaySeasonStats.totalBarons}</span>
             </div>
           </CardContent>
         </Card>
@@ -462,16 +588,16 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
             <div>
               <div className="mb-2 flex justify-between">
                 <span className="text-slate-400">Most Played Role</span>
-                <Badge variant="good">{seasonStats.mostPlayedRole}</Badge>
+                <Badge variant="good">{displaySeasonStats.mostPlayedRole}</Badge>
               </div>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Avg Vision Score</span>
-              <span className="font-semibold text-slate-100">{seasonStats.avgVision.toFixed(1)}</span>
+              <span className="font-semibold text-slate-100">{displaySeasonStats.avgVision.toFixed(1)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Total Games</span>
-              <span className="font-semibold text-slate-100">{seasonStats.gamesPlayed}</span>
+              <span className="font-semibold text-slate-100">{displaySeasonStats.gamesPlayed}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Win Streak Best</span>
@@ -479,8 +605,8 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Current Form</span>
-              <Badge variant={seasonStats.winRate >= 0.55 ? "good" : seasonStats.winRate >= 0.45 ? "default" : "destructive"}>
-                {seasonStats.winRate >= 0.55 ? "Hot" : seasonStats.winRate >= 0.45 ? "Stable" : "Cold"}
+              <Badge variant={displaySeasonStats.winRate >= 0.55 ? "good" : displaySeasonStats.winRate >= 0.45 ? "default" : "bad"}>
+                {displaySeasonStats.winRate >= 0.55 ? "Hot" : displaySeasonStats.winRate >= 0.45 ? "Stable" : "Cold"}
               </Badge>
             </div>
           </CardContent>
@@ -498,37 +624,183 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
             <CardDescription>Your most played champions this season</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {seasonStats.topChampions.map((champ) => (
-                <Card key={champ.name} className="border-slate-700 bg-slate-900/50">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-violet-400/30">
-                        <Image
-                          src={champ.icon}
-                          alt={champ.name}
-                          fill
-                          className="object-cover"
-                        />
+            <div className="flex flex-col gap-4">
+              {displaySeasonStats.topChampions.slice(0, 3).map((champ, index) => (
+                <div
+                  key={champ.name}
+                  className="relative h-[250px] overflow-hidden rounded-2xl border border-violet-400/30"
+                  style={{
+                    backgroundImage: `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${champ.name}_0.jpg')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'top',
+                    backgroundRepeat: 'no-repeat',
+                  }}
+                >
+                  {/* Dark overlay for better text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/60 to-transparent" />
+                  
+                  {/* Stats Content */}
+                  <div className="relative h-full flex items-center px-8">
+                    <div className="flex items-center gap-8">
+                      {/* Rank Indicator */}
+                      <div className="text-4xl font-bold text-violet-400">
+                        #{index + 1}
                       </div>
-                      <h3 className="text-center text-sm font-semibold text-slate-100">
-                        {champ.name}
-                      </h3>
-                      <div className="flex flex-col items-center gap-1 text-xs text-slate-400">
-                        <span>{champ.games} games</span>
-                        <Badge 
-                          variant={champ.winRate >= 0.55 ? "good" : champ.winRate >= 0.45 ? "default" : "destructive"}
-                          className="text-xs"
-                        >
-                          {Math.round(champ.winRate * 100)}% WR
-                        </Badge>
-                        <span className="text-slate-300">{champ.kda.toFixed(2)} KDA</span>
+                      
+                      {/* Champion Stats */}
+                      <div className="flex items-center gap-6 text-lg">
+                        <div className="flex flex-col">
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Games</span>
+                          <span className="text-xl font-bold text-slate-100">{champ.games}</span>
+                        </div>
+                        
+                        <div className="flex flex-col">
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Win Rate</span>
+                          <span className={`text-xl font-bold ${champ.winRate >= 0.55 ? 'text-green-400' : champ.winRate >= 0.45 ? 'text-slate-100' : 'text-red-400'}`}>
+                            {Math.round(champ.winRate * 100)}%
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-col">
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Total Damage</span>
+                          <span className="text-xl font-bold text-orange-400">
+                            {champ.totalDamage.toLocaleString()}
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-col">
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Avg Damage</span>
+                          <span className="text-lg font-semibold text-slate-200">
+                            {Math.round(champ.avgDamage).toLocaleString()}
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-col">
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Multi-Kills</span>
+                          <div className="flex items-center gap-2 text-sm font-semibold">
+                            {champ.pentaKills > 0 && (
+                              <span className="text-yellow-400">🏆{champ.pentaKills}x Penta</span>
+                            )}
+                            {champ.quadraKills > 0 && (
+                              <span className="text-purple-400">⭐{champ.quadraKills}x Quadra</span>
+                            )}
+                            {champ.tripleKills > 0 && (
+                              <span className="text-cyan-400">💫{champ.tripleKills}x Triple</span>
+                            )}
+                            {champ.doubleKills > 0 && (
+                              <span className="text-blue-400">✨{champ.doubleKills}x Double</span>
+                            )}
+                            {champ.pentaKills === 0 && champ.quadraKills === 0 && champ.tripleKills === 0 && champ.doubleKills === 0 && (
+                              <span className="text-slate-400">None</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col">
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Takedowns</span>
+                          <span className="text-xl font-bold text-cyan-400">{champ.totalTakedowns}</span>
+                        </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+      </section>
+
+      {/* Summoner Spells Stats */}
+      <section>
+        <Card className="border-violet-400/30 bg-slate-950/70">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-yellow-400" />
+              Summoner Spells Stats
+            </CardTitle>
+            <CardDescription>Your summoner spell usage this season</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingSeasonStats ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-slate-400">Loading summoner spell stats...</p>
+              </div>
+            ) : topSummonerSpells.length > 0 ? (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {topSummonerSpells.map((spell) => (
+                  <div
+                    key={spell.name}
+                    className="relative aspect-square overflow-hidden rounded-lg border border-slate-700 bg-slate-900/50"
+                    style={{
+                      backgroundImage: `url('${spell.icon}')`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                    }}
+                  >
+                    {/* Dark overlay to reduce brightness */}
+                    <div className="absolute inset-0 bg-black/40" />
+                    
+                    {/* Total casts overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-8xl font-extrabold text-white/60 tracking-tighter">
+                        {spell.totalCasts}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-slate-400">No summoner spell data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Most Played With */}
+      <section>
+        <Card className="border-violet-400/30 bg-slate-950/70">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-cyan-400" />
+              Most Played With
+            </CardTitle>
+            <CardDescription>Your most frequent teammates this season</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingSeasonStats ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-slate-400">Loading teammates...</p>
+              </div>
+            ) : topPlayedWith.length > 0 ? (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {topPlayedWith.map((player, index) => (
+                  <Card key={player.riotId} className="border-violet-400/20 bg-slate-900/50">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-xl font-bold text-white">
+                          #{index + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-slate-100 truncate">
+                            {player.summonerName}
+                          </h3>
+                          <p className="text-sm text-slate-400">
+                            {player.gamesPlayed} {player.gamesPlayed === 1 ? 'game' : 'games'} together
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-slate-400">No teammate data available</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>

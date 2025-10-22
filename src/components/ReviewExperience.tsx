@@ -50,17 +50,85 @@ export function ReviewExperience({
       ),
     [activePuuid, match.participants],
   );
-  // Filter events based on selected players
+  // Filter and transform events based on selected players
   const filteredEvents = useMemo(() => {
     if (showAllEvents || selectedPlayers.size === 0) {
       return events;
     }
-    return events.filter(
-      (event) =>
-        (event.killerPuuid && selectedPlayers.has(event.killerPuuid)) ||
-        (event.victimPuuid && selectedPlayers.has(event.victimPuuid))
-    );
-  }, [events, selectedPlayers, showAllEvents]);
+    
+    const playerEvents: TimelineEvent[] = [];
+    
+    for (const event of events) {
+      // Check each selected player's involvement
+      for (const playerPuuid of selectedPlayers) {
+        let shouldInclude = false;
+        let transformedEvent = { ...event };
+        
+        // Only process champion kills (not towers/objectives)
+        if (event.type === "KILL") {
+          // Player was the killer - show as KILL
+          if (event.killerPuuid === playerPuuid) {
+            transformedEvent.type = "KILL";
+            shouldInclude = true;
+          }
+          // Player was the victim - show as DEATH
+          else if (event.victimPuuid === playerPuuid) {
+            transformedEvent.type = "DEATH";
+            shouldInclude = true;
+          }
+          // Player participated in the kill but wasn't the killer (check playerPositions for assists)
+          else if (event.killerPuuid && event.killerPuuid !== playerPuuid) {
+            // Check if player was nearby (likely an assist)
+            const playerPosition = event.playerPositions?.find(p => p.puuid === playerPuuid);
+            if (playerPosition) {
+              // Get killer and victim positions to determine if player was close enough for assist
+              const killerPosition = event.playerPositions?.find(p => p.puuid === event.killerPuuid);
+              const victimPosition = event.playerPositions?.find(p => p.puuid === event.victimPuuid);
+              
+              if (killerPosition && victimPosition) {
+                // Calculate distance - if player is within reasonable assist range, count it
+                const distanceToKill = Math.sqrt(
+                  Math.pow(playerPosition.x - victimPosition.x, 2) + 
+                  Math.pow(playerPosition.y - victimPosition.y, 2)
+                );
+                
+                // Assist range approximately 1500 units
+                if (distanceToKill < 2000) {
+                  transformedEvent = {
+                    ...event,
+                    type: "ASSIST",
+                    id: `${event.id}-assist-${playerPuuid}`,
+                  };
+                  shouldInclude = true;
+                }
+              }
+            }
+          }
+        }
+        // Handle objectives (TOWER, DRAGON, BARON, HERALD) - show if player's team was involved
+        else if (["TOWER", "DRAGON", "BARON", "HERALD", "OBJECTIVE"].includes(event.type)) {
+          // Check if player's team took this objective
+          const participant = match.participants.find(p => p.puuid === playerPuuid);
+          if (participant && event.teamId === participant.teamId) {
+            shouldInclude = true;
+          }
+        }
+        // Other events (wards, etc.) involving the player
+        else if (event.killerPuuid === playerPuuid || event.victimPuuid === playerPuuid) {
+          shouldInclude = true;
+        }
+        
+        if (shouldInclude) {
+          // Avoid duplicates
+          if (!playerEvents.find(e => e.id === transformedEvent.id)) {
+            playerEvents.push(transformedEvent);
+          }
+        }
+      }
+    }
+    
+    return playerEvents;
+  }, [events, selectedPlayers, showAllEvents, match.participants]);
 
   const { currentTime, scrubTo, togglePlay } = useScrubber({
     duration: match.gameDuration,
@@ -95,7 +163,7 @@ export function ReviewExperience({
         region={match.region}
       />
       
-      {/* Champion Filter Buttons - Split by Team */}
+      {/* Champion Filter - Team Grid by Lane */}
       <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-4">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300/75">
@@ -111,124 +179,149 @@ export function ReviewExperience({
           </Button>
         </div>
         
-        <div className="space-y-4">
-          {/* Blue Team */}
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-blue-500" />
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-400">
-                Blue Team
-              </h4>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {match.participants
-                .filter((p) => p.teamId === 100)
-                .map((participant) => {
-                  const isSelected = selectedPlayers.has(participant.puuid);
-                  const isPrimary = participant.puuid === match.primaryParticipantPuuid;
-                  return (
-                    <motion.button
-                      key={participant.puuid}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => togglePlayerSelection(participant.puuid)}
-                      className={cn(
-                        "relative flex items-center gap-2 rounded-2xl border p-2 transition-all",
-                        isSelected
-                          ? "border-blue-400 bg-blue-500/20 shadow-lg shadow-blue-500/20"
-                          : "border-white/10 bg-slate-900/40 hover:border-blue-400/50",
-                        isPrimary && "ring-2 ring-yellow-400/50"
+        {/* Grid Layout: Lanes as Rows, Teams as Columns */}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border border-blue-500/20 bg-blue-950/30 p-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-blue-500" />
+                    <span className="text-xs font-semibold uppercase tracking-wide text-blue-400">
+                      Blue Team
+                    </span>
+                  </div>
+                </th>
+                <th className="border border-red-500/20 bg-red-950/30 p-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-red-500" />
+                    <span className="text-xs font-semibold uppercase tracking-wide text-red-400">
+                      Red Team
+                    </span>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { key: "TOP", lane: "TOP", role: null },
+                { key: "JUNGLE", lane: "JUNGLE", role: null },
+                { key: "MIDDLE", lane: "MIDDLE", role: null },
+                { key: "BOTTOM_CARRY", lane: "BOTTOM", role: "CARRY" },
+                { key: "BOTTOM_SUPPORT", lane: "BOTTOM", role: "SUPPORT" },
+              ].map((position) => {
+                const bluePlayer = match.participants.find(
+                  (p) => p.teamId === 100 && p.lane === position.lane && 
+                  (position.role === null || p.role === position.role || 
+                   (position.lane === "BOTTOM" && position.role === "CARRY" && p.role !== "SUPPORT") ||
+                   (p.lane === "UTILITY" && position.role === "SUPPORT"))
+                );
+                const redPlayer = match.participants.find(
+                  (p) => p.teamId === 200 && p.lane === position.lane && 
+                  (position.role === null || p.role === position.role || 
+                   (position.lane === "BOTTOM" && position.role === "CARRY" && p.role !== "SUPPORT") ||
+                   (p.lane === "UTILITY" && position.role === "SUPPORT"))
+                );
+                
+                return (
+                  <tr key={position.key}>
+                    {/* Blue Team Cell */}
+                    <td className="border border-blue-500/10 bg-slate-900/20 p-2">
+                      {bluePlayer && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => togglePlayerSelection(bluePlayer.puuid)}
+                          className={cn(
+                            "relative flex w-full items-center gap-3 rounded-xl border p-2 transition-all",
+                            selectedPlayers.has(bluePlayer.puuid)
+                              ? "border-blue-400 bg-blue-500/20 shadow-md shadow-blue-500/20"
+                              : "border-white/10 bg-slate-900/40 hover:border-blue-400/50",
+                            bluePlayer.puuid === match.primaryParticipantPuuid && "ring-2 ring-yellow-400/50"
+                          )}
+                          title={`${bluePlayer.summonerName} (${bluePlayer.championName})`}
+                        >
+                          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-blue-400/30">
+                            <Image
+                              src={bluePlayer.championIcon}
+                              alt={bluePlayer.championName}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-xs font-semibold text-slate-100">
+                              {bluePlayer.championName}
+                            </p>
+                            <p className="text-xs text-slate-300/60 truncate max-w-[120px]">
+                              {bluePlayer.summonerName}
+                            </p>
+                            <p className="text-xs font-mono text-blue-300 mt-0.5">
+                              {bluePlayer.kills}/{bluePlayer.deaths}/{bluePlayer.assists}
+                            </p>
+                          </div>
+                          {selectedPlayers.has(bluePlayer.puuid) && (
+                            <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-slate-950 bg-blue-400" />
+                          )}
+                          {bluePlayer.puuid === match.primaryParticipantPuuid && (
+                            <div className="absolute -left-1 -top-1 h-4 w-4 rounded-full border-2 border-slate-950 bg-yellow-400 flex items-center justify-center">
+                              <span className="text-[8px] font-bold text-slate-900">★</span>
+                            </div>
+                          )}
+                        </motion.button>
                       )}
-                      title={`${participant.summonerName} (${participant.championName})`}
-                    >
-                      <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-blue-400/30">
-                        <Image
-                          src={participant.championIcon}
-                          alt={participant.championName}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-xs font-semibold text-slate-100">
-                          {participant.championName}
-                        </p>
-                        <p className="text-xs text-slate-300/60 max-w-[100px] truncate">
-                          {participant.summonerName}
-                        </p>
-                      </div>
-                      {isSelected && (
-                        <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-slate-950 bg-blue-400" />
+                    </td>
+                    {/* Red Team Cell */}
+                    <td className="border border-red-500/10 bg-slate-900/20 p-2">
+                      {redPlayer && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => togglePlayerSelection(redPlayer.puuid)}
+                          className={cn(
+                            "relative flex w-full items-center gap-3 rounded-xl border p-2 transition-all",
+                            selectedPlayers.has(redPlayer.puuid)
+                              ? "border-red-400 bg-red-500/20 shadow-md shadow-red-500/20"
+                              : "border-white/10 bg-slate-900/40 hover:border-red-400/50",
+                            redPlayer.puuid === match.primaryParticipantPuuid && "ring-2 ring-yellow-400/50"
+                          )}
+                          title={`${redPlayer.summonerName} (${redPlayer.championName})`}
+                        >
+                          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-red-400/30">
+                            <Image
+                              src={redPlayer.championIcon}
+                              alt={redPlayer.championName}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-xs font-semibold text-slate-100">
+                              {redPlayer.championName}
+                            </p>
+                            <p className="text-xs text-slate-300/60 truncate max-w-[120px]">
+                              {redPlayer.summonerName}
+                            </p>
+                            <p className="text-xs font-mono text-red-300 mt-0.5">
+                              {redPlayer.kills}/{redPlayer.deaths}/{redPlayer.assists}
+                            </p>
+                          </div>
+                          {selectedPlayers.has(redPlayer.puuid) && (
+                            <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-slate-950 bg-red-400" />
+                          )}
+                          {redPlayer.puuid === match.primaryParticipantPuuid && (
+                            <div className="absolute -left-1 -top-1 h-4 w-4 rounded-full border-2 border-slate-950 bg-yellow-400 flex items-center justify-center">
+                              <span className="text-[8px] font-bold text-slate-900">★</span>
+                            </div>
+                          )}
+                        </motion.button>
                       )}
-                      {isPrimary && (
-                        <div className="absolute -left-1 -top-1 h-4 w-4 rounded-full border-2 border-slate-950 bg-yellow-400 flex items-center justify-center">
-                          <span className="text-[8px] font-bold text-slate-900">★</span>
-                        </div>
-                      )}
-                    </motion.button>
-                  );
-                })}
-            </div>
-          </div>
-
-          {/* Red Team */}
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-red-500" />
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-red-400">
-                Red Team
-              </h4>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {match.participants
-                .filter((p) => p.teamId === 200)
-                .map((participant) => {
-                  const isSelected = selectedPlayers.has(participant.puuid);
-                  const isPrimary = participant.puuid === match.primaryParticipantPuuid;
-                  return (
-                    <motion.button
-                      key={participant.puuid}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => togglePlayerSelection(participant.puuid)}
-                      className={cn(
-                        "relative flex items-center gap-2 rounded-2xl border p-2 transition-all",
-                        isSelected
-                          ? "border-red-400 bg-red-500/20 shadow-lg shadow-red-500/20"
-                          : "border-white/10 bg-slate-900/40 hover:border-red-400/50",
-                        isPrimary && "ring-2 ring-yellow-400/50"
-                      )}
-                      title={`${participant.summonerName} (${participant.championName})`}
-                    >
-                      <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-red-400/30">
-                        <Image
-                          src={participant.championIcon}
-                          alt={participant.championName}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-xs font-semibold text-slate-100">
-                          {participant.championName}
-                        </p>
-                        <p className="text-xs text-slate-300/60 max-w-[100px] truncate">
-                          {participant.summonerName}
-                        </p>
-                      </div>
-                      {isSelected && (
-                        <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-slate-950 bg-red-400" />
-                      )}
-                      {isPrimary && (
-                        <div className="absolute -left-1 -top-1 h-4 w-4 rounded-full border-2 border-slate-950 bg-yellow-400 flex items-center justify-center">
-                          <span className="text-[8px] font-bold text-slate-900">★</span>
-                        </div>
-                      )}
-                    </motion.button>
-                  );
-                })}
-            </div>
-          </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -244,8 +337,8 @@ export function ReviewExperience({
             selectedPlayers={selectedPlayers}
           />
         </div>
-        {/* Chat - extends to cover map + timeline height */}
-        <div className="flex flex-col">
+        {/* Chat - fixed height */}
+        <div className="flex flex-col h-[737px]">
           <CoachChat
             matchId={match.id}
             currentTime={currentTime}

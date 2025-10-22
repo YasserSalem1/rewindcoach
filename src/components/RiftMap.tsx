@@ -31,36 +31,57 @@ export function RiftMap({
     [currentTime, events]
   );
 
-  // Get player positions from the most recent events
+  // Get player positions from the most recent event at current time
   const playerPositions = useMemo(() => {
     const positions = new Map<string, { x: number; y: number; participant: RiotParticipant }>();
     
-    // Find the most recent position for each player
-    for (const event of [...visibleEvents].reverse()) {
-      if (event.killerPuuid && !positions.has(event.killerPuuid)) {
-        const participant = participants.find((p) => p.puuid === event.killerPuuid);
+    // Find the most recent event at or before the current time
+    const currentEvent = [...visibleEvents]
+      .reverse()
+      .find((event) => event.timestamp <= currentTime);
+    
+    if (currentEvent && currentEvent.playerPositions) {
+      // Use all player positions from this event
+      for (const playerPos of currentEvent.playerPositions) {
+        if (!playerPos.puuid) continue;
+        
+        const participant = participants.find((p) => p.puuid === playerPos.puuid);
         if (participant) {
-          positions.set(event.killerPuuid, {
-            x: event.position.x,
-            y: event.position.y,
+          positions.set(playerPos.puuid, {
+            x: playerPos.x,
+            y: playerPos.y,
             participant,
           });
         }
       }
-      if (event.victimPuuid && !positions.has(event.victimPuuid)) {
-        const participant = participants.find((p) => p.puuid === event.victimPuuid);
-        if (participant) {
-          positions.set(event.victimPuuid, {
-            x: event.position.x,
-            y: event.position.y,
-            participant,
-          });
+    } else {
+      // Fallback to old behavior for backwards compatibility
+      for (const event of [...visibleEvents].reverse()) {
+        if (event.killerPuuid && !positions.has(event.killerPuuid)) {
+          const participant = participants.find((p) => p.puuid === event.killerPuuid);
+          if (participant) {
+            positions.set(event.killerPuuid, {
+              x: event.position.x,
+              y: event.position.y,
+              participant,
+            });
+          }
+        }
+        if (event.victimPuuid && !positions.has(event.victimPuuid)) {
+          const participant = participants.find((p) => p.puuid === event.victimPuuid);
+          if (participant) {
+            positions.set(event.victimPuuid, {
+              x: event.position.x,
+              y: event.position.y,
+              participant,
+            });
+          }
         }
       }
     }
     
     return positions;
-  }, [visibleEvents, participants]);
+  }, [visibleEvents, currentTime, participants]);
 
   return (
     <div
