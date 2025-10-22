@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { REGIONS, type Region, REGION_CONFIG } from "@/lib/riot";
+import { REGIONS, type Region } from "@/lib/riot";
 import { fetchMatches } from "@/lib/riot/fetchers";
 
 /**

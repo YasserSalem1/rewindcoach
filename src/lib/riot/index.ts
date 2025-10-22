@@ -34,13 +34,11 @@ import {
 
 import {
   getRegionConfig,
-  getAccountInfo,
   getRankedInfo,
   fetchAccount,
   fetchMatches,
   fetchMatch,
   fetchTimeline,
-  getLatestVersion,
 } from "./fetchers";
 
 import {
@@ -70,7 +68,7 @@ export async function getProfileBundle(
   tagLine: string,
   matchCount = 10,
 ): Promise<ProfileBundle> {
-  const regionConfig = getRegionConfig(region); // validate region early
+  getRegionConfig(region);
 
   // New /account endpoint returns everything we need in one call
   const account = await fetchAccount(region, gameName, tagLine);
@@ -218,4 +216,3 @@ export async function getMatchBundle(
     timeline,
   };
 }
-

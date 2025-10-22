@@ -149,6 +149,7 @@ export interface RuneSelection {
 }
 
 export interface RiotParticipant {
+  participantId: number;
   puuid: string;
   summonerName: string;
   championId: string;
@@ -158,6 +159,7 @@ export interface RiotParticipant {
   deaths: number;
   assists: number;
   cs: number;
+  level: number;
   goldEarned: number;
   role: string;
   lane: string;
@@ -202,14 +204,13 @@ export interface RiotMatch {
 
 export type TimelineEventType =
   | "KILL"
+  | "ASSIST"
   | "DEATH"
   | "ASSIST"
   | "TOWER"
   | "DRAGON"
   | "BARON"
   | "HERALD"
-  | "WARD_PLACED"
-  | "WARD_KILL"
   | "OBJECTIVE"
   | "MOVE";
 
@@ -226,6 +227,8 @@ export interface TimelineEvent {
   teamId?: number;
   killerPuuid?: string;
   victimPuuid?: string;
+  actorPuuid?: string;
+  assistingPuuids?: string[];
   description: string;
   playerPositions?: Array<{
     puuid: string;
@@ -240,11 +243,31 @@ export interface TimelineEvent {
 export interface TimelineFrame {
   timestamp: number; // seconds
   events: TimelineEvent[];
+  participants: Record<string, TimelineParticipantState>;
 }
 
 export interface MatchBundle {
   match: RiotMatch;
   timeline: TimelineFrame[];
+}
+
+export interface TimelineParticipantSnapshot {
+  puuid: string;
+  summonerName?: string;
+  championName?: string;
+  teamId?: number;
+  position?: TimelinePosition;
+}
+
+export interface TimelineParticipantState {
+  puuid: string;
+  participantId: number;
+  teamId: number;
+  level: number;
+  cs: number;
+  gold: number;
+  position?: TimelinePosition;
+  items: number[];
 }
 
 // ============================================================================
@@ -288,6 +311,8 @@ export interface RiotMatchParticipantDto {
   summonerName: string;
   championId: number;
   championName: string;
+  participantId?: number;
+  champLevel?: number;
   kills: number;
   deaths: number;
   assists: number;
@@ -351,12 +376,21 @@ export interface RiotTimelineEventDto {
   victimId?: number;
   teamId?: number;
   creatorId?: number;
+  participantId?: number;
+  assistingParticipantIds?: Array<number | null>;
   position?: { x: number; y: number };
   monsterType?: string;
   monsterSubType?: string;
   buildingType?: string;
+  laneType?: string;
   killerName?: string;
   victimName?: string;
+}
+
+export interface RiotTimelineParticipantFrame {
+  participantId: number;
+  position?: { x: number; y: number };
+  [key: string]: unknown;
 }
 
 export interface RiotTimelineDto {
@@ -365,6 +399,7 @@ export interface RiotTimelineDto {
     frames: Array<{
       timestamp: number;
       events: Array<RiotTimelineEventDto>;
+      participantFrames?: Record<string, RiotTimelineParticipantFrame>;
     }>;
   };
 }
@@ -500,4 +535,3 @@ export interface RankedInfoResult {
   queues?: RankedQueueEntry[];
   rankedError?: string;
 }
-

@@ -10,8 +10,6 @@ import {
   Radar,
   RadarChart,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -807,5 +805,3 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     </div>
   );
 }
-
-

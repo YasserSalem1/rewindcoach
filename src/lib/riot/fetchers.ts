@@ -13,7 +13,6 @@ import {
   type RankedInfoResult,
   type Region,
   REGION_CONFIG,
-  type RankedQueueEntry,
 } from "./types";
 
 // ============================================================================
@@ -370,4 +369,3 @@ export async function fetchSeasonStats(
     `/seasonstats?${search.toString()}`,
   );
 }
-

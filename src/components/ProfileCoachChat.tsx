@@ -27,8 +27,6 @@ const SUGGESTIONS = [
   "Analyze my recent performance",
 ];
 
-const SYSTEM_PROMPT = "You are a concise League of Legends coach analyzing a player's profile and statistics.";
-
 const MAX_HISTORY = 8;
 
 export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: ProfileCoachChatProps) {
@@ -289,4 +287,3 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
     </motion.div>
   );
 }
-

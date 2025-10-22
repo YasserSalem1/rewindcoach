@@ -7,18 +7,16 @@ import type { RiotMatch } from "@/lib/riot";
 import { formatDuration } from "@/lib/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatPill } from "@/components/StatPill";
 
 interface ReviewHeaderProps {
   match: RiotMatch;
-  currentTime: number;
   gameName?: string;
   tagLine?: string;
   region?: string;
 }
 
-export function ReviewHeader({ match, currentTime, gameName, tagLine, region }: ReviewHeaderProps) {
+export function ReviewHeader({ match, gameName, tagLine, region }: ReviewHeaderProps) {
   const router = useRouter();
   const player = match.participants.find(
     (p) => p.puuid === match.primaryParticipantPuuid,

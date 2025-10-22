@@ -92,7 +92,8 @@ export function SearchCard({
       startTransition(() => {
         router.push(path);
       });
-    } catch (err) {
+    } catch (error) {
+      console.error("[SearchCard] search failed", error);
       setError("Network error. Please check your connection and try again.");
       setIsValidating(false);
     }

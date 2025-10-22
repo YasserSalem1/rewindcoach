@@ -10,7 +10,6 @@ import { MatchList } from "@/components/MatchList";
 import { StyleDNA } from "@/components/StyleDNA";
 import { ProfileCoachChat } from "@/components/ProfileCoachChat";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import type { ProfileBundle, RiotMatch, StyleDNA as StyleDNAType, ProfileHighlights } from "@/lib/riot";
 import { summarizeMatches } from "@/lib/riot";
 
@@ -131,7 +130,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
 
 
       {/* Main Content Grid */}
-      <section className="grid gap-6 lg:grid-cols-[1.1fr,1.8fr,1fr]">
+      <section className="grid gap-6 lg:grid-cols-[1.1fr,1.8fr,1.2fr]">
         <StyleDNA 
           data={styleDNA}
           region={region}
