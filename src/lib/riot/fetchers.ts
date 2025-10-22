@@ -324,6 +324,26 @@ export async function fetchMatch(matchId: string) {
 }
 
 /**
+ * Fetches proper timeline data with item progression
+ * Uses the /timeline endpoint which returns full timeline data
+ */
+export async function fetchFullTimeline(matchId: string): Promise<BackendTimelineResponse | null> {
+  try {
+    const search = new URLSearchParams();
+    search.set("matchId", matchId);
+    
+    const response = await backendFetch<BackendTimelineResponse>(
+      `/timeline?${search.toString()}`,
+    );
+    
+    return response;
+  } catch (error) {
+    console.warn(`[fetchFullTimeline] Failed to fetch timeline for ${matchId}:`, error);
+    return null;
+  }
+}
+
+/**
  * Fetches timeline for a match
  * Uses the coach_match endpoint which returns text format
  */

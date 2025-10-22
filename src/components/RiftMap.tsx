@@ -41,6 +41,8 @@ interface RiftMapProps {
   primaryPuuid: string;
   selectedPlayers: Set<string>;
   currentEvent: CoachParsedEvent | null;
+  timeline: import("@/lib/riot").TimelineFrame[];
+  currentMinute: number;
   className?: string;
   focusSelection?: boolean;
 }
@@ -126,65 +128,112 @@ export function RiftMap({
   primaryPuuid,
   selectedPlayers,
   currentEvent,
+  timeline,
+  currentMinute,
   className,
   focusSelection = false,
 }: RiftMapProps) {
-  const visibleEvents = useMemo(
-    () => events.filter((event) => event.timestamp <= currentTime),
-    [currentTime, events]
-  );
-
-  // Get player positions from the most recent event at current time
-  const playerPositions = useMemo(() => {
-    const positions = new Map<string, { x: number; y: number; participant: RiotParticipant }>();
+  // Get player positions from current minute's timeline frame
+  const positions = useMemo((): ResolvedPosition[] => {
+    const result: ResolvedPosition[] = [];
     
-    // Find the most recent event at or before the current time
-    const currentEvent = [...visibleEvents]
-      .reverse()
-      .find((event) => event.timestamp <= currentTime);
+    // Find the frame for the current minute
+    const currentFrame = timeline.find(f => Math.floor(f.timestamp / 60) === currentMinute);
     
-    if (currentEvent && currentEvent.playerPositions) {
-      // Use all player positions from this event
-      for (const playerPos of currentEvent.playerPositions) {
-        if (!playerPos.puuid) continue;
-        
-        const participant = participants.find((p) => p.puuid === playerPos.puuid);
-        if (participant) {
-          positions.set(playerPos.puuid, {
-            x: playerPos.x,
-            y: playerPos.y,
-            participant,
-          });
-        }
-      }
-    } else {
-      // Fallback to old behavior for backwards compatibility
-      for (const event of [...visibleEvents].reverse()) {
-        if (event.killerPuuid && !positions.has(event.killerPuuid)) {
-          const participant = participants.find((p) => p.puuid === event.killerPuuid);
-          if (participant) {
-            positions.set(event.killerPuuid, {
-              x: event.position.x,
-              y: event.position.y,
-              participant,
-            });
-          }
-        }
-        if (event.victimPuuid && !positions.has(event.victimPuuid)) {
-          const participant = participants.find((p) => p.puuid === event.victimPuuid);
-          if (participant) {
-            positions.set(event.victimPuuid, {
-              x: event.position.x,
-              y: event.position.y,
-              participant,
-            });
-          }
-        }
-      }
+    if (!currentFrame) return result;
+    
+    // Iterate through all participants to show all 10 players
+    for (const participant of participants) {
+      // Get position from frame participant state, or use default
+      const participantState = currentFrame.participants?.[participant.puuid];
+      const position = participantState?.position || { x: 7435, y: 7435 };
+      
+      result.push({
+        key: `${participant.puuid}-${currentMinute}`,
+        puuid: participant.puuid,
+        teamId: participant.teamId,
+        teamColor: (participant.teamId === 100 ? "blue" : "red") as "blue" | "red",
+        championName: participant.championName,
+        championIcon: participant.championIcon || "",
+        summonerName: participant.summonerName,
+        coordinates: position,
+        meta: {
+          puuid: participant.puuid,
+          x: position.x,
+          y: position.y,
+          summonerName: participant.summonerName,
+          championName: participant.championName,
+          teamId: participant.teamId,
+          teamColor: (participant.teamId === 100 ? "blue" : "red") as "blue" | "red",
+        },
+      });
     }
     
-    return positions;
-  }, [visibleEvents, currentTime, participants]);
+    return result;
+  }, [timeline, currentMinute, participants]);
+
+  // Create badge map for event participants
+  const badgeFor = useMemo(() => {
+    const map = new Map<string, BadgeDescriptor>();
+    
+    if (!currentEvent) return map;
+    
+    // Determine badge for killer
+    if (currentEvent.killer?.puuid) {
+      const key = `${currentEvent.killer.puuid}-${currentEvent.id}`;
+      map.set(key, {
+        variant: "kill",
+        label: "Kill",
+        tone: "text-emerald-400",
+      });
+    }
+    
+    // Determine badge for victim
+    if (currentEvent.victim?.puuid) {
+      const key = `${currentEvent.victim.puuid}-${currentEvent.id}`;
+      map.set(key, {
+        variant: "death",
+        label: "Death",
+        tone: "text-red-400",
+      });
+    }
+    
+    // Determine badge for assists
+    currentEvent.assists.forEach((assist) => {
+      if (assist.puuid) {
+        const key = `${assist.puuid}-${currentEvent.id}`;
+        map.set(key, {
+          variant: "assist",
+          label: "Assist",
+          tone: "text-blue-400",
+        });
+      }
+    });
+    
+    // Determine badge for objectives
+    if (currentEvent.objectiveActor?.puuid) {
+      const key = `${currentEvent.objectiveActor.puuid}-${currentEvent.id}`;
+      let Icon: ComponentType<{ className?: string }> | undefined;
+      
+      if (currentEvent.description.toLowerCase().includes("dragon")) {
+        Icon = Flame;
+      } else if (currentEvent.description.toLowerCase().includes("baron")) {
+        Icon = Crown;
+      } else if (currentEvent.description.toLowerCase().includes("herald")) {
+        Icon = Mountain;
+      } else if (currentEvent.description.toLowerCase().includes("tower") || currentEvent.description.toLowerCase().includes("turret")) {
+        Icon = Castle;
+      }
+      
+      map.set(key, {
+        variant: "objective",
+        Icon,
+        tone: "text-purple-400",
+      });
+    }
+    
+    return map;
+  }, [currentEvent]);
 
   return (
     <div
@@ -212,8 +261,6 @@ export function RiftMap({
           const bottom = clampPercent((y / MAP_SIZE) * 100);
           const isPrimary = position.puuid === primaryPuuid;
           const isSelected = selectedPlayers.has(position.puuid);
-          const dimmed =
-            focusSelection && selectedPlayers.size > 0 && !isSelected;
           const badge = badgeFor.get(position.key);
 
           const ringClass =
@@ -221,12 +268,22 @@ export function RiftMap({
               ? "ring-blue-400/80 border-blue-300/60"
               : "ring-red-400/80 border-red-300/60";
 
+          // Check if player is involved in current event
+          const isInvolvedInEvent = currentEvent
+            ? (currentEvent.killer?.puuid === position.puuid ||
+               currentEvent.victim?.puuid === position.puuid ||
+               currentEvent.assists.some(a => a.puuid === position.puuid) ||
+               currentEvent.objectiveActor?.puuid === position.puuid)
+            : true; // If no event, show all at full brightness
+
+          const playerOpacity = isInvolvedInEvent ? 1 : 0.6;
+
           return (
             <motion.div
               key={position.key}
               className="absolute -translate-x-1/2 translate-y-1/2"
               initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: dimmed ? 0.35 : 1 }}
+              animate={{ scale: 1, opacity: playerOpacity }}
               transition={{ duration: 0.25 }}
               style={{ left: `${left}%`, bottom: `${bottom}%`, zIndex: isPrimary ? 30 : 20 }}
             >
@@ -267,15 +324,9 @@ export function RiftMap({
         })}
       </div>
 
-      {!currentEvent ? (
+      {positions.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-slate-400">
-          Select a timeline event to show player locations.
-        </div>
-      ) : null}
-
-      {currentEvent && !hasPositions ? (
-        <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-slate-400">
-          No positional snapshot captured for this event.
+          Player positions will appear as the match progresses.
         </div>
       ) : null}
     </div>

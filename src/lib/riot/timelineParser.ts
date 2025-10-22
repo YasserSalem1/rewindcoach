@@ -2,7 +2,7 @@
  * Parser for text-based timeline format
  */
 
-import type { TimelineEvent, TimelineFrame, TimelineEventType, RiotMatchDto } from "./types";
+import type { TimelineEvent, TimelineFrame, TimelineEventType, RiotMatchDto, TimelineParticipantState } from "./types";
 
 interface ParsedPlayerPosition {
   team: "Blue" | "Red";
@@ -18,6 +18,20 @@ interface ParsedTimelineEvent {
   positions: ParsedPlayerPosition[];
 }
 
+interface ParsedMinuteSnapshot {
+  minute: number;
+  participants: Array<{
+    team: "Blue" | "Red";
+    summonerName: string;
+    championName: string;
+    level: number;
+    cs: number;
+    gold: number;
+    items: number[];
+    position: { x: number; y: number };
+  }>;
+}
+
 /**
  * Parses a timeline text file into TimelineFrame[] format
  */
@@ -27,10 +41,14 @@ export function parseTimelineText(
 ): TimelineFrame[] {
   const lines = textContent.split('\n');
   const events: ParsedTimelineEvent[] = [];
+  const minuteSnapshots: ParsedMinuteSnapshot[] = [];
   
   // Find the Timeline section
   let inTimelineSection = false;
+  let inMinuteSection = false;
   let currentEvent: ParsedTimelineEvent | null = null;
+  let currentMinute: number | null = null;
+  let currentMinuteData: ParsedMinuteSnapshot | null = null;
   
   for (const line of lines) {
     const trimmed = line.trim();
@@ -38,50 +56,109 @@ export function parseTimelineText(
     // Check for Timeline section start
     if (trimmed === 'Timeline:') {
       inTimelineSection = true;
+      inMinuteSection = false;
       continue;
     }
     
-    // Check for section end (Minute-by-minute or empty lines after timeline)
-    if (inTimelineSection && (trimmed === 'Minute-by-minute — All Champions:' || trimmed === '')) {
-      if (currentEvent && trimmed === 'Minute-by-minute — All Champions:') {
-        inTimelineSection = false;
-        break;
-      }
-      continue;
-    }
-    
-    if (!inTimelineSection) continue;
-    
-    // Parse timeline event lines (format: "  02:48 — Red Sympponyy (Janna) killed Blue Jinzo (Hecarim)...")
-    const eventMatch = trimmed.match(/^(\d{2}:\d{2})\s+—\s+(.+)$/);
-    if (eventMatch) {
-      // Save previous event if exists
+    // Check for Minute-by-minute section start
+    if (trimmed === 'Minute-by-minute — All Champions:') {
+      inTimelineSection = false;
+      inMinuteSection = true;
       if (currentEvent) {
         events.push(currentEvent);
+        currentEvent = null;
+      }
+      continue;
+    }
+    
+    // Parse Timeline section
+    if (inTimelineSection) {
+      if (trimmed === '') continue;
+      
+      // Parse timeline event lines (format: "  02:48 — Red Sympponyy (Janna) killed Blue Jinzo (Hecarim)...")
+      const eventMatch = trimmed.match(/^(\d{2}:\d{2})\s+—\s+(.+)$/);
+      if (eventMatch) {
+        // Save previous event if exists
+        if (currentEvent) {
+          events.push(currentEvent);
+        }
+        
+        currentEvent = {
+          timestamp: eventMatch[1],
+          description: eventMatch[2],
+          positions: [],
+        };
+      } else if (currentEvent && trimmed.startsWith('positions:')) {
+        // Parse positions line
+        const positionsText = trimmed.substring('positions:'.length).trim();
+        const playerPositions = positionsText.split('|').map(p => p.trim());
+        
+        for (const playerPos of playerPositions) {
+          // Format: "Blue bigtid3ies (Sion) @(1421,12917)"
+          const match = playerPos.match(/^(Blue|Red)\s+(.+?)\s+\((.+?)\)\s+@\((\d+),(\d+)\)$/);
+          if (match) {
+            currentEvent.positions.push({
+              team: match[1] as "Blue" | "Red",
+              summonerName: match[2],
+              championName: match[3],
+              x: parseInt(match[4], 10),
+              y: parseInt(match[5], 10),
+            });
+          }
+        }
+      }
+    }
+    
+    // Parse Minute-by-minute section
+    if (inMinuteSection) {
+      // Check for minute timestamp (format: "00:00" or "01:00")
+      const minuteMatch = trimmed.match(/^(\d{2}):00$/);
+      if (minuteMatch) {
+        // Save previous minute if exists
+        if (currentMinuteData) {
+          minuteSnapshots.push(currentMinuteData);
+        }
+        
+        currentMinute = parseInt(minuteMatch[1], 10);
+        currentMinuteData = {
+          minute: currentMinute,
+          participants: [],
+        };
+        continue;
       }
       
-      currentEvent = {
-        timestamp: eventMatch[1],
-        description: eventMatch[2],
-        positions: [],
-      };
-    } else if (currentEvent && trimmed.startsWith('positions:')) {
-      // Parse positions line
-      const positionsText = trimmed.substring('positions:'.length).trim();
-      const playerPositions = positionsText.split('|').map(p => p.trim());
-      
-      for (const playerPos of playerPositions) {
-        // Format: "Blue bigtid3ies (Sion) @(1421,12917)"
-        const match = playerPos.match(/^(Blue|Red)\s+(.+?)\s+\((.+?)\)\s+@\((\d+),(\d+)\)$/);
-        if (match) {
-          currentEvent.positions.push({
-            team: match[1] as "Blue" | "Red",
-            summonerName: match[2],
-            championName: match[3],
-            x: parseInt(match[4], 10),
-            y: parseInt(match[5], 10),
-          });
+      // Parse player line (format: "  - Blue Szpont (Vladimir) — Lvl 1, CS 0, Gold 500 (+0), Items [] @(554,581)")
+      const playerMatch = trimmed.match(/^-\s+(Blue|Red)\s+(.+?)\s+\((.+?)\)\s+—\s+Lvl\s+(\d+),\s+CS\s+(\d+),\s+Gold\s+(\d+)\s+\([^)]+\),\s+Items\s+\[([^\]]*)\]\s+@\((\d+),(\d+)\)$/);
+      if (playerMatch && currentMinuteData) {
+        const team = playerMatch[1] as "Blue" | "Red";
+        const summonerName = playerMatch[2];
+        const championName = playerMatch[3];
+        const level = parseInt(playerMatch[4], 10);
+        const cs = parseInt(playerMatch[5], 10);
+        const gold = parseInt(playerMatch[6], 10);
+        const itemsStr = playerMatch[7];
+        const x = parseInt(playerMatch[8], 10);
+        const y = parseInt(playerMatch[9], 10);
+        
+        // Parse items from "ItemName(id), ItemName(id), ..."
+        const items: number[] = [];
+        if (itemsStr.trim()) {
+          const itemMatches = itemsStr.matchAll(/\((\d+)\)/g);
+          for (const match of itemMatches) {
+            items.push(parseInt(match[1], 10));
+          }
         }
+        
+        currentMinuteData.participants.push({
+          team,
+          summonerName,
+          championName,
+          level,
+          cs,
+          gold,
+          items,
+          position: { x, y },
+        });
       }
     }
   }
@@ -91,8 +168,13 @@ export function parseTimelineText(
     events.push(currentEvent);
   }
   
-  // Convert to TimelineFrame format
-  return convertToTimelineFrames(events, matchDto);
+  // Add last minute snapshot
+  if (currentMinuteData) {
+    minuteSnapshots.push(currentMinuteData);
+  }
+  
+  // Convert to TimelineFrame format with minute snapshots
+  return convertToTimelineFrames(events, minuteSnapshots, matchDto);
 }
 
 /**
@@ -100,6 +182,7 @@ export function parseTimelineText(
  */
 function convertToTimelineFrames(
   parsedEvents: ParsedTimelineEvent[],
+  minuteSnapshots: ParsedMinuteSnapshot[],
   matchDto: RiotMatchDto,
 ): TimelineFrame[] {
   const frames: TimelineFrame[] = [];
@@ -107,6 +190,8 @@ function convertToTimelineFrames(
   // Create a map of summoner names to puuids from match participants
   const summonerToPuuid = new Map<string, string>();
   const championToPuuid = new Map<string, string>();
+  const puuidToParticipantId = new Map<string, number>();
+  const puuidToTeamId = new Map<string, number>();
   
   for (const puuid of matchDto.metadata.participants) {
     const participant = matchDto.info.participants.find(p => p.puuid === puuid);
@@ -115,9 +200,49 @@ function convertToTimelineFrames(
       summonerToPuuid.set(participant.summonerName.toLowerCase(), puuid);
       summonerToPuuid.set(participant.riotIdGameName?.toLowerCase() || '', puuid);
       championToPuuid.set(participant.championName.toLowerCase(), puuid);
+      puuidToParticipantId.set(puuid, participant.participantId);
+      puuidToTeamId.set(puuid, participant.teamId);
     }
   }
   
+  // Create frames from minute snapshots with participant data
+  for (const snapshot of minuteSnapshots) {
+    const timestamp = snapshot.minute * 60; // Convert minute to seconds
+    
+    const participants: Record<string, TimelineParticipantState> = {};
+    
+    for (const playerData of snapshot.participants) {
+      const puuid = summonerToPuuid.get(playerData.summonerName.toLowerCase()) ||
+                    championToPuuid.get(playerData.championName.toLowerCase());
+      
+      if (!puuid) {
+        console.warn(`[timelineParser] No puuid found for ${playerData.summonerName} (${playerData.championName})`);
+        continue;
+      }
+      
+      const participantId = puuidToParticipantId.get(puuid) || 0;
+      const teamId = puuidToTeamId.get(puuid) || (playerData.team === 'Blue' ? 100 : 200);
+      
+      participants[puuid] = {
+        puuid,
+        participantId,
+        teamId,
+        level: playerData.level,
+        cs: playerData.cs,
+        gold: playerData.gold,
+        position: playerData.position,
+        items: playerData.items,
+      };
+    }
+    
+    frames.push({
+      timestamp,
+      events: [],
+      participants,
+    });
+  }
+  
+  // Now add events to their respective frames
   let eventIndex = 0;
   for (const event of parsedEvents) {
     const timestampSeconds = parseTimestamp(event.timestamp);
@@ -165,15 +290,10 @@ function convertToTimelineFrames(
     const frameTimestamp = Math.floor(timestampSeconds / 60) * 60;
     let frame = frames.find(f => f.timestamp === frameTimestamp);
     
-    if (!frame) {
-      frame = {
-        timestamp: frameTimestamp,
-        events: [],
-      };
-      frames.push(frame);
+    if (frame) {
+      frame.events.push(timelineEvent);
     }
     
-    frame.events.push(timelineEvent);
     eventIndex++;
   }
   
@@ -219,7 +339,8 @@ function extractEventParticipants(
   let teamId: number | undefined;
   
   // Match patterns like "Red Sympponyy (Janna) killed Blue Jinzo (Hecarim)"
-  const killMatch = description.match(/^(Blue|Red)\s+(.+?)\s+\((.+?)\)\s+killed\s+(Blue|Red)\s+(.+?)\s+\((.+?)\)/);
+  // Also handle "None None (None) killed Red X (Y)" for jungle monster deaths
+  const killMatch = description.match(/^(Blue|Red|None)\s+(.+?)\s+\((.+?)\)\s+killed\s+(Blue|Red)\s+(.+?)\s+\((.+?)\)/);
   if (killMatch) {
     const killerTeam = killMatch[1];
     const killerName = killMatch[2];
@@ -228,9 +349,23 @@ function extractEventParticipants(
     const victimName = killMatch[5];
     const victimChamp = killMatch[6];
     
-    killerPuuid = summonerToPuuid.get(killerName.toLowerCase()) || championToPuuid.get(killerChamp.toLowerCase());
+    // Don't set killer if it's "None"
+    if (killerTeam !== 'None') {
+      killerPuuid = summonerToPuuid.get(killerName.toLowerCase()) || championToPuuid.get(killerChamp.toLowerCase());
+      teamId = killerTeam === 'Blue' ? 100 : 200;
+    }
+    
     victimPuuid = summonerToPuuid.get(victimName.toLowerCase()) || championToPuuid.get(victimChamp.toLowerCase());
-    teamId = killerTeam === 'Blue' ? 100 : 200;
+    
+    // If no killer, use victim's opposite team
+    if (!teamId && victimPuuid) {
+      const victimParticipant = Array.from(summonerToPuuid.entries())
+        .find(([, puuid]) => puuid === victimPuuid);
+      if (victimParticipant) {
+        // Get the opposite team
+        teamId = victimTeam === 'Blue' ? 200 : 100;
+      }
+    }
   }
   
   // Match patterns like "Red team destroyed Outer Turret"

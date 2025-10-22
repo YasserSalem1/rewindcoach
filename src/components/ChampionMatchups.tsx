@@ -10,13 +10,13 @@ import { cn } from "@/lib/ui";
 import { Button } from "@/components/ui/button";
 
 const TRINKET_IDS = new Set([
-  3340, // Warding Totem
+  3340, // Stealth Ward (Warding Totem)
+  3363, // Farsight Alteration
+  3364, // Oracle Lens
   3330, // Scarecrow Effigy
-  3361,
-  3362,
-  3363,
-  3364,
-  3365,
+  3361, // Greater Stealth Totem
+  3362, // Greater Vision Totem
+  3365, // Greater Orb of True Sight
 ]);
 
 interface MomentStats {
@@ -191,10 +191,14 @@ function ChampionSlot({
 
   paddedItems.forEach((itemId) => {
     if (typeof itemId !== "number" || itemId <= 0) return;
+    
+    // Handle trinkets (Stealth Ward, Oracle Lens, Farsight Alteration)
     if (TRINKET_IDS.has(itemId)) {
       if (!trinketId) trinketId = itemId;
       return;
     }
+    
+    // Add to inventory if not duplicate and under 6 items
     if (!inventorySlots.includes(itemId) && inventorySlots.length < 6) {
       inventorySlots.push(itemId);
     }
@@ -204,12 +208,9 @@ function ChampionSlot({
     inventorySlots.push(null);
   }
 
-  if (
-    !trinketId &&
-    participant?.trinket?.id &&
-    TRINKET_IDS.has(participant.trinket.id)
-  ) {
-    trinketId = participant.trinket.id;
+  // If no trinket found in timeline data, show default Stealth Ward (3340) for early game
+  if (!trinketId && stats.level <= 9) {
+    trinketId = 3340; // Default starting trinket
   }
 
   const itemSlots: Array<number | null> = [...inventorySlots, trinketId];

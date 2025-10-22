@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { ArrowLeft } from "lucide-react";
 
 import type { MatchBundle, TimelineEvent, TimelineFrame } from "@/lib/riot";
 import { parseReviewTimeline, type CoachParsedEvent } from "@/lib/parseReviewOutput";
@@ -191,15 +193,39 @@ export function ReviewExperience({
       ) {
         const event = sortedEvents[eventIndex];
         const desc = event.description?.toLowerCase?.() ?? "";
-        if (event.type === "KILL" && event.killerPuuid) {
-          const stats = running.get(event.killerPuuid);
-          if (stats) stats.kills += 1;
-        } else if (event.type === "DEATH" && event.victimPuuid) {
-          const stats = running.get(event.victimPuuid);
-          if (stats) stats.deaths += 1;
-        } else if (event.type === "ASSIST" && event.actorPuuid) {
-          const stats = running.get(event.actorPuuid);
-          if (stats) stats.assists += 1;
+        
+        // Handle KILL events - update killer's kills AND victim's deaths
+        if (event.type === "KILL") {
+          if (event.killerPuuid) {
+            const killerStats = running.get(event.killerPuuid);
+            if (killerStats) killerStats.kills += 1;
+          }
+          if (event.victimPuuid) {
+            const victimStats = running.get(event.victimPuuid);
+            if (victimStats) victimStats.deaths += 1;
+          }
+          
+          // Parse assists from description if available
+          // Format: "Blue X (Y) killed Red A (B) (assists: Blue C (D), Blue E (F))"
+          const assistMatch = event.description?.match(/\(assists:\s*(.+?)\)\s*$/i);
+          if (assistMatch) {
+            const assistsText = assistMatch[1];
+            // Parse each assist: "Blue name (champion)" or "Red name (champion)"
+            const assistMatches = assistsText.matchAll(/(Blue|Red)\s+(.+?)\s+\(([^)]+)\)/gi);
+            for (const match of assistMatches) {
+              const assistName = match[2].trim();
+              const assistChamp = match[3].trim();
+              // Find puuid by summoner name or champion name
+              const assistParticipant = participants.find(p => 
+                p.summonerName?.toLowerCase() === assistName.toLowerCase() ||
+                p.championName?.toLowerCase() === assistChamp.toLowerCase()
+              );
+              if (assistParticipant) {
+                const assistStats = running.get(assistParticipant.puuid);
+                if (assistStats) assistStats.assists += 1;
+              }
+            }
+          }
         } else if (
           (event.type === "TOWER" && !desc.includes("plate")) ||
           event.type === "DRAGON" ||
@@ -535,51 +561,117 @@ export function ReviewExperience({
     ? "border-emerald-500/20 bg-gradient-to-br from-emerald-900/35 via-slate-950/70 to-slate-950/50"
     : "border-rose-500/40 bg-gradient-to-br from-rose-900/65 via-rose-800/35 to-slate-950/55";
 
+  const championSplashUrl = focusParticipant?.championName 
+    ? `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${focusParticipant.championName}_0.jpg`
+    : null;
+
+  // Construct profile URL for back button
+  // Try to use focus player's info, or extract from summonerName
+  let profileUrl = null;
+  let gameName = focusGameName;
+  let tagLine = focusTagLine;
+  
+  // If not provided, try to extract from participant's summonerName (format: Name#TAG)
+  if ((!gameName || !tagLine) && focusParticipant?.summonerName) {
+    const parts = focusParticipant.summonerName.split('#');
+    if (parts.length === 2) {
+      gameName = gameName || parts[0];
+      tagLine = tagLine || parts[1];
+    }
+  }
+  
+  if (gameName && tagLine && match.region) {
+    profileUrl = `/profile/${match.region}/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <div className={cn("rounded-3xl border p-6 shadow-lg shadow-violet-900/25", heroCardClass)}>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-300/80">
-              Match Type
-            </p>
-            <h2 className="text-2xl font-semibold text-slate-100">
-              {matchTypeLabel}
-            </h2>
-          </div>
-          <div
-            className={cn(
-              "rounded-full border px-4 py-1 text-sm font-semibold uppercase tracking-wide",
-              focusParticipant?.win
-                ? "border-emerald-500/60 bg-emerald-500/25 text-emerald-100"
-                : "border-rose-500/80 bg-rose-500/35 text-rose-100",
-            )}
-          >
-            {outcomeText}
-          </div>
-        </div>
-
-        <div className="mt-5 flex items-center gap-4">
-          {focusParticipant?.championIcon ? (
-            <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-white/15 bg-slate-900/80 shadow">
+      {/* Back Button */}
+      {profileUrl ? (
+        <Link
+          href={profileUrl}
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-all group w-fit"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          <span>Back to Profile</span>
+        </Link>
+      ) : (
+        <button
+          onClick={() => window.history.back()}
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-all group w-fit"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          <span>Back</span>
+        </button>
+      )}
+      <div className={cn("relative overflow-hidden rounded-3xl border p-6 shadow-lg shadow-violet-900/25", heroCardClass)}>
+        {/* Champion Splash Art Background */}
+        {championSplashUrl && (
+          <>
+            <div className="absolute inset-0">
               <Image
-                src={focusParticipant.championIcon}
-                alt={focusParticipant.championName}
+                src={championSplashUrl}
+                alt={focusParticipant?.championName ?? "Champion"}
                 fill
-                className="object-cover"
+                className="object-cover object-top"
+                priority
               />
             </div>
-          ) : null}
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
-              Played As
-            </p>
-            <p className="text-lg font-semibold text-slate-100">
-              {focusParticipant?.championName ?? "Unknown"}
-            </p>
-            <p className="text-sm text-slate-400">
-              {focusParticipant?.summonerName ?? focusGameName ?? "—"}
-            </p>
+            {/* Gradient overlay for readability */}
+            <div className={cn(
+              "absolute inset-0",
+              focusParticipant?.win
+                ? "bg-gradient-to-br from-emerald-900/90 via-slate-950/85 to-slate-950/90"
+                : "bg-gradient-to-br from-rose-900/90 via-rose-950/85 to-slate-950/90"
+            )} />
+          </>
+        )}
+        
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-300/80">
+                Match Type
+              </p>
+              <h2 className="text-2xl font-semibold text-slate-100">
+                {matchTypeLabel}
+              </h2>
+            </div>
+            <div
+              className={cn(
+                "rounded-full border px-4 py-1 text-sm font-semibold uppercase tracking-wide",
+                focusParticipant?.win
+                  ? "border-emerald-500/60 bg-emerald-500/25 text-emerald-100"
+                  : "border-rose-500/80 bg-rose-500/35 text-rose-100",
+              )}
+            >
+              {outcomeText}
+            </div>
+          </div>
+
+          <div className="mt-5 flex items-center gap-4">
+            {focusParticipant?.championIcon ? (
+              <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-white/15 bg-slate-900/80 shadow">
+                <Image
+                  src={focusParticipant.championIcon}
+                  alt={focusParticipant.championName}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ) : null}
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+                Played As
+              </p>
+              <p className="text-lg font-semibold text-slate-100">
+                {focusParticipant?.championName ?? "Unknown"}
+              </p>
+              <p className="text-sm text-slate-400">
+                {focusParticipant?.summonerName ?? focusGameName ?? "—"}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -612,6 +704,8 @@ export function ReviewExperience({
               primaryPuuid={match.primaryParticipantPuuid}
               selectedPlayers={selectedPlayersSet}
               currentEvent={currentCoachEvent}
+              timeline={timeline}
+              currentMinute={currentMinute}
               focusSelection={Boolean(selectedPlayer)}
               className="h-full w-full"
             />
@@ -637,6 +731,7 @@ export function ReviewExperience({
         currentEventIndex={currentEventIndex}
         onScrub={handleScrub}
         onSelectEvent={handleCoachEventSelect}
+        selectedPuuid={selectedPlayer}
       />
     </div>
   );

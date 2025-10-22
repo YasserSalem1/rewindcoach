@@ -15,8 +15,8 @@ export * from "./types";
 // Re-export utility functions that might be needed
 // ============================================================================
 
-export { getAccountInfo, getRankedInfo, fetchTimeline, fetchSeasonStats } from "./fetchers";
-export { mapParticipantData, summarizeMatches } from "./transformers";
+export { getAccountInfo, getRankedInfo, fetchTimeline, fetchSeasonStats, fetchFullTimeline } from "./fetchers";
+export { mapParticipantData, summarizeMatches, mapFullTimeline } from "./transformers";
 
 // ============================================================================
 // Imports for main API functions
@@ -39,12 +39,14 @@ import {
   fetchMatches,
   fetchMatch,
   fetchTimeline,
+  fetchFullTimeline,
 } from "./fetchers";
 
 import {
   mapParticipantData,
   mapTimeline,
   summarizeMatches,
+  mapFullTimeline,
 } from "./transformers";
 
 import { parseTimelineText } from "./timelineParser";
@@ -201,14 +203,14 @@ export async function getMatchBundle(
     focusPuuid ?? matchDto.metadata.participants[0],
   );
 
-  // Fetch timeline separately (new API returns text format)
+  // Fetch timeline - use text format which has item progression
   let timeline: TimelineFrame[] = [];
+  
   try {
     const timelineText = await fetchTimeline(matchId, focusPuuid);
-    // Parse text format timeline
     timeline = parseTimelineText(timelineText, matchDto);
   } catch (error) {
-    console.warn(`[backend] Failed to load timeline for ${matchId}`, error);
+    console.warn(`[backend] Failed to load text timeline for ${matchId}`, error);
   }
 
   return {

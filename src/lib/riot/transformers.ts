@@ -19,6 +19,7 @@ import {
   type StyleDNA,
   type ProfileHighlights,
   type TimelineParticipantState,
+  type BackendTimelineResponse,
 } from "./types";
 
 import {
@@ -734,4 +735,91 @@ export function summarizeMatches(matches: RiotMatch[], focusPuuid: string) {
   };
 
   return { highlights, styleDNA };
+}
+
+// ============================================================================
+// Timeline Transformation
+// ============================================================================
+
+/**
+ * Transforms a RiotTimelineDto (full timeline with items) into TimelineFrame[]
+ */
+export function mapFullTimeline(
+  timelineResponse: BackendTimelineResponse,
+  matchDto: RiotMatchDto,
+): TimelineFrame[] {
+  const frames: TimelineFrame[] = [];
+  
+  // The backend returns timeline with info.frames structure
+  const timelineData = (timelineResponse.timeline as any);
+  const framesData = timelineData?.info?.frames || timelineData?.frames;
+  
+  if (!framesData || framesData.length === 0) {
+    return frames;
+  }
+
+  // Create a map of participantId to puuid
+  const participantIdToPuuid = new Map<number, string>();
+  matchDto.info.participants.forEach((p: any, index: number) => {
+    participantIdToPuuid.set(p.participantId ?? index + 1, p.puuid);
+  });
+
+  let frameIndex = 0;
+  for (const riotFrame of framesData) {
+    const timestamp = Math.floor((riotFrame.timestamp ?? 0) / 1000); // Convert ms to seconds
+    
+    // Build participants state for this frame
+    const participants: Record<string, TimelineParticipantState> = {};
+    
+    if (riotFrame.participantFrames) {
+      for (const [participantIdStr, frameData] of Object.entries(riotFrame.participantFrames)) {
+        const participantId = parseInt(participantIdStr, 10);
+        const puuid = participantIdToPuuid.get(participantId);
+        
+        if (!puuid) continue;
+        
+        const participant = matchDto.info.participants.find((p: any) => p.puuid === puuid);
+        if (!participant) continue;
+
+        // Extract item data from frame
+        const frameDataAny = frameData as any;
+        const items: number[] = [];
+        
+        // Items are in item0-item6 fields
+        for (let i = 0; i <= 6; i++) {
+          const itemId = frameDataAny[`item${i}`];
+          if (itemId && typeof itemId === 'number' && itemId > 0) {
+            items.push(itemId);
+          }
+        }
+
+        const minionsKilled = frameDataAny.minionsKilled ?? 0;
+        const jungleMinionsKilled = frameDataAny.jungleMinionsKilled ?? 0;
+
+        participants[puuid] = {
+          puuid,
+          participantId,
+          teamId: participant.teamId,
+          level: frameDataAny.level ?? 1,
+          cs: minionsKilled + jungleMinionsKilled,
+          gold: frameDataAny.totalGold ?? frameDataAny.currentGold ?? 0,
+          position: frameData.position,
+          items,
+        };
+      }
+    }
+    
+    frameIndex++;
+
+    // Convert events (minimal conversion for now)
+    const events: TimelineEvent[] = [];
+    
+    frames.push({
+      timestamp,
+      events,
+      participants,
+    });
+  }
+
+  return frames;
 }
