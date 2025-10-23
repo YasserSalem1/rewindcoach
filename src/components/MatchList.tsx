@@ -18,7 +18,7 @@ interface MatchListProps {
 
 export function MatchList({ 
   matches: initialMatches, 
-  heading = "Recent Matches",
+  heading = "Match History",
   puuid,
   region,
   onMatchesUpdate 
