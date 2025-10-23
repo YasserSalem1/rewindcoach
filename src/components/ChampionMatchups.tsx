@@ -3,7 +3,7 @@
 import type { ComponentType } from "react";
 import { useMemo } from "react";
 import Image from "next/image";
-import { Castle, Flame, Crown, Mountain } from "lucide-react";
+import { Castle, Flame, Crown, Mountain, ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { RiotParticipant } from "@/lib/riot";
 import { cn } from "@/lib/ui";
@@ -52,6 +52,7 @@ interface ChampionMatchupsProps {
   resolveItemIcon: (itemId: number) => string | null;
   onChampionClick: (puuid: string) => void;
   onClearSelection: () => void;
+  onMinuteChange?: (minute: number) => void;
 }
 
 interface ParticipantWithLane extends RiotParticipant {
@@ -336,6 +337,7 @@ export function ChampionMatchups({
   resolveItemIcon,
   onChampionClick,
   onClearSelection,
+  onMinuteChange,
 }: ChampionMatchupsProps) {
   const rows = useMemo(
     () => createLaneRows(participants),
@@ -349,25 +351,69 @@ export function ChampionMatchups({
 
   const timeLabel = `${String(displayedMinute).padStart(2, "0")}:00`;
 
+  const handlePreviousMinute = () => {
+    if (onMinuteChange && displayedMinute > 0) {
+      onMinuteChange(displayedMinute - 1);
+    }
+  };
+
+  const handleNextMinute = () => {
+    if (onMinuteChange && displayedMinute < totalMinutes - 1) {
+      onMinuteChange(displayedMinute + 1);
+    }
+  };
+
   return (
     <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-5 shadow-lg shadow-slate-950/40">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300/80">
-            Champion Matchups
-          </h3>
-          <p className="text-xs text-slate-400">
-            Live KDA at {timeLabel}
-          </p>
-        </div>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300/80">
+          Champion Matchups
+        </h3>
+        {/* Hidden but kept in code */}
         <Button
           type="button"
           size="sm"
           variant={selectedPuuid ? "secondary" : "ghost"}
           onClick={onClearSelection}
-          className="text-xs"
+          className="hidden text-xs"
         >
           {selectedPuuid ? "Show Everyone" : "All Players Selected"}
+        </Button>
+      </div>
+
+      {/* Centered Time Navigation */}
+      <div className="mb-5 flex items-center justify-center gap-4">
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={handlePreviousMinute}
+          disabled={displayedMinute === 0}
+          className="h-9 w-9 p-0 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label="Previous minute"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        
+        <div className="text-center">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
+            Live KDA
+          </p>
+          <p className="text-2xl font-bold text-slate-100 tracking-tight">
+            {timeLabel}
+          </p>
+        </div>
+
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={handleNextMinute}
+          disabled={displayedMinute >= totalMinutes - 1}
+          className="h-9 w-9 p-0 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label="Next minute"
+        >
+          <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
 

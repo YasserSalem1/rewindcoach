@@ -477,41 +477,43 @@ export function ReviewExperience({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isEditingElement(event.target)) return;
 
+      // Arrow Left/Right: Navigate minutes
       if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-        if (!visibleCoachEvents.length) return;
-        const visibleIndex = currentEventIndex !== null
-          ? visibleCoachEvents.findIndex((item) => item.sourceIndex === currentEventIndex)
-          : -1;
-        if (event.key === "ArrowRight") {
-          const nextIndex = visibleIndex >= 0
-            ? Math.min(visibleIndex + 1, visibleCoachEvents.length - 1)
-            : 0;
-          event.preventDefault();
-          handleCoachEventSelect(visibleCoachEvents[nextIndex].sourceIndex);
-        } else if (event.key === "ArrowLeft") {
-          const prevIndex = visibleIndex >= 0
-            ? Math.max(visibleIndex - 1, 0)
-            : visibleCoachEvents.length - 1;
-          event.preventDefault();
-          handleCoachEventSelect(visibleCoachEvents[prevIndex].sourceIndex);
-        }
-        return;
-      }
-
-      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
         if (totalMinutes <= 0) return;
-        if (event.key === "ArrowUp") {
+        if (event.key === "ArrowRight") {
+          const nextMinute = Math.min(totalMinutes - 1, currentMinute + 1);
+          if (nextMinute !== currentMinute) {
+            event.preventDefault();
+            handleMinuteSelect(nextMinute);
+          }
+        } else if (event.key === "ArrowLeft") {
           const previousMinute = Math.max(0, currentMinute - 1);
           if (previousMinute !== currentMinute) {
             event.preventDefault();
             handleMinuteSelect(previousMinute);
           }
-        } else {
-          const nextMinute = Math.min(totalMinutes, currentMinute + 1);
-          if (nextMinute !== currentMinute) {
-            event.preventDefault();
-            handleMinuteSelect(nextMinute);
-          }
+        }
+        return;
+      }
+
+      // Arrow Up/Down: Navigate events
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        if (!visibleCoachEvents.length) return;
+        const visibleIndex = currentEventIndex !== null
+          ? visibleCoachEvents.findIndex((item) => item.sourceIndex === currentEventIndex)
+          : -1;
+        if (event.key === "ArrowDown") {
+          const nextIndex = visibleIndex >= 0
+            ? Math.min(visibleIndex + 1, visibleCoachEvents.length - 1)
+            : 0;
+          event.preventDefault();
+          handleCoachEventSelect(visibleCoachEvents[nextIndex].sourceIndex);
+        } else if (event.key === "ArrowUp") {
+          const prevIndex = visibleIndex >= 0
+            ? Math.max(visibleIndex - 1, 0)
+            : visibleCoachEvents.length - 1;
+          event.preventDefault();
+          handleCoachEventSelect(visibleCoachEvents[prevIndex].sourceIndex);
         }
       }
     };
@@ -687,13 +689,16 @@ export function ReviewExperience({
         resolveItemIcon={resolveItemIcon}
         onChampionClick={handleChampionClick}
         onClearSelection={clearChampionSelection}
+        onMinuteChange={handleMinuteSelect}
       />
-
+      {/* Minute Navigator 
+      
       <MinuteNavigator
         totalMinutes={totalMinutes}
         currentMinute={currentMinute}
         onSelect={handleMinuteSelect}
       />
+      */}
 
       {/* Map + Chat */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-stretch">
