@@ -143,17 +143,15 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
           region={region}
           onMatchesUpdate={handleMatchesUpdate}
         />
+      </section>
 
-      </section>
-      {/* Profile Coach Chat - Full Width, Compact Height */}
-      <section>
-        <ProfileCoachChat
-          puuid={puuid}
-          gameName={summoner.summonerName}
-          tagLine={summoner.tagline}
-          profileSummary={`Player: ${summoner.summonerName}#${summoner.tagline}, Rank: ${rankDisplay} ${summoner.rankedLp} LP, Level: ${summoner.level}, Win Rate: ${highlights.last20WinRate ? Math.round(highlights.last20WinRate * 100) : 0}%, Average KDA: ${highlights.averageKda}, CS/min: ${highlights.csPerMinute}`}
-        />
-      </section>
+      {/* Floating Profile Coach Chat */}
+      <ProfileCoachChat
+        puuid={puuid}
+        gameName={summoner.summonerName}
+        tagLine={summoner.tagline}
+        profileSummary={`Player: ${summoner.summonerName}#${summoner.tagline}, Rank: ${rankDisplay} ${summoner.rankedLp} LP, Level: ${summoner.level}, Win Rate: ${highlights.last20WinRate ? Math.round(highlights.last20WinRate * 100) : 0}%, Average KDA: ${highlights.averageKda}, CS/min: ${highlights.csPerMinute}`}
+      />
     </div>
   );
 }
