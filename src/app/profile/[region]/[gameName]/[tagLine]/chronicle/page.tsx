@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
-import { REGIONS, type Region, getProfileBundle } from "@/lib/riot";
+
 import { ChronicleContent } from "@/components/ChronicleContent";
+import { PersistProfilePref } from "@/components/PersistProfilePref";
+import { REGIONS, type Region, getProfileBundle } from "@/lib/riot";
 
 interface ChroniclePageProps {
   params: Promise<{
@@ -23,7 +25,6 @@ export default async function ChroniclePage({ params }: ChroniclePageProps) {
     notFound();
   }
 
-  // Call riot.ts directly - no HTTP overhead
   let bundle;
   try {
     bundle = await getProfileBundle(region, normalizedGameName, normalizedTagLine);
@@ -33,11 +34,16 @@ export default async function ChroniclePage({ params }: ChroniclePageProps) {
   }
 
   return (
-    <ChronicleContent
-      bundle={bundle}
-      region={region}
-    />
+    <>
+      <PersistProfilePref
+        region={region}
+        gameName={normalizedGameName}
+        tagLine={normalizedTagLine}
+      />
+      <ChronicleContent
+        bundle={bundle}
+        region={region}
+      />
+    </>
   );
 }
-
-
