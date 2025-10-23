@@ -2,7 +2,7 @@
 
 import { FormEvent, useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Send, Maximize2, Minimize2 } from "lucide-react";
+import { Loader2, Send, MessageCircle, X } from "lucide-react";
 
 import { cn } from "@/lib/ui";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -163,127 +163,165 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
   );
 
   return (
-    <motion.div
-      className={cn(
-        "flex flex-col gap-3 rounded-3xl border p-4 backdrop-blur-xl shadow-lg transition-all duration-300",
-        isExpanded
-          ? "fixed inset-4 z-50 border-violet-400/40 bg-slate-950/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/20"
-          : "border-white/10 bg-slate-950/70",
-      )}
-      layout
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-heading text-lg text-slate-100">Profile Coach</h3>
-          <p className="text-xs text-slate-300/75">
-            Ask questions about your performance, champion pool, or get personalized advice.
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-slate-400 hover:text-violet-300 hover:bg-violet-500/10"
-          title={isExpanded ? "Minimize" : "Expand"}
-        >
-          {isExpanded ? (
-            <Minimize2 className="h-4 w-4" />
-          ) : (
-            <Maximize2 className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
-
-      <div className="flex flex-wrap gap-2">{suggestionButtons}</div>
-
-      <div
-        className={cn(
-          "space-y-4 overflow-y-auto overflow-x-hidden rounded-2xl bg-slate-900/45 p-4",
-          "scrollbar-thin scrollbar-thumb-violet-500/20 scrollbar-track-transparent",
-          isExpanded ? "flex-1 min-h-0" : "min-h-[200px] max-h-[250px]",
+    <>
+      {/* Floating Chat Button */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsOpen(true)}
+            className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-700 shadow-2xl shadow-violet-500/40 transition-all hover:shadow-violet-500/60"
+            aria-label="Open chat"
+          >
+            <MessageCircle className="h-7 w-7 text-white" />
+            {/* Notification Badge (optional) */}
+            <motion.div
+              className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-red-500 border-2 border-slate-950"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            >
+              <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-white">
+                !
+              </span>
+            </motion.div>
+          </motion.button>
         )}
-      >
-        {messages.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-center">
-            <div className="max-w-md space-y-2">
-              <p className="text-sm text-slate-400/75">
-                Start a conversation with your coach by asking a question or selecting a suggestion above.
-              </p>
-              <p className="text-xs text-slate-500/60">
-                Your coach analyzes your profile statistics and match history.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <AnimatePresence initial={false}>
-            {messages.map((message) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
+      </AnimatePresence>
+
+      {/* Expanded Chat Window */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 100, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 100, scale: 0.9 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed bottom-6 right-6 z-50 flex h-[600px] w-[400px] max-h-[calc(100vh-3rem)] flex-col rounded-3xl border border-violet-400/40 bg-slate-950/95 shadow-2xl shadow-violet-500/20 backdrop-blur-2xl"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-700">
+                  <MessageCircle className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-base font-semibold text-slate-100">Profile Coach</h3>
+                  <p className="text-xs text-slate-400">Always here to help</p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(false)}
+                className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-red-500/20"
+                aria-label="Close chat"
               >
-                {message.content ? (
-                  <ChatMessage
-                    role={message.role}
-                    content={message.content}
-                    isStreaming={isStreaming && message.role === "coach"}
-                  />
-                ) : (
-                  <div className="flex items-center gap-2 text-slate-300/70 px-4">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Thinking…</span>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Suggestions */}
+            {messages.length === 0 && (
+              <div className="flex flex-wrap gap-2 p-4 border-b border-white/5">
+                {suggestionButtons}
+              </div>
+            )}
+
+            {/* Messages Area */}
+            <div
+              className={cn(
+                "flex-1 space-y-4 overflow-y-auto overflow-x-hidden p-4",
+                "scrollbar-thin scrollbar-thumb-violet-500/20 scrollbar-track-transparent",
+              )}
+            >
+              {messages.length === 0 ? (
+                <div className="flex h-full items-center justify-center text-center">
+                  <div className="max-w-xs space-y-3 px-4">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/10 border border-violet-500/20">
+                      <MessageCircle className="h-8 w-8 text-violet-400" />
+                    </div>
+                    <p className="text-sm font-medium text-slate-300">
+                      Start a conversation
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      Ask questions about your performance, champion pool, or get personalized advice.
+                    </p>
                   </div>
-                )}
-              </motion.div>
-            ))}
-            <div ref={messagesEndRef} />
-          </AnimatePresence>
+                </div>
+              ) : (
+                <AnimatePresence initial={false}>
+                  {messages.map((message) => (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                    >
+                      {message.content ? (
+                        <ChatMessage
+                          role={message.role}
+                          content={message.content}
+                          isStreaming={isStreaming && message.role === "coach"}
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2 text-slate-300/70 px-4">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm">Thinking…</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </AnimatePresence>
+              )}
+            </div>
+
+            {/* Input Form */}
+            <form onSubmit={handleSubmit} className="border-t border-white/10 p-4">
+              <div className="flex items-end gap-2">
+                <div className="relative flex-1">
+                  <textarea
+                    ref={inputRef}
+                    rows={2}
+                    placeholder={isStreaming ? "Coach is thinking…" : "Ask your coach…"}
+                    className="w-full resize-none rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none ring-violet-400 transition placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (!isStreaming) {
+                          const val = event.currentTarget.value;
+                          if (val.trim()) sendMessage(val);
+                          event.currentTarget.value = "";
+                        }
+                      }
+                    }}
+                    aria-label="Chat with coach"
+                    disabled={isStreaming}
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  size="sm" 
+                  disabled={isStreaming}
+                  className="h-11 w-11 rounded-xl bg-gradient-to-br from-violet-600 to-purple-700 p-0 hover:from-violet-700 hover:to-purple-800"
+                >
+                  {isStreaming ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
+            </form>
+          </motion.div>
         )}
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <textarea
-            ref={inputRef}
-            rows={isExpanded ? 2 : 1}
-            placeholder={isStreaming ? "Coach is thinking…" : "Ask your coach…"}
-            className="w-full resize-none rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none ring-violet-400 transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                event.stopPropagation();
-                if (!isStreaming) {
-                  const val = event.currentTarget.value;
-                  if (val.trim()) sendMessage(val);
-                  event.currentTarget.value = "";
-                }
-              }
-            }}
-            aria-label="Chat with coach"
-            disabled={isStreaming}
-          />
-        </div>
-        <Button type="submit" size="sm" disabled={isStreaming}>
-          {isStreaming ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
-        </Button>
-      </form>
-
-      {/* Backdrop when expanded */}
-      {isExpanded && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 -z-10 bg-black/60 backdrop-blur-sm"
-          onClick={() => setIsExpanded(false)}
-        />
-      )}
-    </motion.div>
+      </AnimatePresence>
+    </>
   );
 }
