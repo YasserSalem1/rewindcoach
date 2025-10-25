@@ -2,7 +2,7 @@
 
 import { FormEvent, useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Send, MessageCircle, X } from "lucide-react";
+import { Loader2, Send, MessageCircle, X, Maximize2, Minimize2 } from "lucide-react";
 
 import { cn } from "@/lib/ui";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -81,7 +82,7 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
       setIsStreaming(true);
 
       try {
-        const response = await fetch("/api/chat", {
+        const response = await fetch("/api/profile-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -173,7 +174,10 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
             exit={{ scale: 0, opacity: 0 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setIsOpen(true)}
+            onClick={() => {
+              setIsOpen(true);
+              setIsExpanded(false);
+            }}
             className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-700 shadow-2xl shadow-violet-500/40 transition-all hover:shadow-violet-500/60"
             aria-label="Open chat"
           >
@@ -196,11 +200,17 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            layout
             initial={{ opacity: 0, y: 100, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-6 right-6 z-50 flex h-[600px] w-[400px] max-h-[calc(100vh-3rem)] flex-col rounded-3xl border border-violet-400/40 bg-slate-950/95 shadow-2xl shadow-violet-500/20 backdrop-blur-2xl"
+            className={cn(
+              "fixed z-50 flex max-h-[calc(100vh-3rem)] flex-col rounded-3xl border border-violet-400/40 bg-slate-950/95 shadow-2xl shadow-violet-500/20 backdrop-blur-2xl transition-all duration-300",
+              isExpanded
+                ? "inset-6 max-h-[calc(100vh-3rem)] w-[min(720px,calc(100vw-3rem))]"
+                : "bottom-6 right-6 h-[640px] w-[460px]",
+            )}
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 p-4">
@@ -213,21 +223,36 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
                   <p className="text-xs text-slate-400">Always here to help</p>
                 </div>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsOpen(false)}
-                className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-red-500/20"
-                aria-label="Close chat"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsExpanded((prev) => !prev)}
+                  className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-violet-500/20"
+                  aria-label={isExpanded ? "Minimize chat" : "Expand chat"}
+                >
+                  {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsExpanded(false);
+                  }}
+                  className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-red-500/20"
+                  aria-label="Close chat"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Suggestions */}
             {messages.length === 0 && (
-              <div className="flex flex-wrap gap-2 p-4 border-b border-white/5">
+              <div className="flex flex-wrap gap-2 border-b border-white/5 p-4">
                 {suggestionButtons}
               </div>
             )}
@@ -287,7 +312,7 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
                 <div className="relative flex-1">
                   <textarea
                     ref={inputRef}
-                    rows={2}
+                    rows={isExpanded ? 3 : 2}
                     placeholder={isStreaming ? "Coach is thinking…" : "Ask your coach…"}
                     className="w-full resize-none rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none ring-violet-400 transition placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                     onKeyDown={(event) => {
@@ -320,6 +345,19 @@ export function ProfileCoachChat({ puuid, gameName, tagLine, profileSummary }: P
               </div>
             </form>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Backdrop when expanded */}
+      <AnimatePresence>
+        {isOpen && isExpanded && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.6 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+            onClick={() => setIsExpanded(false)}
+          />
         )}
       </AnimatePresence>
     </>
