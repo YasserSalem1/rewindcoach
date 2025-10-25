@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, type ComponentType } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Castle, Crown, Flame, Mountain } from "lucide-react";
 
 import type { RiotParticipant } from "@/lib/riot";
 import type {
@@ -20,8 +19,7 @@ type BadgeVariant = "kill" | "death" | "assist" | "objective";
 interface BadgeDescriptor {
   variant: BadgeVariant;
   label?: string;
-  Icon?: ComponentType<{ className?: string }>;
-  tone?: string;
+  colorClass?: string;
 }
 
 interface ResolvedPosition {
@@ -48,22 +46,11 @@ interface RiftMapProps {
 }
 
 const BADGE_BASE: Record<BadgeVariant, string> = {
-  kill: "bg-emerald-400 text-emerald-950",
-  death: "bg-rose-500 text-rose-50",
-  assist: "bg-sky-400 text-sky-950",
-  objective: "bg-amber-400 text-amber-950",
+  kill: "text-emerald-300",
+  death: "text-rose-300",
+  assist: "text-sky-300",
+  objective: "text-amber-300",
 };
-
-const OBJECTIVE_ICON_RULES: Array<{
-  test: RegExp;
-  Icon: ComponentType<{ className?: string }>;
-  tone: string;
-}> = [
-  { test: /(dragon|soul)/i, Icon: Flame, tone: "bg-orange-400/95 text-slate-950" },
-  { test: /(baron)/i, Icon: Crown, tone: "bg-purple-400/95 text-slate-950" },
-  { test: /(herald|voidgrub)/i, Icon: Mountain, tone: "bg-indigo-400/95 text-slate-950" },
-  { test: /(turret|tower|inhibitor|nexus)/i, Icon: Castle, tone: "bg-amber-400/95 text-slate-950" },
-];
 
 const normalize = (value?: string | null) =>
   (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -89,36 +76,6 @@ const actorMatches = (a?: CoachEventActor, b?: CoachEventActor) => {
     return true;
   }
   return false;
-};
-
-const resolveObjectiveBadge = (objectiveName?: string): BadgeDescriptor | null => {
-  if (!objectiveName) return null;
-  const rule = OBJECTIVE_ICON_RULES.find((entry) => entry.test.test(objectiveName));
-  if (rule) {
-    return { variant: "objective", Icon: rule.Icon, tone: rule.tone };
-  }
-  return { variant: "objective", label: "O" };
-};
-
-const resolveBadge = (event: CoachParsedEvent, position: CoachEventPosition): BadgeDescriptor | null => {
-  if (event.category === "kill") {
-    if (event.killer && actorMatches(position, event.killer)) {
-      return { variant: "kill", label: "K" };
-    }
-    if (event.victim && actorMatches(position, event.victim)) {
-      return { variant: "death", label: "D" };
-    }
-    if (event.assists.some((assist) => actorMatches(position, assist))) {
-      return { variant: "assist", label: "A" };
-    }
-    return null;
-  }
-
-  if (event.objectiveActor && actorMatches(position, event.objectiveActor)) {
-    return resolveObjectiveBadge(event.objectiveName) ?? { variant: "objective", label: "O" };
-  }
-
-  return null;
 };
 
 const clampPercent = (value: number) => Math.min(100, Math.max(0, value));
@@ -175,63 +132,67 @@ export function RiftMap({
   // Create badge map for event participants
   const badgeFor = useMemo(() => {
     const map = new Map<string, BadgeDescriptor>();
-    
     if (!currentEvent) return map;
-    
-    // Determine badge for killer
-    if (currentEvent.killer?.puuid) {
-      const key = `${currentEvent.killer.puuid}-${currentEvent.id}`;
-      map.set(key, {
-        variant: "kill",
-        label: "Kill",
-        tone: "text-emerald-400",
-      });
-    }
-    
-    // Determine badge for victim
-    if (currentEvent.victim?.puuid) {
-      const key = `${currentEvent.victim.puuid}-${currentEvent.id}`;
-      map.set(key, {
-        variant: "death",
-        label: "Death",
-        tone: "text-red-400",
-      });
-    }
-    
-    // Determine badge for assists
-    currentEvent.assists.forEach((assist) => {
-      if (assist.puuid) {
-        const key = `${assist.puuid}-${currentEvent.id}`;
-        map.set(key, {
-          variant: "assist",
-          label: "Assist",
-          tone: "text-blue-400",
-        });
-      }
+
+    const addBadge = (actor: CoachEventActor | undefined, descriptor: BadgeDescriptor) => {
+      if (!actor?.puuid) return;
+      map.set(actor.puuid, descriptor);
+    };
+
+    addBadge(currentEvent.killer, {
+      variant: "kill",
+      label: "K",
+      colorClass: "text-emerald-300 drop-shadow-[0_0_8px_rgba(16,185,129,0.85)]",
     });
-    
-    // Determine badge for objectives
-    if (currentEvent.objectiveActor?.puuid) {
-      const key = `${currentEvent.objectiveActor.puuid}-${currentEvent.id}`;
-      let Icon: ComponentType<{ className?: string }> | undefined;
-      
-      if (currentEvent.description.toLowerCase().includes("dragon")) {
-        Icon = Flame;
-      } else if (currentEvent.description.toLowerCase().includes("baron")) {
-        Icon = Crown;
-      } else if (currentEvent.description.toLowerCase().includes("herald")) {
-        Icon = Mountain;
-      } else if (currentEvent.description.toLowerCase().includes("tower") || currentEvent.description.toLowerCase().includes("turret")) {
-        Icon = Castle;
+
+    addBadge(currentEvent.victim, {
+      variant: "death",
+      label: "D",
+      colorClass: "text-rose-300 drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]",
+    });
+
+    currentEvent.assists.forEach((assist) =>
+      addBadge(assist, {
+        variant: "assist",
+        label: "A",
+        colorClass: "text-sky-300 drop-shadow-[0_0_8px_rgba(125,211,252,0.8)]",
+      }),
+    );
+
+    if (currentEvent.objectiveActor) {
+      const descriptor = (currentEvent.objectiveName ?? currentEvent.description ?? "").toLowerCase();
+
+      const isTower =
+        currentEvent.category === "turret" ||
+        /tower|turret|inhibitor|nexus/.test(descriptor);
+
+      let label = "O";
+      let colorClass = "text-violet-300 drop-shadow-[0_0_8px_rgba(167,139,250,0.85)]";
+
+      if (isTower) {
+        label = "T";
+        colorClass = "text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.9)]";
+      } else if (/dragon|drake|soul/.test(descriptor)) {
+        label = "Dr";
+        colorClass = "text-orange-300 drop-shadow-[0_0_8px_rgba(251,146,60,0.9)]";
+      } else if (/baron|atakhan/.test(descriptor)) {
+        label = "B";
+        colorClass = "text-purple-300 drop-shadow-[0_0_8px_rgba(192,132,252,0.9)]";
+      } else if (/void|grub/.test(descriptor)) {
+        label = "V";
+        colorClass = "text-fuchsia-300 drop-shadow-[0_0_8px_rgba(232,121,249,0.9)]";
+      } else if (/rift|herald/.test(descriptor)) {
+        label = "R";
+        colorClass = "text-indigo-300 drop-shadow-[0_0_8px_rgba(129,140,248,0.9)]";
       }
-      
-      map.set(key, {
+
+      addBadge(currentEvent.objectiveActor, {
         variant: "objective",
-        Icon,
-        tone: "text-purple-400",
+        label,
+        colorClass,
       });
     }
-    
+
     return map;
   }, [currentEvent]);
 
@@ -261,7 +222,7 @@ export function RiftMap({
           const bottom = clampPercent((y / MAP_SIZE) * 100);
           const isPrimary = position.puuid === primaryPuuid;
           const isSelected = selectedPlayers.has(position.puuid);
-          const badge = badgeFor.get(position.key);
+          const badge = badgeFor.get(position.puuid);
 
           const ringClass =
             position.teamId === 100
@@ -305,18 +266,14 @@ export function RiftMap({
                 )}
 
                 {badge ? (
-                  <div
+                  <span
                     className={cn(
-                      "absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shadow-lg shadow-slate-900/60",
-                      badge.tone ?? BADGE_BASE[badge.variant],
+                      "pointer-events-none absolute inset-0 flex items-center justify-center text-2xl font-black uppercase tracking-tight drop-shadow-[0_1px_10px_rgba(15,23,42,0.95)]",
+                      badge.colorClass ?? BADGE_BASE[badge.variant],
                     )}
                   >
-                    {badge.Icon ? (
-                      <badge.Icon className="h-3 w-3" />
-                    ) : (
-                      <span>{badge.label}</span>
-                    )}
-                  </div>
+                    {badge.label}
+                  </span>
                 ) : null}
               </div>
             </motion.div>
