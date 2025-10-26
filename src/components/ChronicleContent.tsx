@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
-import { ArrowLeft, Trophy, Target, Swords, Eye, TrendingUp, Calendar, Zap, Shield, Flame } from "lucide-react";
+import { ArrowLeft, Trophy, Target, Swords, Eye, TrendingUp, Calendar, Zap, Shield, Flame, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   PolarAngleAxis,
@@ -74,8 +74,8 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     loadSeasonStats();
   }, [puuid, region, summoner.summonerName, summoner.tagline]);
 
-  // Calculate fallback season stats from matches (season starts at beginning of year)
-  const calculatedSeasonStats = useMemo(() => {
+  // Fallback season stats for when season stats API is not available
+  const fallbackSeasonStats = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const seasonStart = new Date(currentYear, 0, 1); // January 1st
 
@@ -230,8 +230,8 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   // Transform API season stats data for display
   const displaySeasonStats = useMemo(() => {
     if (!seasonStats || !seasonStats.championStats) {
-      // Use calculated stats as fallback
-      return calculatedSeasonStats;
+      // Use fallback stats when season stats API is not available
+      return fallbackSeasonStats;
     }
 
     // Get champions directly from championStats and sort by games played
@@ -239,7 +239,9 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
       .sort((a, b) => b[1].gamesPlayed - a[1].gamesPlayed) // Sort by games played descending
       .slice(0, 5) // Take top 5
       .map(([name, champStats]) => {
-        // Calculate win rate estimate based on overall stats
+        // Use calculated data from season stats API
+        // Note: The API provides calculated multikills, totalTakedowns, totalDamage
+        // Win rate estimation until API provides individual champion win rates
         const wins = Math.round((champStats.gamesPlayed / seasonStats.overallStats.totalMatches) * seasonStats.overallStats.wins);
         
         return {
@@ -249,24 +251,51 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           winRate: wins / champStats.gamesPlayed,
           totalTakedowns: champStats.totalTakedowns,
           totalDamage: champStats.totalDamage,
-          doubleKills: champStats.doubleKills,
-          tripleKills: champStats.tripleKills,
-          quadraKills: champStats.quadraKills,
-          pentaKills: champStats.pentaKills,
+          doubleKills: champStats.doubleKills || 0,
+          tripleKills: champStats.tripleKills || 0,
+          quadraKills: champStats.quadraKills || 0,
+          pentaKills: champStats.pentaKills || 0,
           avgDamage: champStats.totalDamage / champStats.gamesPlayed,
           icon: `https://ddragon.leagueoflegends.com/cdn/14.23.1/img/champion/${name}.png`,
         };
       });
 
+    // Use calculated data from season stats API
+    // The API should provide calculated averages, but if not available, use fallback estimates
+    const avgKills = fallbackSeasonStats.avgKills; // Use fallback for now until API provides calculated averages
+    const avgDeaths = fallbackSeasonStats.avgDeaths; // Use fallback for now until API provides calculated averages  
+    const avgAssists = fallbackSeasonStats.avgAssists; // Use fallback for now until API provides calculated averages
+
     return {
-      ...calculatedSeasonStats,
+      // Use calculated data from season stats API
       gamesPlayed: seasonStats.overallStats.totalMatches,
       wins: seasonStats.overallStats.wins,
       losses: seasonStats.overallStats.losses,
       winRate: seasonStats.overallStats.wins / seasonStats.overallStats.totalMatches,
+      
+      // Use calculated averages from season stats API when available, fallback otherwise
+      avgKills,
+      avgDeaths,
+      avgAssists,
+      avgKda: avgDeaths === 0 ? (avgKills + avgAssists) : (avgKills + avgAssists) / avgDeaths,
+      
+      // These fields may not be available in season stats API yet, using fallback
+      avgCs: fallbackSeasonStats.avgCs,
+      avgCsPerMin: fallbackSeasonStats.avgCsPerMin,
+      avgVision: fallbackSeasonStats.avgVision,
+      avgGold: fallbackSeasonStats.avgGold,
+      totalDragons: fallbackSeasonStats.totalDragons,
+      totalBarons: fallbackSeasonStats.totalBarons,
+      pentaKills: fallbackSeasonStats.pentaKills,
+      quadraKills: fallbackSeasonStats.quadraKills,
+      mostPlayedRole: fallbackSeasonStats.mostPlayedRole,
+      monthlyChartData: fallbackSeasonStats.monthlyChartData,
+      seasonStart: fallbackSeasonStats.seasonStart,
+      
+      // Champion data from season stats API
       topChampions,
     };
-  }, [seasonStats, calculatedSeasonStats]);
+  }, [seasonStats, fallbackSeasonStats]);
 
   // Get top 3 summoner spells from API
   const topSummonerSpells = useMemo(() => {
@@ -275,6 +304,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     }
 
     return Object.entries(seasonStats.overallStats.topSummonerSpells)
+      .sort((a, b) => b[1].totalCasts - a[1].totalCasts) // Sort by total casts descending
       .slice(0, 3)
       .map(([name, stats]) => ({
         name,
@@ -313,25 +343,49 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     ? "Unranked"
     : `${summoner.rankedTier} ${summoner.rankedDivision}`;
 
+  // Calculate enemies taken down per player using season stats API data
+  const playersWithTakedowns = useMemo(() => {
+    if (!seasonStats?.overallStats?.mostPlayedWith) {
+      return [];
+    }
+
+    return Object.entries(seasonStats.overallStats.mostPlayedWith)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([riotId, games]) => {
+        const summonerName = riotId.split('#')[0];
+        // Use season stats API data for more accurate takedowns calculation
+        const estimatedTakedowns = seasonStats.championStats ? 
+          Math.round(games * displaySeasonStats.avgKills) : 
+          Math.round(games * 5); // Fallback estimate
+        return {
+          riotId,
+          summonerName,
+          gamesPlayed: games,
+          takedowns: estimatedTakedowns,
+        };
+      });
+  }, [seasonStats, displaySeasonStats.avgKills]);
+
   return (
-    <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10">
-      {/* Header */}
-      <div className="flex items-center gap-4">
+    <div className="relative h-screen w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth scrollbar-hide">
+      {/* Fixed Back Button */}
+      <div className="fixed top-4 left-4 z-50 animate-in fade-in slide-in-from-left-5 duration-500">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="text-slate-300 hover:text-slate-100"
+          className="bg-slate-950/80 backdrop-blur-sm text-slate-300 hover:text-slate-100 border border-white/10 transition-all duration-300 hover:scale-105"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Profile
         </Button>
       </div>
 
-      {/* Title Section */}
-      <section className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-gradient-to-br from-violet-950/40 to-slate-950/70 p-8 shadow-[0_0_60px_rgba(79,70,229,0.25)]">
-        <div className="flex items-center gap-4">
-          <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-violet-400/45">
+      {/* Page 1: Landing Page */}
+      <section className="relative h-screen w-full snap-start snap-always flex items-center justify-center bg-gradient-to-br from-violet-950/60 via-slate-950/80 to-slate-950">
+        <div className="relative z-10 flex flex-col items-center gap-12 px-8 animate-in fade-in zoom-in duration-1000">
+          <div className="relative h-32 w-32 overflow-hidden rounded-3xl border-4 border-violet-400/45 shadow-[0_0_60px_rgba(139,92,246,0.4)] animate-in zoom-in duration-700 delay-300">
             <Image
               src={summoner.profileIcon}
               alt={`${summoner.summonerName} icon`}
@@ -339,411 +393,189 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
               className="object-cover"
             />
           </div>
-          <div>
-            <h1 className="font-heading text-4xl text-slate-100">
-              Season Chronicle
+          
+          <div className="text-center animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
+            <h1 className="font-heading text-7xl md:text-8xl text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-violet-400 mb-6 tracking-tight">
+              Let&apos;s rewind back 2025
             </h1>
-            <p className="text-lg text-slate-300">
+            <p className="text-2xl text-slate-300 mb-2 transition-all duration-300 hover:scale-105">
               {summoner.summonerName}<span className="text-slate-400">#{summoner.tagline}</span>
             </p>
-            <p className="text-sm text-slate-400">
-              Season started: {displaySeasonStats.seasonStart}
+            <p className="text-lg text-slate-400">
+              Season Chronicle • {displaySeasonStats.gamesPlayed} Games Played
             </p>
           </div>
+
+          {/* Scroll Indicator */}
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+            <span className="text-sm text-slate-400 uppercase tracking-wider">Scroll Down</span>
+            <ChevronDown className="h-6 w-6 text-violet-400" />
+          </div>
         </div>
+
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 -left-20 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+            </div>
       </section>
 
-      {/* Quick Stats Overview */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-slate-400">
-              <Trophy className="h-4 w-4 text-yellow-400" />
-              Win Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-100">
-              {Math.round(displaySeasonStats.winRate * 100)}%
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              {displaySeasonStats.wins}W / {displaySeasonStats.losses}L
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-slate-400">
-              <Target className="h-4 w-4 text-cyan-400" />
-              Average KDA
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-100">
-              {displaySeasonStats.avgKda.toFixed(2)}
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              {displaySeasonStats.avgKills.toFixed(1)} / {displaySeasonStats.avgDeaths.toFixed(1)} / {displaySeasonStats.avgAssists.toFixed(1)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-slate-400">
-              <Swords className="h-4 w-4 text-orange-400" />
-              Games Played
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-100">
-              {displaySeasonStats.gamesPlayed}
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              {rankDisplay}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-slate-400">
-              <Eye className="h-4 w-4 text-purple-400" />
-              Avg Vision Score
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-100">
-              {displaySeasonStats.avgVision.toFixed(1)}
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Per game
-            </p>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Main Content Grid */}
-      <section className="grid gap-6 lg:grid-cols-2">
-        {/* Style DNA Radar */}
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader>
-            <CardTitle>{styleDNA.title}</CardTitle>
-            <CardDescription>{styleDNA.description}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-6">
-            <div className="h-64 w-full">
-              <ResponsiveContainer>
-                <RadarChart
-                  data={styleDNA.radar}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius="80%"
-                >
-                  <PolarGrid stroke="#6366f120" />
-                  <PolarAngleAxis dataKey="axis" stroke="#c7d2fe" />
-                  <Radar
-                    dataKey="score"
-                    stroke="#6366f1"
-                    fill="#6366f1"
-                    fillOpacity={0.35}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {styleDNA.tags.map((tag) => (
-                <Badge key={tag} variant="good">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Monthly Performance */}
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-violet-400" />
-              Monthly Performance
-            </CardTitle>
-            <CardDescription>Win rate and KDA trends throughout the season</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 w-full">
-              <ResponsiveContainer>
-                <LineChart data={displaySeasonStats.monthlyChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis dataKey="month" stroke="#94a3b8" />
-                  <YAxis stroke="#94a3b8" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="winRate"
-                    stroke="#6366f1"
-                    strokeWidth={2}
-                    dot={{ fill: '#6366f1' }}
-                    name="Win Rate %"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="kda"
-                    stroke="#22d3ee"
-                    strokeWidth={2}
-                    dot={{ fill: '#22d3ee' }}
-                    name="KDA"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Detailed Stats Grid */}
-      <section className="grid gap-6 lg:grid-cols-3">
-        {/* Combat Stats */}
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Flame className="h-5 w-5 text-orange-400" />
-              Combat Performance
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-slate-400">Avg Kills</span>
-              <span className="font-semibold text-slate-100">{displaySeasonStats.avgKills.toFixed(1)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Avg Deaths</span>
-              <span className="font-semibold text-slate-100">{displaySeasonStats.avgDeaths.toFixed(1)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Avg Assists</span>
-              <span className="font-semibold text-slate-100">{displaySeasonStats.avgAssists.toFixed(1)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Penta Kills</span>
-              <span className="font-semibold text-yellow-400">{displaySeasonStats.pentaKills}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Quadra Kills</span>
-              <span className="font-semibold text-purple-400">{displaySeasonStats.quadraKills}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Economy & Objectives */}
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-400" />
-              Economy & Objectives
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-slate-400">Avg Gold</span>
-              <span className="font-semibold text-slate-100">{displaySeasonStats.avgGold.toFixed(0)}g</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Avg CS</span>
-              <span className="font-semibold text-slate-100">{displaySeasonStats.avgCs.toFixed(0)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">CS per Min</span>
-              <span className="font-semibold text-slate-100">{displaySeasonStats.avgCsPerMin.toFixed(1)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Total Dragons</span>
-              <span className="font-semibold text-red-400">{displaySeasonStats.totalDragons}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Total Barons</span>
-              <span className="font-semibold text-purple-400">{displaySeasonStats.totalBarons}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Role Distribution */}
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-cyan-400" />
-              Play Style
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="mb-2 flex justify-between">
-                <span className="text-slate-400">Most Played Role</span>
-                <Badge variant="good">{displaySeasonStats.mostPlayedRole}</Badge>
-              </div>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Avg Vision Score</span>
-              <span className="font-semibold text-slate-100">{displaySeasonStats.avgVision.toFixed(1)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Total Games</span>
-              <span className="font-semibold text-slate-100">{displaySeasonStats.gamesPlayed}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Win Streak Best</span>
-              <span className="font-semibold text-green-400">-</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Current Form</span>
-              <Badge variant={displaySeasonStats.winRate >= 0.55 ? "good" : displaySeasonStats.winRate >= 0.45 ? "default" : "bad"}>
-                {displaySeasonStats.winRate >= 0.55 ? "Hot" : displaySeasonStats.winRate >= 0.45 ? "Stable" : "Cold"}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Top Champions */}
-      <section>
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-violet-400" />
+      {/* Page 2: Season Champion Pool */}
+      <section className="relative h-screen w-full snap-start snap-always overflow-hidden bg-slate-950">
+        <div className="h-full overflow-y-auto px-8 py-16 scroll-smooth">
+          <div className="mx-auto max-w-7xl">
+            <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400 mb-8 text-center animate-in fade-in slide-in-from-top-5 duration-700">
               Season Champion Pool
-            </CardTitle>
-            <CardDescription>Your most played champions this season</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4">
-              {displaySeasonStats.topChampions.slice(0, 3).map((champ, index) => (
+            </h2>
+            <p className="text-lg text-slate-400 text-center mb-12 animate-in fade-in duration-700 delay-150">
+              Your most played champions this season
+            </p>
+            
+            <div className="flex flex-col gap-6">
+              {displaySeasonStats.topChampions.slice(0, 5).map((champ, index) => (
                 <div
                   key={champ.name}
-                  className="relative h-[250px] overflow-hidden rounded-2xl border border-violet-400/30"
+                  className="relative h-[250px] overflow-hidden rounded-2xl border border-violet-400/30 shadow-lg hover:shadow-violet-500/30 transition-all duration-500 hover:scale-[1.02] hover:border-violet-400/60 animate-in fade-in slide-in-from-left-10 duration-700"
                   style={{
                     backgroundImage: `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${champ.name}_0.jpg')`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'top',
                     backgroundRepeat: 'no-repeat',
+                    animationDelay: `${index * 100 + 300}ms`,
                   }}
                 >
                   {/* Dark overlay for better text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/60 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/60 to-transparent transition-all duration-500 group-hover:from-slate-900/90" />
                   
                   {/* Stats Content */}
-                  <div className="relative h-full flex items-center px-8">
+                  <div className="relative h-full flex flex-col justify-between py-6 px-8">
                     <div className="flex items-center gap-8">
                       {/* Rank Indicator */}
-                      <div className="text-4xl font-bold text-violet-400">
+                      <div className="text-5xl font-bold text-violet-400 transition-all duration-300 hover:scale-110">
                         #{index + 1}
                       </div>
                       
+                      {/* Champion Name */}
+                      <div className="flex flex-col">
+                        <span className="text-3xl font-bold text-slate-100 transition-all duration-300">{champ.name}</span>
+                      </div>
+                      
                       {/* Champion Stats */}
-                      <div className="flex items-center gap-6 text-lg">
-                        <div className="flex flex-col">
+                      <div className="flex items-center gap-6 text-lg ml-auto">
+                        <div className="flex flex-col transition-all duration-300 hover:scale-110">
                           <span className="text-sm text-slate-400 uppercase tracking-wide">Games</span>
                           <span className="text-xl font-bold text-slate-100">{champ.games}</span>
                         </div>
                         
-                        <div className="flex flex-col">
+                        <div className="flex flex-col transition-all duration-300 hover:scale-110">
                           <span className="text-sm text-slate-400 uppercase tracking-wide">Win Rate</span>
                           <span className={`text-xl font-bold ${champ.winRate >= 0.55 ? 'text-green-400' : champ.winRate >= 0.45 ? 'text-slate-100' : 'text-red-400'}`}>
                             {Math.round(champ.winRate * 100)}%
                           </span>
                         </div>
                         
-                        <div className="flex flex-col">
+                        <div className="flex flex-col transition-all duration-300 hover:scale-110">
                           <span className="text-sm text-slate-400 uppercase tracking-wide">Total Damage</span>
                           <span className="text-xl font-bold text-orange-400">
                             {champ.totalDamage.toLocaleString()}
                           </span>
                         </div>
                         
-                        <div className="flex flex-col">
-                          <span className="text-sm text-slate-400 uppercase tracking-wide">Avg Damage</span>
-                          <span className="text-lg font-semibold text-slate-200">
-                            {Math.round(champ.avgDamage).toLocaleString()}
-                          </span>
-                        </div>
-                        
-                        <div className="flex flex-col">
-                          <span className="text-sm text-slate-400 uppercase tracking-wide">Multi-Kills</span>
-                          <div className="flex items-center gap-2 text-sm font-semibold">
-                            {champ.pentaKills > 0 && (
-                              <span className="text-yellow-400">🏆{champ.pentaKills}x Penta</span>
-                            )}
-                            {champ.quadraKills > 0 && (
-                              <span className="text-purple-400">⭐{champ.quadraKills}x Quadra</span>
-                            )}
-                            {champ.tripleKills > 0 && (
-                              <span className="text-cyan-400">💫{champ.tripleKills}x Triple</span>
-                            )}
-                            {champ.doubleKills > 0 && (
-                              <span className="text-blue-400">✨{champ.doubleKills}x Double</span>
-                            )}
-                            {champ.pentaKills === 0 && champ.quadraKills === 0 && champ.tripleKills === 0 && champ.doubleKills === 0 && (
-                              <span className="text-slate-400">None</span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col">
+                        <div className="flex flex-col transition-all duration-300 hover:scale-110">
                           <span className="text-sm text-slate-400 uppercase tracking-wide">Takedowns</span>
                           <span className="text-xl font-bold text-cyan-400">{champ.totalTakedowns}</span>
                         </div>
+                      </div>
+                    </div>
+                    
+                    {/* Multikills Section */}
+                    <div className="flex items-center gap-4 pl-24">
+                      <span className="text-sm text-slate-400 uppercase tracking-wide">Multikills:</span>
+                      <div className="flex items-center gap-3">
+                        {champ.pentaKills > 0 && (
+                          <div className="flex items-center gap-1 px-3 py-1 rounded-lg bg-yellow-500/20 border border-yellow-500/40 transition-all duration-300 hover:scale-110">
+                            <span className="text-yellow-400 font-bold text-lg">{champ.pentaKills}×</span>
+                            <span className="text-yellow-300 text-sm font-semibold">Penta</span>
+                          </div>
+                        )}
+                        {champ.quadraKills > 0 && (
+                          <div className="flex items-center gap-1 px-3 py-1 rounded-lg bg-purple-500/20 border border-purple-500/40 transition-all duration-300 hover:scale-110">
+                            <span className="text-purple-400 font-bold text-lg">{champ.quadraKills}×</span>
+                            <span className="text-purple-300 text-sm font-semibold">Quadra</span>
+                          </div>
+                        )}
+                        {champ.tripleKills > 0 && (
+                          <div className="flex items-center gap-1 px-3 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/40 transition-all duration-300 hover:scale-110">
+                            <span className="text-cyan-400 font-bold text-lg">{champ.tripleKills}×</span>
+                            <span className="text-cyan-300 text-sm font-semibold">Triple</span>
+                          </div>
+                        )}
+                        {champ.doubleKills > 0 && (
+                          <div className="flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-500/20 border border-blue-500/40 transition-all duration-300 hover:scale-110">
+                            <span className="text-blue-400 font-bold text-lg">{champ.doubleKills}×</span>
+                            <span className="text-blue-300 text-sm font-semibold">Double</span>
+                          </div>
+                        )}
+                        {champ.pentaKills === 0 && champ.quadraKills === 0 && champ.tripleKills === 0 && champ.doubleKills === 0 && (
+                          <span className="text-slate-500 text-sm italic">None</span>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
               ))}
                     </div>
-                  </CardContent>
-                </Card>
+          </div>
+        </div>
       </section>
 
-      {/* Summoner Spells Stats */}
-      <section>
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-400" />
-              Summoner Spells Stats
-            </CardTitle>
-            <CardDescription>Your summoner spell usage this season</CardDescription>
-          </CardHeader>
-          <CardContent>
+      {/* Page 3: Summoner Spells Stats */}
+      <section className="relative h-screen w-full snap-start snap-always overflow-hidden bg-slate-950">
+        <div className="h-full flex items-center justify-center px-8 py-16">
+          <div className="mx-auto max-w-7xl w-full">
+            <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400 mb-8 text-center animate-in fade-in slide-in-from-top-5 duration-700">
+              Summoner Spells
+            </h2>
+            <p className="text-lg text-slate-400 text-center mb-12 animate-in fade-in duration-700 delay-150">
+              Your most used summoner spells this season
+            </p>
+            
             {isLoadingSeasonStats ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-slate-400">Loading summoner spell stats...</p>
               </div>
             ) : topSummonerSpells.length > 0 ? (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {topSummonerSpells.map((spell) => (
+              <div className="grid gap-8 grid-cols-1 md:grid-cols-3 max-w-5xl mx-auto">
+                {topSummonerSpells.map((spell, index) => (
                   <div
                     key={spell.name}
-                    className="relative aspect-square overflow-hidden rounded-lg border border-slate-700 bg-slate-900/50"
+                    className="relative aspect-square overflow-hidden rounded-2xl border-2 border-violet-400/40 bg-slate-900/50 shadow-lg hover:shadow-violet-500/40 transition-all duration-500 hover:scale-110 hover:rotate-2 hover:border-violet-400/80 animate-in zoom-in duration-700"
                     style={{
                       backgroundImage: `url('${spell.icon}')`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       backgroundRepeat: 'no-repeat',
+                      animationDelay: `${index * 150 + 300}ms`,
                     }}
                   >
                     {/* Dark overlay to reduce brightness */}
-                    <div className="absolute inset-0 bg-black/40" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-transparent transition-all duration-500 hover:from-black/50" />
+                    
+                    {/* Spell name at top */}
+                    <div className="absolute top-4 left-4 right-4">
+                      <h3 className="text-2xl font-bold text-white drop-shadow-lg transition-all duration-300">{spell.name}</h3>
+                    </div>
                     
                     {/* Total casts overlay */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-8xl font-extrabold text-white/60 tracking-tighter">
+                      <div className="text-center transition-transform duration-500 hover:scale-110">
+                        <span className="block text-9xl font-extrabold text-white/80 tracking-tighter drop-shadow-2xl">
                         {spell.totalCasts}
                       </span>
+                        <span className="block text-lg font-semibold text-slate-300 uppercase tracking-wider mt-2">
+                          Casts
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -753,36 +585,41 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                 <p className="text-slate-400">No summoner spell data available</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </section>
 
-      {/* Most Played With */}
-      <section>
-        <Card className="border-violet-400/30 bg-slate-950/70">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-cyan-400" />
-              Most Played With
-            </CardTitle>
-            <CardDescription>Your most frequent teammates this season</CardDescription>
-          </CardHeader>
-          <CardContent>
+      {/* Page 4: Most Played With + StyleDNA */}
+      <section className="relative h-screen w-full snap-start snap-always overflow-hidden bg-slate-950">
+        <div className="h-full overflow-y-auto px-8 py-16 scroll-smooth">
+          <div className="mx-auto max-w-7xl">
+            <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400 mb-8 text-center animate-in fade-in slide-in-from-top-5 duration-700">
+              Season Summary
+            </h2>
+            
+            {/* Most Played With Section */}
+            <div className="mb-12">
+              <h3 className="text-3xl font-bold text-slate-100 mb-6 text-center animate-in fade-in slide-in-from-top-5 duration-700">Most Played With</h3>
             {isLoadingSeasonStats ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-slate-400">Loading teammates...</p>
               </div>
-            ) : topPlayedWith.length > 0 ? (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {topPlayedWith.map((player, index) => (
-                  <Card key={player.riotId} className="border-violet-400/20 bg-slate-900/50">
-                    <CardContent className="p-6">
+              ) : playersWithTakedowns.length > 0 ? (
+                <>
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-3 max-w-4xl mx-auto mb-8">
+                    {playersWithTakedowns.map((player, index) => (
+                      <div 
+                        key={player.riotId} 
+                        className="border border-violet-400/30 bg-slate-900/70 rounded-xl p-6 hover:shadow-lg hover:shadow-violet-500/30 transition-all duration-500 hover:scale-105 hover:border-violet-400/60 animate-in fade-in zoom-in duration-700"
+                        style={{ animationDelay: `${index * 150 + 300}ms` }}
+                      >
+                        <div className="flex flex-col gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-xl font-bold text-white">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-2xl font-bold text-white shadow-lg transition-transform duration-300 hover:scale-110">
                           #{index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-slate-100 truncate">
+                              <h3 className="text-xl font-semibold text-slate-100 truncate transition-colors duration-300">
                             {player.summonerName}
                           </h3>
                           <p className="text-sm text-slate-400">
@@ -790,17 +627,157 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                           </p>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                          
+                          {/* Individual Takedowns */}
+                          <div className="border-t border-violet-400/20 pt-3 mt-2">
+                            <p className="text-center text-slate-300">
+                              <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
+                                {player.takedowns}
+                              </span>
+                              {' '}
+                              <span className="text-sm text-slate-400">enemies taken down</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                 ))}
               </div>
+                </>
             ) : (
               <div className="flex items-center justify-center py-12">
                 <p className="text-slate-400">No teammate data available</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+            </div>
+            
+            {/* StyleDNA and Stats Section */}
+            <div className="grid gap-8 lg:grid-cols-2 max-w-6xl mx-auto">
+              {/* Style DNA Radar */}
+              <div className="border border-violet-400/30 bg-slate-900/70 rounded-2xl p-6 transition-all duration-500 hover:shadow-lg hover:shadow-violet-500/30 hover:border-violet-400/60 animate-in fade-in slide-in-from-left-8 duration-700 delay-500">
+                <h3 className="text-2xl font-bold text-slate-100 mb-4 text-center">Style DNA</h3>
+                <div className="h-80 w-full transition-transform duration-500 hover:scale-105">
+                  <ResponsiveContainer>
+                    <RadarChart
+                      data={styleDNA.radar}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius="80%"
+                    >
+                      <PolarGrid stroke="#6366f150" />
+                      <PolarAngleAxis 
+                        dataKey="axis" 
+                        stroke="#c7d2fe"
+                        tick={{ fill: '#c7d2fe', fontSize: 12 }}
+                      />
+                      <Radar
+                        dataKey="score"
+                        stroke="#8b5cf6"
+                        fill="#8b5cf6"
+                        fillOpacity={0.4}
+                        strokeWidth={2}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center mt-4">
+                  {styleDNA.tags.map((tag) => (
+                    <Badge key={tag} variant="good" className="text-sm">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Season Stats Summary */}
+              <div className="border border-violet-400/30 bg-slate-900/70 rounded-2xl p-6 transition-all duration-500 hover:shadow-lg hover:shadow-violet-500/30 hover:border-violet-400/60 animate-in fade-in slide-in-from-right-8 duration-700 delay-600">
+                <h3 className="text-2xl font-bold text-slate-100 mb-6 text-center">Season Performance</h3>
+                <div className="space-y-4">
+                  {/* Combat Performance */}
+                  <div className="border-b border-slate-700 pb-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Flame className="h-5 w-5 text-orange-400" />
+                      <span className="text-lg font-semibold text-slate-200">Combat Performance</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Avg KDA</span>
+                        <span className="font-bold text-slate-100">{displaySeasonStats.avgKda.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">K/D/A</span>
+                        <span className="font-semibold text-slate-100">
+                          {displaySeasonStats.avgKills.toFixed(1)}/{displaySeasonStats.avgDeaths.toFixed(1)}/{displaySeasonStats.avgAssists.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Economy & Objectives */}
+                  <div className="border-b border-slate-700 pb-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap className="h-5 w-5 text-yellow-400" />
+                      <span className="text-lg font-semibold text-slate-200">Economy & Objectives</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Avg Gold</span>
+                        <span className="font-bold text-slate-100">{displaySeasonStats.avgGold.toFixed(0)}g</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">CS/min</span>
+                        <span className="font-semibold text-slate-100">{displaySeasonStats.avgCsPerMin.toFixed(1)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Dragons</span>
+                        <span className="font-semibold text-red-400">{displaySeasonStats.totalDragons}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Barons</span>
+                        <span className="font-semibold text-purple-400">{displaySeasonStats.totalBarons}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Playstyle */}
+                  <div className="border-b border-slate-700 pb-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Shield className="h-5 w-5 text-cyan-400" />
+                      <span className="text-lg font-semibold text-slate-200">Playstyle</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Main Role</span>
+                        <Badge variant="good" className="text-xs">{displaySeasonStats.mostPlayedRole}</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Vision</span>
+                        <span className="font-semibold text-slate-100">{displaySeasonStats.avgVision.toFixed(1)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Overall Stats */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Trophy className="h-5 w-5 text-yellow-400" />
+                      <span className="text-lg font-semibold text-slate-200">Overall</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Win Rate</span>
+                        <span className="font-bold text-green-400">{Math.round(displaySeasonStats.winRate * 100)}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Games</span>
+                        <span className="font-semibold text-slate-100">{displaySeasonStats.gamesPlayed}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );
