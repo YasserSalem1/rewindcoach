@@ -85,3 +85,42 @@ body {
 .animate-pulse-subtle {
   animation: pulse-subtle 2s ease-in-out infinite;
 }
+
+/* Smooth scroll behavior for chronicle pages */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced snap scrolling */
+.snap-y {
+  scroll-snap-type: y mandatory;
+  scroll-padding: 0;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+.snap-always {
+  scroll-snap-stop: always;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Prevent scroll chaining/overscroll on snap containers */
+.snap-y.snap-mandatory {
+  overscroll-behavior-y: contain;
+}
+
+/* Hide scrollbar while maintaining scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
