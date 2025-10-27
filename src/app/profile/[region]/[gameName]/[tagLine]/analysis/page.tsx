@@ -40,10 +40,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
         gameName={normalizedGameName}
         tagLine={normalizedTagLine}
       />
-      <MatchAnalysisContent
-        bundle={bundle}
-        region={region}
-      />
+      <MatchAnalysisContent bundle={bundle} />
     </>
   );
 }

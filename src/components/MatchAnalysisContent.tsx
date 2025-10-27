@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -39,7 +39,6 @@ import { cn } from "@/lib/ui";
 
 interface MatchAnalysisContentProps {
   bundle: ProfileBundle;
-  region: string;
 }
 
 interface TimelineDatum {
@@ -96,7 +95,7 @@ const CANONICAL_LANE_LABELS: Record<CanonicalLane, string> = {
 const LP_WIN_DELTA = 15;
 const LP_LOSS_DELTA = -15;
 
-export function MatchAnalysisContent({ bundle, region }: MatchAnalysisContentProps) {
+export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
   const router = useRouter();
   const { profile, matches, styleDNA, highlights, puuid } = bundle;
 
@@ -572,9 +571,53 @@ export function MatchAnalysisContent({ bundle, region }: MatchAnalysisContentPro
       ? "Unranked"
       : `${profile.rankedTier} ${profile.rankedDivision}`;
 
+  const snapshotRef = useRef<HTMLDivElement>(null);
+
+  const shareTags = useMemo(() => styleDNA.tags.slice(0, 3), [styleDNA.tags]);
+  const shareObjectiveEntries = useMemo(
+    () => [
+      {
+        label: "Dragons",
+        value: analysis.objectiveLedger?.dragons ?? 0,
+        icon: "/images/objectives/gragon.jpeg",
+      },
+      {
+        label: "Barons",
+        value: analysis.objectiveLedger?.barons ?? 0,
+        icon: "/images/objectives/baronicon.png",
+      },
+      {
+        label: "Towers",
+        value: analysis.objectiveLedger?.towers ?? 0,
+        icon: "/images/objectives/tower.png",
+      },
+    ],
+    [analysis.objectiveLedger?.barons, analysis.objectiveLedger?.dragons, analysis.objectiveLedger?.towers],
+  );
+  const shareMomentumGames = useMemo(() => {
+    const recentSlice = analysis.timelineData.slice(-6);
+    if (!recentSlice.length) {
+      return [] as Array<
+        TimelineDatum & {
+          lp: number | null;
+          lpDelta: number | null;
+        }
+      >;
+    }
+    const lpSlice = analysis.lpTimeline.slice(-recentSlice.length);
+    return recentSlice.map((entry, index) => ({
+      ...entry,
+      lp: lpSlice[index]?.lp ?? null,
+      lpDelta: lpSlice[index]?.delta ?? null,
+    }));
+  }, [analysis.timelineData, analysis.lpTimeline]);
+  const shareWinRate = analysis.sample ? Math.round((analysis.wins / analysis.sample) * 100) : 0;
+  const snapshotGeneratedOn = useMemo(() => new Date().toLocaleDateString(), []);
+
   return (
-    <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <>
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <Button
           variant="ghost"
           className="w-fit text-slate-300 hover:text-slate-100"
@@ -583,29 +626,6 @@ export function MatchAnalysisContent({ bundle, region }: MatchAnalysisContentPro
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <div className="flex gap-3">
-          <Button
-            variant="secondary"
-            onClick={() =>
-              router.push(
-                `/profile/${region}/${encodeURIComponent(profile.summonerName)}/${encodeURIComponent(profile.tagline)}`,
-              )
-            }
-          >
-            Profile Hub
-          </Button>
-          <Button
-            variant="default"
-            onClick={() =>
-              router.push(
-                `/profile/${region}/${encodeURIComponent(profile.summonerName)}/${encodeURIComponent(profile.tagline)}/chronicle`,
-              )
-            }
-            className="bg-gradient-to-r from-violet-500 to-fuchsia-500 text-slate-950 hover:opacity-90"
-          >
-            Open Chronicle
-          </Button>
-        </div>
       </div>
 
       <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-950/90 p-6 shadow-[0_0_50px_rgba(79,70,229,0.25)]">
@@ -935,23 +955,76 @@ export function MatchAnalysisContent({ bundle, region }: MatchAnalysisContentPro
             <CardTitle>Objective Ledger</CardTitle>
             <CardDescription>Team objective haul across the sample</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+          <CardContent className="grid gap-3">
             {[
-              { label: "Dragons", value: analysis.objectiveLedger?.dragons ?? 0, accent: "from-amber-400 to-orange-500" },
-              { label: "Barons", value: analysis.objectiveLedger?.barons ?? 0, accent: "from-purple-400 to-fuchsia-500" },
-              { label: "Towers", value: analysis.objectiveLedger?.towers ?? 0, accent: "from-emerald-400 to-teal-500" },
-            ].map((objective) => (
-              <div
-                key={objective.label}
-                className="flex items-center justify-between rounded-2xl border border-white/5 bg-slate-900/70 px-4 py-3"
-              >
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{objective.label}</p>
-                  <p className="text-2xl font-semibold text-slate-100">{objective.value}</p>
+              {
+                label: "Dragons",
+                value: analysis.objectiveLedger?.dragons ?? 0,
+                accent: "from-emerald-400/50 via-emerald-500/20 to-teal-500/10",
+                icon: "/images/objectives/gragon.jpeg",
+              },
+              {
+                label: "Barons",
+                value: analysis.objectiveLedger?.barons ?? 0,
+                accent: "from-fuchsia-500/60 via-violet-500/25 to-purple-500/10",
+                icon: "/images/objectives/baronicon.png",
+              },
+              {
+                label: "Towers",
+                value: analysis.objectiveLedger?.towers ?? 0,
+                accent: "from-sky-500/60 via-indigo-500/20 to-slate-500/10",
+                icon: "/images/objectives/tower.png",
+              },
+            ].map((objective) => {
+              const perGame =
+                analysis.sample > 0 ? objective.value / analysis.sample : 0;
+              const perGameDisplay =
+                perGame > 0
+                  ? perGame >= 10
+                    ? perGame.toFixed(1)
+                    : perGame.toFixed(2)
+                  : "0";
+
+              return (
+                <div
+                  key={objective.label}
+                  className="relative overflow-hidden rounded-2xl border border-white/5 bg-slate-950/70 px-4 py-4"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${objective.accent} opacity-60`} />
+                  <div className="absolute inset-0 bg-slate-950/85" />
+                  <div className="relative flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/10 bg-slate-900/80 shadow-lg shadow-black/40">
+                        <Image
+                          src={objective.icon}
+                          alt={`${objective.label} icon`}
+                          fill
+                          sizes="48px"
+                          className="object-contain"
+                          priority={false}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-100/70">
+                          {objective.label}
+                        </p>
+                        <p className="text-2xl font-semibold text-slate-50 drop-shadow">
+                          {objective.value}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[0.65rem] uppercase tracking-[0.25em] text-slate-200/70">
+                        Per game
+                      </p>
+                      <p className="text-lg font-semibold text-slate-50">
+                        {perGameDisplay}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${objective.accent} opacity-80`} />
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
 
@@ -1110,13 +1183,6 @@ export function MatchAnalysisContent({ bundle, region }: MatchAnalysisContentPro
                 {analysis.objectiveRate.toFixed(1)}
               </p>
               <p className="text-xs text-slate-400">drakes + barons / game</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Avg Gold</p>
-              <p className="text-2xl font-semibold text-amber-200">
-                {formatGold(analysis.avgGold)}
-              </p>
-              <p className="text-xs text-slate-400">earned per match</p>
             </div>
           </CardContent>
         </Card>
@@ -1300,6 +1366,204 @@ export function MatchAnalysisContent({ bundle, region }: MatchAnalysisContentPro
         </Card>
       </section>
 
-    </div>
+      </div>
+      <div
+        ref={snapshotRef}
+        className="pointer-events-none fixed left-[-2000px] top-0 z-[-1] w-[960px] rounded-3xl border border-white/10 bg-slate-950 p-8 text-slate-100 shadow-[0_0_50px_rgba(88,28,135,0.45)]"
+      >
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <p className="text-[0.65rem] uppercase tracking-[0.4em] text-fuchsia-300/70">
+              Match Intelligence Lab Snapshot
+            </p>
+            <h2 className="mt-3 font-heading text-4xl font-semibold text-slate-50">
+              {profile.summonerName}
+              <span className="ml-1 text-slate-400/80">#{profile.tagline}</span>
+            </h2>
+            <p className="mt-2 text-sm text-slate-300/90">
+              Level {profile.level} • {rankDisplay}{" "}
+              {profile.rankedTier !== "UNRANKED" ? `${profile.rankedLp} LP` : "Placements pending"}
+            </p>
+            {shareTags.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {shareTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-fuchsia-400/40 bg-fuchsia-500/10 px-3 py-1 text-xs uppercase tracking-wide text-fuchsia-100"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-slate-900/80 px-6 py-4 text-right shadow-[0_10px_30px_rgba(79,70,229,0.25)]">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400/80">
+              Last {analysis.sample} Games
+            </p>
+            <p className="mt-3 text-4xl font-semibold text-emerald-300">{shareWinRate}% WR</p>
+            <p className="text-sm text-slate-300">
+              {analysis.wins}-{analysis.losses}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <section className="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-400/80">Momentum Timeline</p>
+            {shareMomentumGames.length ? (
+              <div className="mt-3 space-y-3 text-sm text-slate-200">
+                <div className="rounded-xl border border-violet-400/30 bg-violet-500/10 px-3 py-2 text-slate-100">
+                  <p className="text-[0.6rem] uppercase tracking-[0.3em] text-violet-200/80">LP swing</p>
+                  <p className="text-2xl font-semibold text-violet-100">
+                    {analysis.lpTrendChange >= 0 ? "+" : ""}
+                    {analysis.lpTrendChange}
+                    <span className="ml-1 text-sm text-slate-300">LP</span>
+                  </p>
+                  <p className="text-xs text-slate-300/80">Across {analysis.sample} matches</p>
+                </div>
+                {recentPerformance ? (
+                  <div className="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-xs text-slate-300">
+                    <p className="text-[0.6rem] uppercase tracking-[0.3em] text-slate-400/80">Recent 5</p>
+                    <p className="text-base font-semibold text-slate-100">
+                      {recentPerformance.wins}-{recentPerformance.losses} •{" "}
+                      {recentPerformance.lpChange >= 0 ? "+" : ""}
+                      {recentPerformance.lpChange} LP
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {recentPerformance.avgKda.toFixed(2)} KDA • {recentPerformance.avgCs.toFixed(2)} cs/min •{" "}
+                      {Math.round(recentPerformance.avgKp)}% KP • {formatMinutes(recentPerformance.avgDuration)}
+                    </p>
+                  </div>
+                ) : null}
+                <div>
+                  <p className="text-[0.6rem] uppercase tracking-[0.3em] text-slate-400/80">Latest games</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {shareMomentumGames
+                      .slice()
+                      .reverse()
+                      .map((game) => (
+                        <div
+                          key={game.name}
+                          className={cn(
+                            "flex h-12 w-12 flex-col items-center justify-center rounded-xl border text-xs font-semibold",
+                            game.result === "W"
+                              ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-100"
+                              : "border-rose-400/40 bg-rose-400/10 text-rose-100",
+                          )}
+                        >
+                          <span>{game.result}</span>
+                          <span className="text-[0.55rem] uppercase tracking-[0.3em] text-slate-300/80">
+                            {game.name}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+                <ul className="space-y-1 text-xs text-slate-300">
+                  {shareMomentumGames.slice(-1).map((lastGame) => (
+                    <li key={`${lastGame.name}-summary`}>
+                      Last game: {lastGame.kda.toFixed(2)} KDA • {lastGame.cs.toFixed(1)} cs/min •{" "}
+                      {Math.round(lastGame.kp)}% KP
+                      {typeof lastGame.lpDelta === "number"
+                        ? ` • ${lastGame.lpDelta >= 0 ? "+" : ""}${lastGame.lpDelta} LP`
+                        : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-400">Queue more matches to chart momentum.</p>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-400/80">Objective Ledger</p>
+            <p className="mt-1 text-xs text-slate-400">
+              Team takes secured during this match block.
+            </p>
+            <div className="mt-3 flex flex-col gap-3">
+              {shareObjectiveEntries.map((objective) => {
+                const perGame =
+                  analysis.sample > 0 ? (objective.value / analysis.sample).toFixed(objective.value >= 10 ? 1 : 2) : "0";
+                return (
+                  <div
+                    key={objective.label}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-slate-900">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={objective.icon}
+                          alt={`${objective.label} icon`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-[0.65rem] uppercase tracking-[0.3em] text-slate-400/80">
+                          {objective.label}
+                        </p>
+                        <p className="text-xl font-semibold text-slate-50">{objective.value}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[0.6rem] uppercase tracking-[0.3em] text-slate-400/80">Per game</p>
+                      <p className="text-xs text-slate-300">{perGame}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-400/80">Signature Performances</p>
+            <div className="mt-3 flex flex-col gap-3">
+              {highlightMatches.length ? (
+                highlightMatches.slice(0, 3).map((entry) => (
+                  <div
+                    key={entry.title}
+                    className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-violet-400/30">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={entry.data.championIcon}
+                          alt={entry.data.championName}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-[0.6rem] uppercase tracking-[0.3em] text-slate-400/80">{entry.label}</p>
+                        <p className="text-sm font-semibold text-slate-100">{entry.title}</p>
+                        <p className="text-xs text-slate-400">
+                          {entry.data.championName} • {entry.data.kda} • {entry.data.csPerMin} cs/min •{" "}
+                          {Math.round(entry.data.killParticipation)}% KP
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right text-xs text-slate-400">
+                      <p>{entry.data.result}</p>
+                      <p>{entry.data.date}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-400">
+                  Play a few more matches to spotlight your standout games.
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-slate-700/60 bg-slate-950/80 px-4 py-3 text-[0.65rem] uppercase tracking-[0.4em] text-slate-500">
+          Generated with Rewind Coach • {snapshotGeneratedOn}
+        </div>
+      </div>
+
+    </>
   );
 }
