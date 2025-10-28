@@ -1,0 +1,121 @@
+{
+    "puuid": "qbi-xG7GxRH9qspHqXrdL8M2er5WmRQuUP0Nnm9lX3nIqj-ruhjrSBmT1R6yxA7R2eU6Qq7BHLelnQ",
+    "region": "europe",
+    "statsPeriodStart": 1760486400,
+    "totalMatchesAttempted": 37,
+    "totalMatchesAnalyzed": 37,
+    "overallStats": {
+        "totalMatches": 37,
+        "mostPlayedWith": {
+            "Memphis Cult#_miRNSCfc2RYbP1O14e8B5RsslujV1RPgVFX1sTwF4C5OP5eEqFubMkRdKfMR9eu_AgOc-rlupeEJw": 1,
+            "Graxller#nJSl1vSrwdVLMp-8rcpNL0dMFOB_u3S6wPCmATULSfFlaM82QQOkg3Inl_rahBNGohQEUAgzHvsr7A": 1,
+            "akoswadd#cBTkQ7wWjWPEGK4FepmTG-b4TuFTHr4fJOtiQu94e-xgSOWTENw315ppNeGCfpw4r5MOwg_9E7YHgw": 1,
+            "emeletladzsosz#5bo_v5c-_d7KKJ52SxFj3VlI2lGIZdctAW1f-OfzSVKVNndGiBlKzX9fIRMvXa9NrDKEy6TFfpIhrQ": 1,
+            "DarknessChild13#KGGQu4uMZCvsIQrLu8C7F3i06MnR51sAnuNMQRMR1Sv_ZEcAvd6Gj3vfp520uRyVdl41Ee5YisrtGg": 1
+        },
+        "wins": 21,
+        "losses": 16,
+        "totalCS": 7795,
+        "mostKills": {
+            "value": 17,
+            "champion": "Kaisa"
+        },
+        "mostDeaths": {
+            "value": 10,
+            "champion": "Caitlyn"
+        },
+        "mostAssists": {
+            "value": 15,
+            "champion": "Kaisa"
+        },
+        "longestGameDuration": 2578,
+        "shortestGameDuration": 916,
+        "topSummonerSpells": {
+            "Flash": {
+                "totalCasts": 128,
+                "gamesUsed": 37,
+                "avgCastsPerGame": 3.46
+            },
+            "Barrier": {
+                "totalCasts": 63,
+                "gamesUsed": 17,
+                "avgCastsPerGame": 3.71
+            },
+            "Exhaust": {
+                "totalCasts": 54,
+                "gamesUsed": 16,
+                "avgCastsPerGame": 3.38
+            },
+            "Smite": {
+                "totalCasts": 13,
+                "gamesUsed": 1,
+                "avgCastsPerGame": 13.0
+            },
+            "Cleanse": {
+                "totalCasts": 7,
+                "gamesUsed": 2,
+                "avgCastsPerGame": 3.5
+            }
+        },
+        "topItems": [
+            {
+                "itemId": 1055,
+                "gamesBought": 24
+            },
+            {
+                "itemId": 3031,
+                "gamesBought": 16
+            },
+            {
+                "itemId": 3006,
+                "gamesBought": 15
+            }
+        ]
+    },
+    "top3Champions": [
+        "Smolder",
+        "Kaisa",
+        "Naafiri"
+    ],
+    "championStats": {
+        "Smolder": {
+            "gamesPlayed": 7,
+            "totalTakedowns": 86,
+            "totalDamage": 127086,
+            "doubleKills": 5,
+            "tripleKills": 0,
+            "quadraKills": 0,
+            "pentaKills": 0,
+            "qCasts": 890,
+            "wCasts": 404,
+            "eCasts": 217,
+            "rCasts": 49
+        },
+        "Kaisa": {
+            "gamesPlayed": 6,
+            "totalTakedowns": 94,
+            "totalDamage": 138457,
+            "doubleKills": 7,
+            "tripleKills": 1,
+            "quadraKills": 0,
+            "pentaKills": 0,
+            "qCasts": 449,
+            "wCasts": 198,
+            "eCasts": 559,
+            "rCasts": 30
+        },
+        "Naafiri": {
+            "gamesPlayed": 1,
+            "totalTakedowns": 1,
+            "totalDamage": 5208,
+            "doubleKills": 0,
+            "tripleKills": 0,
+            "quadraKills": 0,
+            "pentaKills": 0,
+            "qCasts": 152,
+            "wCasts": 32,
+            "eCasts": 84,
+            "rCasts": 5
+        }
+    }
+}
