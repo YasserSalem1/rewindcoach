@@ -629,7 +629,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                       </div>
                       
                       {/* Champion Stats - Horizontal Compact Layout */}
-                      <div className="flex items-center gap-4 text-sm ml-auto">
+                      <div className="flex items-top gap-4 text-sm ml-auto">
                         <div className="flex flex-col items-center transition-all duration-300 hover:scale-110">
                           <span className="text-xs text-slate-400 uppercase tracking-wide">Games</span>
                           <span className="text-lg font-bold text-slate-100">{champ.games}</span>
