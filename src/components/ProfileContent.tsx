@@ -61,7 +61,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
       : "text-slate-400";
 
   return (
-    <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
+    <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 pb-32">
       {/* Back Button */}
       <div className="flex items-center gap-4">
         <Button
