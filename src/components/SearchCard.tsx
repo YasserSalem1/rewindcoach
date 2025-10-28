@@ -104,7 +104,7 @@ export function SearchCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className={cn(className)}
+      className={cn("flex w-full justify-center", className)}
     >
       <Card className="w-full max-w-xl border-white/10 bg-slate-900/60 p-8 shadow-[0_0_60px_rgba(79,70,229,0.25)]">
         <CardHeader className="items-center text-center">

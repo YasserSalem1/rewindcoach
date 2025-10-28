@@ -177,7 +177,6 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     // Top champions by games played
     const topChampions = Object.entries(championStats)
       .sort((a, b) => b[1].games - a[1].games)
-      .slice(0, 5)
       .map(([name, stats]) => ({
         name,
         ...stats,
@@ -237,7 +236,6 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     // Get champions directly from championStats and sort by games played
     const topChampions = Object.entries(seasonStats.championStats)
       .sort((a, b) => b[1].gamesPlayed - a[1].gamesPlayed) // Sort by games played descending
-      .slice(0, 5) // Take top 5
       .map(([name, champStats]) => {
         // Use calculated data from season stats API
         // Note: The API provides calculated multikills, totalTakedowns, totalDamage
@@ -428,11 +426,11 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
               Season Champion Pool
             </h2>
             <p className="text-lg text-slate-400 text-center mb-12 animate-in fade-in duration-700 delay-150">
-              Your most played champions this season
+              Every champion you've piloted this season, ordered by games played
             </p>
             
             <div className="flex flex-col gap-6">
-              {displaySeasonStats.topChampions.slice(0, 5).map((champ, index) => (
+              {displaySeasonStats.topChampions.map((champ, index) => (
                 <div
                   key={champ.name}
                   className="relative h-[250px] overflow-hidden rounded-2xl border border-violet-400/30 shadow-lg hover:shadow-violet-500/30 transition-all duration-500 hover:scale-[1.02] hover:border-violet-400/60 animate-in fade-in slide-in-from-left-10 duration-700"

@@ -697,7 +697,6 @@ export function summarizeMatches(matches: RiotMatch[], focusPuuid: string) {
     csPerMinute: parseFloat(avgCsPerMinute.toFixed(2)),
     topChampions: Array.from(championStats.entries())
       .sort((a, b) => b[1].games - a[1].games)
-      .slice(0, 3)
       .map(([championName, data]) => ({
         championId: championName,
         championName,

@@ -164,19 +164,17 @@ export function CoachChat({ matchId, currentTime, puuid, gameName, tagLine, clas
     [isStreaming, sendMessage],
   );
 
+const baseClasses = "flex flex-col rounded-3xl transition-all duration-300";
 const collapsedClasses = cn(
-  "border-white/10 bg-slate-950/70 backdrop-blur-xl shadow-lg max-h-[46rem] min-h-[360px] w-full",
+  "relative h-full max-h-full border border-white/10 bg-slate-950/70 backdrop-blur-xl shadow-lg max-h-[46rem] min-h-[360px] w-full",
   className,
 );
+const expandedClasses =
+  "fixed inset-y-6 right-6 z-50 flex max-h-[calc(100vh-3rem)] w-[min(720px,calc(100vw-3rem))] border border-violet-400/40 bg-slate-950/95 shadow-2xl shadow-violet-500/20 backdrop-blur-2xl";
 
 return (
   <motion.div
-    className={cn(
-      "relative flex h-full max-h-full flex-col rounded-3xl border transition-all duration-300",
-      isExpanded
-        ? "fixed inset-4 z-50 border-violet-400/40 bg-slate-950/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/20"
-        : collapsedClasses,
-    )}
+    className={cn(baseClasses, isExpanded ? expandedClasses : collapsedClasses)}
       layout
     >
       <div className="flex items-center justify-between p-4 pb-3">

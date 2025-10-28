@@ -34,6 +34,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ProfileCoachChat } from "@/components/ProfileCoachChat";
 import type { ProfileBundle } from "@/lib/riot";
 import { cn } from "@/lib/ui";
 
@@ -64,13 +65,6 @@ interface MatchSummaryCard {
   date: string;
 }
 
-interface LpTimelinePoint {
-  name: string;
-  lp: number;
-  delta: number;
-  result: "W" | "L";
-}
-
 const formatPercent = (value: number) => `${Math.round((value || 0) * 100)}%`;
 const formatMinutes = (minutes: number) => `${Math.round(minutes || 0)}m`;
 const formatGold = (value: number) => `${Math.round(value || 0).toLocaleString()}g`;
@@ -91,9 +85,6 @@ const CANONICAL_LANE_LABELS: Record<CanonicalLane, string> = {
   Bot: "Bot",
   Support: "Support",
 };
-
-const LP_WIN_DELTA = 15;
-const LP_LOSS_DELTA = -15;
 
 export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
   const router = useRouter();
@@ -132,8 +123,6 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
         fastestMatch: null,
         longestMatch: null,
         clutchMoments: [] as MatchSummaryCard[],
-        lpTimeline: [] as LpTimelinePoint[],
-        lpTrendChange: 0,
       };
     }
 
@@ -159,7 +148,6 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
     const laneTally: Record<string, number> = {};
     const timelineData: TimelineDatum[] = [];
     const matchCards: MatchSummaryCard[] = [];
-    const matchOutcomes: Array<{ win: boolean }> = [];
     const clutchCandidates: Array<{ summary: MatchSummaryCard; kp: number }> = [];
     let bestKdaMatch: { summary: MatchSummaryCard; score: number } | null = null;
     let bestFarmMatch: { summary: MatchSummaryCard; score: number } | null = null;
@@ -245,7 +233,6 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
 
       matchCards.push(matchSummary);
       clutchCandidates.push({ summary: matchSummary, kp: kpPercent });
-      matchOutcomes.push({ win: participant.win });
 
       if (!bestKdaMatch || kdaValue > bestKdaMatch.score) {
         bestKdaMatch = { summary: matchSummary, score: kdaValue };
@@ -291,30 +278,6 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
         killParticipation: kp,
       }));
 
-    const chronologicalOutcomes = [...matchOutcomes].reverse();
-    const lpDeltas = chronologicalOutcomes.map((outcome) =>
-      outcome.win ? LP_WIN_DELTA : LP_LOSS_DELTA,
-    );
-    const currentRankedLp = typeof profile.rankedLp === "number" ? profile.rankedLp : 0;
-    const totalDelta = lpDeltas.reduce((acc, delta) => acc + delta, 0);
-    const startingLpRaw = currentRankedLp - totalDelta;
-    let lpRunning = startingLpRaw;
-    const lpTimeline: LpTimelinePoint[] = chronologicalOutcomes.map((outcome, index) => {
-      lpRunning += lpDeltas[index];
-      return {
-        name: `G${index + 1}`,
-        lp: Math.max(0, Math.round(lpRunning)),
-        delta: lpDeltas[index],
-        result: outcome.win ? "W" : "L",
-      };
-    });
-    const lpTrendChange =
-      lpTimeline.length > 1
-        ? lpTimeline[lpTimeline.length - 1].lp - lpTimeline[0].lp
-        : lpTimeline.length === 1
-        ? lpTimeline[0].lp - Math.max(0, Math.round(startingLpRaw))
-        : 0;
-
     return {
       sample,
       wins,
@@ -344,10 +307,8 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
       fastestMatch: fastestMatch?.summary ?? null,
       longestMatch: longestMatch?.summary ?? null,
       clutchMoments,
-      lpTimeline,
-      lpTrendChange,
     };
-  }, [matchesWindow, puuid, profile.rankedLp]);
+  }, [matchesWindow, puuid]);
 
   const iconLookup = useMemo(() => {
     const map = new Map<string, string>();
@@ -382,7 +343,6 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
 
     return Array.from(championMap.entries())
       .sort((a, b) => b[1].games - a[1].games)
-      .slice(0, 4)
       .map(([championName, record]) => ({
         championName,
         icon: iconLookup.get(championName),
@@ -403,15 +363,10 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
     });
   }, [analysis.timelineData]);
 
-  const timelineCompositeData = useMemo(() => {
-    if (!analysis.timelineData.length) {
-      return [];
-    }
-    return analysis.timelineData.map((entry, index) => ({
-      ...entry,
-      lp: analysis.lpTimeline[index]?.lp ?? null,
-    }));
-  }, [analysis.timelineData, analysis.lpTimeline]);
+  const timelineCompositeData = useMemo(
+    () => analysis.timelineData.slice(),
+    [analysis.timelineData],
+  );
 
   const recentPerformance = useMemo(() => {
     const segment = analysis.timelineData.slice(-5);
@@ -432,13 +387,6 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
       },
       { kda: 0, cs: 0, kp: 0, vision: 0, duration: 0 },
     );
-    const lpSlice = analysis.lpTimeline.slice(-games);
-    const lpChange =
-      lpSlice.length > 1
-        ? lpSlice[lpSlice.length - 1].lp - lpSlice[0].lp
-        : lpSlice.length === 1
-        ? lpSlice[0].delta ?? 0
-        : 0;
     const lastResult = segment[segment.length - 1]?.result ?? "W";
     return {
       games,
@@ -449,10 +397,9 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
       avgKp: totals.kp / games,
       avgVision: totals.vision / games,
       avgDuration: totals.duration / games,
-      lpChange,
       lastResult,
     };
-  }, [analysis.timelineData, analysis.lpTimeline]);
+  }, [analysis.timelineData]);
 
   const recentWindowSize = recentPerformance?.games ?? Math.min(5, analysis.timelineData.length);
 
@@ -594,25 +541,28 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
     ],
     [analysis.objectiveLedger?.barons, analysis.objectiveLedger?.dragons, analysis.objectiveLedger?.towers],
   );
-  const shareMomentumGames = useMemo(() => {
-    const recentSlice = analysis.timelineData.slice(-6);
-    if (!recentSlice.length) {
-      return [] as Array<
-        TimelineDatum & {
-          lp: number | null;
-          lpDelta: number | null;
-        }
-      >;
-    }
-    const lpSlice = analysis.lpTimeline.slice(-recentSlice.length);
-    return recentSlice.map((entry, index) => ({
-      ...entry,
-      lp: lpSlice[index]?.lp ?? null,
-      lpDelta: lpSlice[index]?.delta ?? null,
-    }));
-  }, [analysis.timelineData, analysis.lpTimeline]);
+  const shareMomentumGames = useMemo(
+    () => analysis.timelineData.slice(-6),
+    [analysis.timelineData],
+  );
   const shareWinRate = analysis.sample ? Math.round((analysis.wins / analysis.sample) * 100) : 0;
   const snapshotGeneratedOn = useMemo(() => new Date().toLocaleDateString(), []);
+
+  const profileSummary = useMemo(() => {
+    const recentWr = analysis.sample ? Math.round((analysis.wins / analysis.sample) * 100) : 0;
+    return `Player: ${profile.summonerName}#${profile.tagline}, Rank: ${rankDisplay}, Level: ${profile.level}, Recent WR: ${recentWr}%, Avg KDA: ${analysis.avgKda.toFixed(
+      2,
+    )}, CS/min: ${analysis.avgCsPerMin.toFixed(2)}`;
+  }, [
+    analysis.avgCsPerMin,
+    analysis.avgKda,
+    analysis.sample,
+    analysis.wins,
+    profile.level,
+    profile.summonerName,
+    profile.tagline,
+    rankDisplay,
+  ]);
 
   return (
     <>
@@ -641,7 +591,7 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
                 <span className="ml-1 text-slate-400/70">#{profile.tagline}</span>
               </h1>
               <p className="text-sm text-slate-300">
-                Level {profile.level} • {rankDisplay} {profile.rankedTier !== "UNRANKED" ? `${profile.rankedLp} LP` : ""}
+                Level {profile.level} • {rankDisplay}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -710,20 +660,9 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
             <div>
               <CardTitle>Momentum Timeline</CardTitle>
               <CardDescription>
-                Trends pulled from your last 20 games: KDA, CS cadence, kill participation, vision heat, streaks, and LP swing
+                Trends pulled from your last 20 games: KDA, CS cadence, kill participation, and vision heat
               </CardDescription>
             </div>
-            {analysis.lpTimeline.length ? (
-              <span
-                className={cn(
-                  "rounded-full border px-3 py-1 text-xs uppercase tracking-[0.35em]",
-                  analysis.lpTrendChange >= 0 ? "border-emerald-400/40 text-emerald-200" : "border-rose-400/40 text-rose-200",
-                )}
-              >
-                {analysis.lpTrendChange >= 0 ? "+" : ""}
-                {analysis.lpTrendChange} LP
-              </span>
-            ) : null}
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             {timelineCompositeData.length ? (
@@ -750,20 +689,9 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
                           tick={{ fontSize: 10 }}
                           domain={[0, (dataMax: number) => Math.ceil(dataMax + 1)]}
                         />
-                        {analysis.lpTimeline.length ? (
-                          <YAxis
-                            yAxisId="lp"
-                            orientation="right"
-                            stroke="#fbbf24"
-                            tick={{ fontSize: 10 }}
-                            allowDecimals={false}
-                          />
-                        ) : null}
+                        
                         <Tooltip
                           formatter={(value: number, name: string) => {
-                            if (name === "LP (est.)") {
-                              return [`${value} LP`, "LP (est.)"];
-                            }
                             if (name === "CS / min") {
                               return [`${value.toFixed(2)} cs/min`, "CS cadence"];
                             }
@@ -804,18 +732,6 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
                           strokeWidth={2}
                           activeDot={{ r: 4 }}
                         />
-                        {analysis.lpTimeline.length ? (
-                          <Line
-                            yAxisId="lp"
-                            type="monotone"
-                            dataKey="lp"
-                            stroke="#fbbf24"
-                            strokeWidth={2}
-                            dot={{ r: 3, stroke: "#fbbf24", fill: "#f59e0b" }}
-                            name="LP (est.)"
-                            connectNulls
-                          />
-                        ) : null}
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
@@ -920,7 +836,7 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
             <CardTitle>Consistency Gauges</CardTitle>
             <CardDescription>How often you hit high-impact marks</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
+          <CardContent className="flex flex-col gap-3">
             <div>
               <div className="flex items-center justify-between text-sm text-slate-300">
                 <span>High impact games</span>
@@ -1054,7 +970,7 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
             <CardTitle>Focus Priorities</CardTitle>
             <CardDescription>Actionable habits surfaced from the last twenty games</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
+          <CardContent className="flex flex-col gap-3">
             {focusRecommendations.map((rec) => (
               <div
                 key={rec.title}
@@ -1082,7 +998,7 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
             <CardTitle>Signature Performances</CardTitle>
             <CardDescription>Standout games from this block</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
+          <CardContent className="flex flex-col gap-3">
             {highlightMatches.length ? (
               highlightMatches.map((entry) => (
                 <div
@@ -1227,22 +1143,11 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Tempo & LP</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Tempo</p>
                   <p className="mt-2 text-lg font-semibold text-slate-100">
                     {formatMinutes(recentPerformance.avgDuration)}
-                    <span
-                      className={cn(
-                        "ml-2 rounded-full px-2 py-0.5 text-xs",
-                        recentPerformance.lpChange >= 0
-                          ? "bg-emerald-500/10 text-emerald-300"
-                          : "bg-rose-500/10 text-rose-300",
-                      )}
-                    >
-                      {recentPerformance.lpChange >= 0 ? "+" : ""}
-                      {recentPerformance.lpChange} LP
-                    </span>
                   </p>
-                  <p className="text-xs text-slate-400">Average game length & swing</p>
+                  <p className="text-xs text-slate-400">Average game length</p>
                 </div>
               </>
             ) : (
@@ -1258,46 +1163,52 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
             <CardTitle>Recent Match Files</CardTitle>
             <CardDescription>Per-match impact cues for the latest outings</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
+          <CardContent className="flex flex-col gap-3">
             {analysis.matchCards.length ? (
-              <ScrollArea className="h-[34rem] pr-3">
-                <div className="flex flex-col gap-4">
+              <ScrollArea className="h-[36rem] pr-2">
+                <div className="flex flex-col gap-3">
                   {analysis.matchCards.map((match) => (
                     <div
                       key={match.id}
-                      className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/70 p-4 transition-colors duration-200 hover:border-violet-400/50 hover:bg-slate-900/90 md:flex-row md:items-center md:justify-between"
+                      className="rounded-xl border border-white/10 bg-slate-900/65 px-3 py-3 transition-colors duration-200 hover:border-violet-400/40 hover:bg-slate-900/90"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-violet-400/40">
-                          <Image
-                            src={match.championIcon}
-                            alt={match.championName}
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                        <div className="flex items-start gap-3 sm:items-center">
+                          <div className="relative mt-0.5 h-10 w-10 overflow-hidden rounded-xl border border-violet-400/40 sm:mt-0">
+                            <Image
+                              src={match.championIcon}
+                              alt={match.championName}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[0.6rem] uppercase tracking-[0.35em] text-slate-500">
+                              {match.queue}
+                            </p>
+                            <p className="truncate text-base font-semibold text-slate-100">
+                              {match.championName} • {match.result}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {match.date} • {match.duration}m
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm text-slate-400">{match.queue}</p>
-                          <p className="text-lg font-semibold text-slate-100">
-                            {match.championName} • {match.result}
-                          </p>
-                          <p className="text-xs text-slate-500">{match.date} • {match.duration}m</p>
+                        <div className="grid grid-cols-3 gap-3 text-xs text-slate-200 sm:text-sm">
+                          <span className="flex items-center gap-1 whitespace-nowrap">
+                            <Swords className="h-4 w-4 text-fuchsia-300" />
+                            {match.kda}
+                          </span>
+                          <span className="flex items-center gap-1 whitespace-nowrap">
+                            <Target className="h-4 w-4 text-sky-300" />
+                            {match.csPerMin} cs/min
+                          </span>
+                          <span className="flex items-center gap-1 whitespace-nowrap">
+                            <TrendingUp className="h-4 w-4 text-emerald-300" />
+                            {match.killParticipation}% KP
+                          </span>
                         </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-200">
-                        <span className="flex items-center gap-1">
-                          <Swords className="h-4 w-4 text-fuchsia-300" />
-                          {match.kda}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Target className="h-4 w-4 text-sky-300" />
-                          {match.csPerMin} cs/min
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <TrendingUp className="h-4 w-4 text-emerald-300" />
-                          {match.killParticipation}% KP
-                        </span>
                       </div>
                     </div>
                   ))}
@@ -1308,62 +1219,66 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
             )}
           </CardContent>
         </Card>
-        <Card className="border-white/10 bg-slate-950/80 lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Champion Pool Radar</CardTitle>
-            <CardDescription>Your staple picks and how they’re landing lately</CardDescription>
-          </CardHeader>
-          <CardContent className="flex h-full flex-col gap-4">
-            {recentChampionPool.length ? (
-              <div className="flex flex-col gap-3">
-                {recentChampionPool.map((champion) => (
-                  <div
-                    key={champion.championName}
-                    className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/70 px-3 py-2 transition-colors duration-200 hover:border-fuchsia-400/40 hover:bg-slate-900/90"
-                  >
-                    <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-violet-400/30">
-                      {champion.icon ? (
-                        <Image
-                          src={champion.icon}
-                          alt={champion.championName}
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-xs text-slate-500">
-                          {champion.championName.slice(0, 2)}
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <Card className="border-white/10 bg-slate-950/80 flex h-full flex-col lg:h-[36rem]">
+            <CardHeader>
+              <CardTitle>Champion Pool Radar</CardTitle>
+              <CardDescription>Your staple picks and how they’re landing lately</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col gap-4 overflow-hidden">
+              {recentChampionPool.length ? (
+                <ScrollArea className="flex-1 pr-2">
+                  <div className="flex flex-col gap-4">
+                    {recentChampionPool.map((champion) => (
+                      <div
+                        key={champion.championName}
+                        className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/70 px-3 py-2 transition-colors duration-200 hover:border-fuchsia-400/40 hover:bg-slate-900/90"
+                      >
+                        <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-violet-400/30">
+                          {champion.icon ? (
+                            <Image
+                              src={champion.icon}
+                              alt={champion.championName}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs text-slate-500">
+                              {champion.championName.slice(0, 2)}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between text-sm text-slate-300">
-                        <p className="font-semibold text-slate-100">{champion.championName}</p>
-                        <span className="text-xs text-slate-400">{champion.games} games</span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between text-sm text-slate-300">
+                            <p className="font-semibold text-slate-100">{champion.championName}</p>
+                            <span className="text-xs text-slate-400">{champion.games} games</span>
+                          </div>
+                          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-800/60">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-fuchsia-400 via-sky-400 to-emerald-400"
+                              style={{ width: `${Math.min(100, Math.round((champion.winRate || 0) * 100))}%` }}
+                            />
+                          </div>
+                          <p className="mt-1 text-xs uppercase tracking-[0.3em] text-slate-500">
+                            {Math.round((champion.winRate || 0) * 100)}% win rate
+                          </p>
+                        </div>
                       </div>
-                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-800/60">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-fuchsia-400 via-sky-400 to-emerald-400"
-                          style={{ width: `${Math.min(100, Math.round((champion.winRate || 0) * 100))}%` }}
-                        />
-                      </div>
-                      <p className="mt-1 text-xs uppercase tracking-[0.3em] text-slate-500">
-                        {Math.round((champion.winRate || 0) * 100)}% win rate
-                      </p>
-                    </div>
+                    ))}
+                    <p className="text-xs text-slate-500">
+                      Showcasing every champion you piloted across your last {analysis.sample} games.
+                    </p>
                   </div>
-                ))}
-                <p className="text-xs text-slate-500">
-                  Showcasing the most played champions across your last {analysis.sample} games.
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-slate-900/50 p-6 text-center text-sm text-slate-400">
-                Play more unique champions to populate this radar.
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </ScrollArea>
+              ) : (
+                <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-slate-900/50 p-6 text-center text-sm text-slate-400">
+                  Play more unique champions to populate this radar.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </section>
 
       </div>
@@ -1381,8 +1296,7 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
               <span className="ml-1 text-slate-400/80">#{profile.tagline}</span>
             </h2>
             <p className="mt-2 text-sm text-slate-300/90">
-              Level {profile.level} • {rankDisplay}{" "}
-              {profile.rankedTier !== "UNRANKED" ? `${profile.rankedLp} LP` : "Placements pending"}
+              Level {profile.level} • {rankDisplay}
             </p>
             {shareTags.length ? (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -1414,11 +1328,9 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
             {shareMomentumGames.length ? (
               <div className="mt-3 space-y-3 text-sm text-slate-200">
                 <div className="rounded-xl border border-violet-400/30 bg-violet-500/10 px-3 py-2 text-slate-100">
-                  <p className="text-[0.6rem] uppercase tracking-[0.3em] text-violet-200/80">LP swing</p>
+                  <p className="text-[0.6rem] uppercase tracking-[0.3em] text-violet-200/80">Impact Pulse</p>
                   <p className="text-2xl font-semibold text-violet-100">
-                    {analysis.lpTrendChange >= 0 ? "+" : ""}
-                    {analysis.lpTrendChange}
-                    <span className="ml-1 text-sm text-slate-300">LP</span>
+                    {Math.round(analysis.avgKillParticipation * 100)}% KP
                   </p>
                   <p className="text-xs text-slate-300/80">Across {analysis.sample} matches</p>
                 </div>
@@ -1426,9 +1338,7 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
                   <div className="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-xs text-slate-300">
                     <p className="text-[0.6rem] uppercase tracking-[0.3em] text-slate-400/80">Recent 5</p>
                     <p className="text-base font-semibold text-slate-100">
-                      {recentPerformance.wins}-{recentPerformance.losses} •{" "}
-                      {recentPerformance.lpChange >= 0 ? "+" : ""}
-                      {recentPerformance.lpChange} LP
+                      {recentPerformance.wins}-{recentPerformance.losses}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
                       {recentPerformance.avgKda.toFixed(2)} KDA • {recentPerformance.avgCs.toFixed(2)} cs/min •{" "}
@@ -1465,9 +1375,6 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
                     <li key={`${lastGame.name}-summary`}>
                       Last game: {lastGame.kda.toFixed(2)} KDA • {lastGame.cs.toFixed(1)} cs/min •{" "}
                       {Math.round(lastGame.kp)}% KP
-                      {typeof lastGame.lpDelta === "number"
-                        ? ` • ${lastGame.lpDelta >= 0 ? "+" : ""}${lastGame.lpDelta} LP`
-                        : ""}
                     </li>
                   ))}
                 </ul>
@@ -1563,6 +1470,13 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
           Generated with Rewind Coach • {snapshotGeneratedOn}
         </div>
       </div>
+
+      <ProfileCoachChat
+        puuid={puuid}
+        gameName={profile.summonerName}
+        tagLine={profile.tagline}
+        profileSummary={profileSummary}
+      />
 
     </>
   );

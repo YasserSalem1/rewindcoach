@@ -8,9 +8,8 @@ import { useRouter } from "next/navigation";
 
 import { MatchList } from "@/components/MatchList";
 import { StyleDNA } from "@/components/StyleDNA";
-import { ProfileCoachChat } from "@/components/ProfileCoachChat";
 import { Button } from "@/components/ui/button";
-import type { ProfileBundle, RiotMatch, StyleDNA as StyleDNAType, ProfileHighlights } from "@/lib/riot";
+import type { ProfileBundle, RiotMatch, StyleDNA as StyleDNAType } from "@/lib/riot";
 import { summarizeMatches } from "@/lib/riot";
 
 interface ProfileContentProps {
@@ -23,13 +22,11 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
   const { profile: summoner, puuid } = bundle;
   
   const [styleDNA, setStyleDNA] = useState<StyleDNAType>(bundle.styleDNA);
-  const [highlights, setHighlights] = useState<ProfileHighlights>(bundle.highlights);
 
   const handleMatchesUpdate = useCallback((updatedMatches: RiotMatch[]) => {
-    // Recalculate style DNA and highlights with all matches
-    const { styleDNA: newStyleDNA, highlights: newHighlights } = summarizeMatches(updatedMatches, puuid);
+    // Recalculate style DNA with all matches
+    const { styleDNA: newStyleDNA } = summarizeMatches(updatedMatches, puuid);
     setStyleDNA(newStyleDNA);
-    setHighlights(newHighlights);
   }, [puuid]);
 
   const handleBack = () => {
@@ -98,15 +95,10 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
                   <p>
                     Level {summoner.level} • {region}
                   </p>
-                  <div className="group relative inline-flex items-center gap-2 rounded-full border border-white/12 bg-slate-900/75 px-4 py-1 backdrop-blur-sm transition-shadow duration-200 hover:shadow-[0_12px_35px_rgba(79,70,229,0.25)]">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-slate-900/75 px-4 py-1 backdrop-blur-sm transition-shadow duration-200 hover:shadow-[0_12px_35px_rgba(79,70,229,0.25)]">
                     <span className={`font-heading text-base font-semibold tracking-tight ${rankColor}`}>
                       {rankDisplay}
                     </span>
-                    {summoner.rankedTier !== "UNRANKED" && (
-                      <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 translate-y-1 rounded-full border border-violet-400/40 bg-slate-900/95 px-3 py-1 text-xs font-medium text-slate-200 opacity-0 shadow-[0_12px_30px_rgba(79,70,229,0.35)] transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-                        {typeof summoner.rankedLp === "number" ? `${summoner.rankedLp} LP` : "Placement in progress"}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -147,13 +139,6 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
         />
       </section>
 
-      {/* Floating Profile Coach Chat */}
-      <ProfileCoachChat
-        puuid={puuid}
-        gameName={summoner.summonerName}
-        tagLine={summoner.tagline}
-        profileSummary={`Player: ${summoner.summonerName}#${summoner.tagline}, Rank: ${rankDisplay} ${summoner.rankedLp} LP, Level: ${summoner.level}, Win Rate: ${highlights.last20WinRate ? Math.round(highlights.last20WinRate * 100) : 0}%, Average KDA: ${highlights.averageKda}, CS/min: ${highlights.csPerMinute}`}
-      />
     </div>
   );
 }
