@@ -500,6 +500,20 @@ export interface ChampionSeasonStats {
   tripleKills: number;
   quadraKills: number;
   pentaKills: number;
+  qCasts?: number;
+  wCasts?: number;
+  eCasts?: number;
+  rCasts?: number;
+}
+
+export interface RecordStat {
+  value: number;
+  champion: string;
+}
+
+export interface ItemStat {
+  itemId: number;
+  gamesBought: number;
 }
 
 export interface SeasonStatsResponse {
@@ -510,11 +524,18 @@ export interface SeasonStatsResponse {
   totalMatchesAnalyzed: number;
   overallStats: {
     totalMatches: number;
-    mostPlayedChampions: Record<string, number>;
+    mostPlayedChampions?: Record<string, number>;
     mostPlayedWith: Record<string, number>;
     wins: number;
     losses: number;
     topSummonerSpells: Record<string, SummonerSpellStats>;
+    totalCS?: number;
+    mostKills?: RecordStat;
+    mostDeaths?: RecordStat;
+    mostAssists?: RecordStat;
+    longestGameDuration?: number;
+    shortestGameDuration?: number;
+    topItems?: ItemStat[];
   };
   championStats: Record<string, ChampionSeasonStats>;
 }
