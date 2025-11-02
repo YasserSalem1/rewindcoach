@@ -149,10 +149,14 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
     const timelineData: TimelineDatum[] = [];
     const matchCards: MatchSummaryCard[] = [];
     const clutchCandidates: Array<{ summary: MatchSummaryCard; kp: number }> = [];
-    let bestKdaMatch: { summary: MatchSummaryCard; score: number } | null = null;
-    let bestFarmMatch: { summary: MatchSummaryCard; score: number } | null = null;
-    let fastestMatch: { summary: MatchSummaryCard; duration: number } | null = null;
-    let longestMatch: { summary: MatchSummaryCard; duration: number } | null = null;
+    let bestKdaMatch: { summary: MatchSummaryCard; score: number } | null;
+    bestKdaMatch = null;
+    let bestFarmMatch: { summary: MatchSummaryCard; score: number } | null;
+    bestFarmMatch = null;
+    let fastestMatch: { summary: MatchSummaryCard; duration: number } | null;
+    fastestMatch = null;
+    let longestMatch: { summary: MatchSummaryCard; duration: number } | null;
+    longestMatch = null;
 
     matchesWindow.forEach((match, index) => {
       const participant =
@@ -302,10 +306,10 @@ export function MatchAnalysisContent({ bundle }: MatchAnalysisContentProps) {
         barons: teamBarons,
         towers: teamTowers,
       },
-      bestKdaMatch: bestKdaMatch?.summary ?? null,
-      bestFarmMatch: bestFarmMatch?.summary ?? null,
-      fastestMatch: fastestMatch?.summary ?? null,
-      longestMatch: longestMatch?.summary ?? null,
+      bestKdaMatch: (bestKdaMatch as { summary: MatchSummaryCard; score: number } | null)?.summary ?? null,
+      bestFarmMatch: (bestFarmMatch as { summary: MatchSummaryCard; score: number } | null)?.summary ?? null,
+      fastestMatch: (fastestMatch as { summary: MatchSummaryCard; duration: number } | null)?.summary ?? null,
+      longestMatch: (longestMatch as { summary: MatchSummaryCard; duration: number } | null)?.summary ?? null,
       clutchMoments,
     };
   }, [matchesWindow, puuid]);

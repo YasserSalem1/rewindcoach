@@ -211,6 +211,8 @@ export type TimelineEventType =
   | "DRAGON"
   | "BARON"
   | "HERALD"
+  | "WARD_PLACED"
+  | "WARD_KILL"
   | "OBJECTIVE"
   | "MOVE";
 
@@ -309,6 +311,7 @@ export interface CoachAnswerChunk {
 export interface RiotMatchParticipantDto {
   puuid: string;
   summonerName: string;
+  riotIdGameName?: string;
   championId: number;
   championName: string;
   participantId?: number;

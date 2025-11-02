@@ -200,7 +200,9 @@ function convertToTimelineFrames(
       summonerToPuuid.set(participant.summonerName.toLowerCase(), puuid);
       summonerToPuuid.set(participant.riotIdGameName?.toLowerCase() || '', puuid);
       championToPuuid.set(participant.championName.toLowerCase(), puuid);
-      puuidToParticipantId.set(puuid, participant.participantId);
+      if (participant.participantId !== undefined) {
+        puuidToParticipantId.set(puuid, participant.participantId);
+      }
       puuidToTeamId.set(puuid, participant.teamId);
     }
   }

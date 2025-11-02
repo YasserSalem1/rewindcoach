@@ -12,7 +12,6 @@ import { CoachChat } from "@/components/CoachChat";
 import { RiftMap } from "@/components/RiftMap";
 import { Timeline } from "@/components/Timeline";
 import { ChampionMatchups } from "@/components/ChampionMatchups";
-import { MinuteNavigator } from "@/components/MinuteNavigator";
 import { cn } from "@/lib/ui";
 
 interface ReviewExperienceProps {
