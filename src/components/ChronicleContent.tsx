@@ -2,11 +2,10 @@
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { ArrowLeft, Trophy, Target, Zap, Shield, Flame, ChevronDown, Award, Clock, Package, Skull, HeartHandshake, Share2, Download, Link, Crown, Sparkles, Crosshair, Swords } from "lucide-react";
+import { ArrowLeft, Trophy, Target, Flame, ChevronDown, Award, Clock, Package, Skull, HeartHandshake, Share2, Download, Link, Crown, Sparkles, Crosshair, Swords } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import type { ProfileBundle, SeasonStatsResponse } from "@/lib/riot";
 
 interface ChronicleContentProps {
@@ -30,7 +29,7 @@ const SUMMONER_SPELL_IDS: Record<string, string> = {
 
 export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   const router = useRouter();
-  const { profile: summoner, styleDNA, highlights, matches, puuid } = bundle;
+  const { profile: summoner, puuid } = bundle;
   const [seasonStats, setSeasonStats] = useState<SeasonStatsResponse | null>(null);
   const [isLoadingSeasonStats, setIsLoadingSeasonStats] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
@@ -226,6 +225,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   }, [seasonStats]);
 
   // Get top 3 most played with players from API
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const topPlayedWith = useMemo(() => {
     if (!seasonStats?.overallStats?.mostPlayedWith) {
       return [];
@@ -350,6 +350,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   };
 
   // Format rank display
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const rankDisplay = summoner.rankedTier === "UNRANKED" 
     ? "Unranked"
     : `${summoner.rankedTier} ${summoner.rankedDivision}`;

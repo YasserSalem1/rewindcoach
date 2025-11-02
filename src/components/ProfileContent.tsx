@@ -36,6 +36,49 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
     router.back();
   };
 
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  }, []);
+
+  const checkStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
+      const data = await response.json();
+
+      if (response.status === 200) {
+        if (data.status === "COMPLETE") {
+          // Stop polling and navigate to chronicle page
+          stopPolling();
+          setIsGenerating(false);
+          setButtonText("View Your Season Rewind");
+          // Navigate to chronicle page to display the stats
+          router.push(
+            `/profile/${region}/${encodeURIComponent(summoner.summonerName)}/${encodeURIComponent(summoner.tagline)}/chronicle`,
+          );
+        } else if (data.status === "CALCULATING") {
+          // Keep polling - button stays in generating state
+          // Polling will continue via the interval
+        }
+      }
+    } catch (error) {
+      console.error("Error checking status:", error);
+      // Continue polling on error
+    }
+  }, [puuid, region, summoner.summonerName, summoner.tagline, router, stopPolling]);
+
+  const startPolling = useCallback(() => {
+    // Initial check
+    checkStatus();
+    
+    // Poll every 10 seconds
+    pollingIntervalRef.current = setInterval(() => {
+      checkStatus();
+    }, 10000);
+  }, [checkStatus]);
+
   // Check status on page load
   useEffect(() => {
     const checkInitialStatus = async () => {
@@ -68,7 +111,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
     };
 
     checkInitialStatus();
-  }, [puuid]);
+  }, [puuid, startPolling]);
 
   // Clean up polling interval on unmount
   useEffect(() => {
@@ -78,49 +121,6 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
       }
     };
   }, []);
-
-  const stopPolling = () => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-  };
-
-  const checkStatus = async () => {
-    try {
-      const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
-      const data = await response.json();
-
-      if (response.status === 200) {
-        if (data.status === "COMPLETE") {
-          // Stop polling and navigate to chronicle page
-          stopPolling();
-          setIsGenerating(false);
-          setButtonText("View Your Season Rewind");
-          // Navigate to chronicle page to display the stats
-          router.push(
-            `/profile/${region}/${encodeURIComponent(summoner.summonerName)}/${encodeURIComponent(summoner.tagline)}/chronicle`,
-          );
-        } else if (data.status === "CALCULATING") {
-          // Keep polling - button stays in generating state
-          // Polling will continue via the interval
-        }
-      }
-    } catch (error) {
-      console.error("Error checking status:", error);
-      // Continue polling on error
-    }
-  };
-
-  const startPolling = () => {
-    // Initial check
-    checkStatus();
-    
-    // Poll every 10 seconds
-    pollingIntervalRef.current = setInterval(() => {
-      checkStatus();
-    }, 10000);
-  };
 
   const initiateCalculation = async () => {
     try {

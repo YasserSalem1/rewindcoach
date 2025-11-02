@@ -61,6 +61,7 @@ const toTeamColor = (teamId?: number, fallback?: "blue" | "red") => {
   return fallback ?? "blue";
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const actorMatches = (a?: CoachEventActor, b?: CoachEventActor) => {
   if (!a || !b) return false;
   if (a.puuid && b.puuid && a.puuid === b.puuid) return true;
@@ -88,7 +89,8 @@ export function RiftMap({
   timeline,
   currentMinute,
   className,
-  focusSelection = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  focusSelection: _focusSelection = false,
 }: RiftMapProps) {
   // Get player positions from current minute's timeline frame
   const positions = useMemo((): ResolvedPosition[] => {
