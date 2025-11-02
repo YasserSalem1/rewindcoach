@@ -1,161 +1,162 @@
-# 🏆 Rewind Coach
+# Rewind Coach
 
 > **Your AI-powered League of Legends performance coach — built with AWS and Riot Games API**
 
 ---
 
-## 🎯 Inspiration
+## Inspiration
 
-League of Legends is one of the most complex and competitive games ever made — with tens of thousands of interactions per match and an overwhelming learning curve.  
-Players often lose without truly understanding *why*.
+League of Legends is one of the most complex and competitive games ever made — with thousands of interactions per match and an overwhelming learning curve. Players must constantly track information such as champions, abilities, items, gold leads, objectives, and jungle pathing.  
 
-Traditional replay tools only show what happened. **Rewind Coach** explains *why* it happened.
+Most players lose without fully understanding *why*.  
 
-We set out to build something that doesn’t just replay your games — it **teaches, interprets, and guides** you like a real coach would.  
+Traditional replay tools only show what happened. **Rewind Coach** explains *why* it happened.  
+
+We set out to build a tool that doesn’t just replay your games, but truly **teaches, interprets, and guides** you like a real coach.  
 Rewind Coach rewinds your matches across the season, analyzes your decisions minute by minute, and helps you turn every mistake into mastery.
 
 ---
 
-## 💡 What It Does
+## What It Does
 
-Rewind Coach connects directly to the **Riot Games API** to fetch your match history and timeline data across the season.  
-It then uses an **AI coaching engine** to turn that raw data into **personalized storytelling, insights, and improvement plans**.
+Rewind Coach connects directly to the **Riot Games API** to fetch match history and timeline data.  
+It then uses an **AI coaching engine** to transform this raw telemetry into **personalized insights and improvement plans**.
 
 Your AI coach can:
 
-- 🧩 **Explain** what happened — kills, deaths, objectives, and rotations  
-- 💬 **Analyze** *why* specific decisions shaped the match outcome  
-- 🎯 **Advise** on mechanics, positioning, and macro strategy  
-- 📊 **Evaluate** item builds, gold leads, and map control efficiency  
+- Explain key events such as kills, deaths, objectives, and rotations  
+- Analyze why specific decisions influenced match outcomes  
+- Advise on mechanics, positioning, and macro strategy  
+- Evaluate item builds, gold spikes, and map control efficiency  
 
-All of this is visualized inside an **interactive web app** that lets you:
+All insights are displayed in an **interactive web application** where players can:
 
-- Review season-wide summaries and champion performance  
-- Explore **item and rune trends**, **summoner spell usage**, and **gameplay patterns**  
-- Chat directly with your **AI coach** for personalized improvement feedback  
-- Watch your matches unfold on a **dynamic timeline map replay** with synchronized commentary  
-
----
-
-## 🪄 Chronicle — Season Insights
-
-Beyond coaching, **Rewind Coach Chronicle** transforms your gameplay data into **memorable insights and fun milestones**.
-
-The Chronicle section highlights:
-
-- 🌟 Your **most-played champions** and roles  
-- 💥 **Key moments** — first bloods, clutch steals, comeback wins  
-- 📈 Season progression metrics (CS/min, vision score, gold efficiency)  
-- 🎮 **Signature playstyle traits** and performance evolution  
-- 🏅 Fun personal stats — “Most kills in a single game,” “Most assists,” or “Favorite item builds”  
-
-It’s both **reflective and entertaining** — turning your season into a shareable story that celebrates how far you’ve come.
+- Review individual match breakdowns and season summaries  
+- Explore champion, item, and rune trends  
+- Chat directly with their AI coach for tailored feedback  
+- Replay matches on a **minute-by-minute timeline** with synchronized analysis  
 
 ---
 
-## 🧱 How We Built It
+## Chronicle — Season Rewind
 
-### 🖥️ Frontend
+The **Chronicle** section turns gameplay data into a personal story of growth and achievement.  
 
-- Built with **Next.js** for a modern, reactive, and seamless UX  
-- Deployed via **AWS Amplify Hosting** with automated **CI/CD from GitHub**  
-- Distributed globally through **Amazon CloudFront** for low-latency access  
+It highlights:
 
-### ⚙️ Backend (Serverless Architecture)
+- Most-played champions and preferred roles  
+- Defining moments such as first bloods, objective steals, and comeback wins  
+- Season progression metrics like CS per minute, vision score, and gold efficiency  
+- Signature playstyle traits and long-term improvement  
+- Fun personal records such as highest kills, assists, or favorite item builds  
 
-The backend is **100% serverless**, powered by **AWS Lambda** and **Amazon API Gateway**, and composed of three micro-functions:
+Chronicle combines reflection and entertainment — celebrating progress while revealing opportunities for improvement.
+
+---
+
+## How We Built It
+
+### Frontend
+
+- Developed with **Next.js** for a modern and reactive user experience  
+- Deployed through **AWS Amplify Hosting** with automated CI/CD from GitHub  
+- Distributed globally using **Amazon CloudFront** for low-latency performance  
+
+### Backend (Serverless Architecture)
+
+The backend is fully serverless, built on **AWS Lambda** and **Amazon API Gateway**, and structured into three modular functions:
 
 | Function | Description |
 |-----------|--------------|
-| 🧩 **Match Summary** | Retrieves and aggregates Riot API match + timeline data |
-| 🧠 **Chat Coach** | Orchestrates AI coaching via Amazon Bedrock |
-| 🔁 **Request Handler** | Handles CORS, routing, and DynamoDB caching |
+| **Match Summary** | Retrieves and aggregates Riot API match and timeline data |
+| **Chat Coach** | Orchestrates AI coaching and reasoning via Amazon Bedrock |
+| **Request Handler** | Manages routing, caching, and client responses |
 
-This modular design ensures **scalability**, **fault isolation**, and **minimal maintenance overhead**.
+This architecture ensures scalability, fault isolation, and minimal maintenance overhead.
 
 ---
 
-## 🤖 AI & Knowledge Layer
+## AI & Knowledge Layer
 
-At the core of Rewind Coach lies an **AI-driven reasoning engine**, combining **Amazon Bedrock** with a **custom Knowledge Base** and **OpenSearch retrieval**.
+At the core of Rewind Coach lies an **AI reasoning engine** powered by **Amazon Bedrock**, **OpenSearch**, and a **custom Knowledge Base**.
 
 | Component | Role |
 |------------|------|
-| 🧠 **Amazon Bedrock (Meta Llama 3)** | Conversational reasoning, narrative generation, and analysis |
-| 📚 **Amazon OpenSearch + KB** | Retrieval-augmented grounding for champion data and tactical reasoning |
-| 🧾 **Prompt Schema** | Custom format designed to interpret structured Riot match & timeline JSON |
+| **Amazon Bedrock (Claude Sonnet 3.5)** | Generates coaching dialogue, explanations, and personalized analysis |
+| **Amazon OpenSearch + Knowledge Base** | Enables retrieval-augmented grounding with champion data and tactical insights |
+| **Prompt Schema** | Custom structured input format that interprets Riot match and timeline JSON |
 
-Together, they create a coach that **reasons like an expert** while staying **factually grounded** in match data.
-
----
-
-## 🗃️ Data Storage & Caching
-
-- **Amazon DynamoDB** – Caches current match states and season summaries for rapid response  
-- **Amazon S3** – Stores replays, archived games, and knowledge documents at scale  
-- **TTL-based caching** ensures cost efficiency and fast reads  
+This setup allows the coach to reason like an expert while remaining factually anchored to real match data.
 
 ---
 
-## 🔒 Observability & Security
+## Data Storage & Caching
 
-- **Amazon CloudWatch** – Centralized logs and performance metrics  
-- **AWS Secrets Manager** – Secure Riot API key management and rotation  
-- **AWS IAM** – Fine-grained permissions for Bedrock, DynamoDB, and OpenSearch  
-
-The entire system is **secure, observable, and fully serverless** — from API calls to AI inference.
+- **Amazon DynamoDB** caches match summaries and player profiles for fast response times.  
+- **Amazon S3** stores replays, historical data, and knowledge documents.  
+- TTL-based caching ensures cost efficiency and responsive user interactions.  
 
 ---
 
-## ⚙️ Challenges We Faced
+## Observability & Security
 
-- Turning a big vision into an executable, problem-solving product  
-- Designing an experience that feels like a **coach**, not just a chatbot  
-- Managing **Riot API rate limits** and identifying correct endpoints  
-- Handling **LLM token constraints** when processing large timeline data  
-- Fine-tuning **Bedrock prompts** for accuracy and strategic clarity  
-- Coordinating **Amplify frontend builds** with Lambda backend deployments  
-- Structuring **context flow** between DynamoDB cache and Bedrock inputs  
+- **Amazon CloudWatch** monitors Lambda performance and logs API activity.  
+- **AWS Secrets Manager** secures Riot API keys and sensitive credentials.  
+- **AWS IAM** enforces fine-grained permissions across Bedrock, DynamoDB, and OpenSearch.  
+
+The system is secure, observable, and entirely serverless — from data ingestion to AI reasoning.
 
 ---
 
-## 🏅 Achievements
+## Challenges
 
-- ✅ Built a complete end-to-end **AI coaching pipeline**  
-- ✅ Created a **timeline visualization** synchronized with AI commentary  
-- ✅ Integrated **RAG-based reasoning** using Bedrock + OpenSearch  
-- ✅ Designed a **cost-efficient DynamoDB caching layer**  
-- ✅ Developed **Chronicle** for fun, data-rich seasonal insights  
-- ✅ Delivered real-time, personalized coaching entirely on **serverless AWS**  
-
----
-
-## 🧠 What We Learned
-
-- How to design **retrieval-augmented systems** mixing structure and reasoning  
-- The craft of **prompt engineering** for domain-specific LLMs  
-- Best practices for **AWS Bedrock orchestration** and context handling  
-- How to turn complex match telemetry into **intuitive storytelling**  
-- The value of balancing **factual precision** with **engaging UX**
+- Translating a large vision into a practical, reliable product  
+- Designing an AI that feels like a coach, not a chatbot  
+- Managing Riot API rate limits and handling large timeline datasets  
+- Controlling LLM token usage without losing analytical depth  
+- Engineering effective Bedrock prompts for accurate strategic output  
+- Coordinating Amplify frontend deployments with Lambda backend updates  
+- Structuring context flow between DynamoDB cache and Bedrock inputs  
 
 ---
 
-## 🔮 What’s Next
+## Achievements
 
-- 🔁 Multi-game performance tracking and cross-match coaching  
-- 🗣️ Real-time **voice-based AI coaching**  
-- 🧭 Team analytics for synergy, rotations, and macro coordination  
-- 🎥 Upload clips or live games for **in-lane tactical feedback**  
-- 📊 Launch a **freemium player dashboard** with AWS-powered analytics  
+- Built a complete end-to-end AI coaching pipeline  
+- Developed dynamic timeline visualization synchronized with AI commentary  
+- Implemented retrieval-augmented reasoning with Bedrock and OpenSearch  
+- Designed a cost-efficient DynamoDB caching system  
+- Created the Chronicle feature for season-wide insights  
+- Delivered real-time, personalized coaching on a fully serverless AWS stack  
 
 ---
 
-## 🛠️ Tech Stack
+## What We Learned
+
+- How to design retrieval-augmented systems combining structured and unstructured data  
+- The principles of domain-specific prompt engineering for gaming analytics  
+- Best practices for orchestrating AWS Bedrock in real-time applications  
+- Techniques to translate match telemetry into human-readable narratives  
+- The importance of balancing factual precision with engaging user experience  
+
+---
+
+## What’s Next
+
+- Multi-game performance tracking and cross-match analysis  
+- Real-time, voice-enabled AI coaching  
+- Team analytics for coordination and macro strategy  
+- Player-submitted clips for live tactical feedback  
+- Launch of a freemium analytics dashboard powered by AWS  
+
+---
+
+## Tech Stack
 
 | Category | Tools & Services |
 |-----------|------------------|
 | **Frontend** | Next.js · TailwindCSS · Amplify Hosting · CloudFront |
 | **Backend** | AWS Lambda · API Gateway · DynamoDB · S3 |
-| **AI / ML** | Amazon Bedrock (Meta Llama 3) · OpenSearch · RAG Knowledge Base |
+| **AI / ML** | Amazon Bedrock (Claude Sonnet 3.5) · OpenSearch · Custom Knowledge Base |
 | **DevOps** | Amplify CI/CD · CloudWatch · IAM · Secrets Manager |
-| **APIs** | Riot Games API (Match & Timeline) |
+| **APIs** | Riot Games API (Match & Timeline Endpoints) |
