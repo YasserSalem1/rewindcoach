@@ -61,31 +61,8 @@ export function SearchCard({
     const trimmedTag = tagLine.trim();
 
     try {
-      // Validate profile exists before navigating
-      const params = new URLSearchParams({
-        region,
-        gameName: trimmedGame,
-        tagLine: trimmedTag,
-      });
-
-      const response = await fetch(`/api/profile?${params.toString()}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || "Profile not found";
-        
-        if (response.status === 404 || errorMessage.includes("not found")) {
-          setError(`Player "${trimmedGame}#${trimmedTag}" not found in ${region}. Please check your spelling and region.`);
-        } else if (response.status === 500) {
-          setError("Server error. Please try again in a moment.");
-        } else {
-          setError(errorMessage);
-        }
-        setIsValidating(false);
-        return;
-      }
-
-      // Profile exists, save preference and navigate
+      // Save preference and navigate directly - validation will happen on profile page
+      // This is faster than pre-validating via API call
       setProfilePref({ region, gameName: trimmedGame, tagLine: trimmedTag });
       const path = `/profile/${region}/${encodeURIComponent(trimmedGame)}/${encodeURIComponent(trimmedTag)}`;
       
@@ -93,8 +70,8 @@ export function SearchCard({
         router.push(path);
       });
     } catch (error) {
-      console.error("[SearchCard] search failed", error);
-      setError("Network error. Please check your connection and try again.");
+      console.error("[SearchCard] navigation failed", error);
+      setError("Navigation error. Please try again.");
       setIsValidating(false);
     }
   };
