@@ -1,14 +1,13 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { ArrowLeft, Trophy, Target, Zap, Shield, Flame, ChevronDown, Award, Clock, Package, Skull, HeartHandshake, Share2, Download, Link } from "lucide-react";
+import { ArrowLeft, Trophy, Target, Zap, Shield, Flame, ChevronDown, Award, Clock, Package, Skull, HeartHandshake, Share2, Download, Link, Crown, Sparkles, Crosshair, Swords } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { ProfileBundle, SeasonStatsResponse } from "@/lib/riot";
-import { REGION_CONFIG, fetchSeasonStats } from "@/lib/riot";
 
 interface ChronicleContentProps {
   bundle: ProfileBundle;
@@ -35,221 +34,121 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   const [seasonStats, setSeasonStats] = useState<SeasonStatsResponse | null>(null);
   const [isLoadingSeasonStats, setIsLoadingSeasonStats] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch season stats from API
+  // Fetch season stats ONLY from AWS Lambda API
   useEffect(() => {
     const loadSeasonStats = async () => {
       try {
-        const summonerName = `${summoner.summonerName}-${summoner.tagline}`;
-        const regionRouting = REGION_CONFIG[region as keyof typeof REGION_CONFIG]?.routing || region.toLowerCase();
+        const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
         
-        const data = await fetchSeasonStats(
-          puuid,
-          regionRouting,
-          summonerName,
-          region.toLowerCase()
-        );
-        
-        setSeasonStats(data);
+        if (response.status === 200) {
+          const data = await response.json();
+          
+          if (data.status === "COMPLETE" && data.seasonStats) {
+            // Extract the seasonStats object from the response
+            // Response structure: { status, puuid, seasonStats: { overallStats, championStats } }
+            setSeasonStats(data.seasonStats);
+          }
+        }
+        // If not 200 or not COMPLETE, seasonStats stays null
       } catch (error) {
-        console.error("Error fetching season stats:", error);
+        console.error("Error fetching season stats from AWS Lambda:", error);
       } finally {
         setIsLoadingSeasonStats(false);
       }
     };
 
     loadSeasonStats();
-  }, [puuid, region, summoner.summonerName, summoner.tagline]);
+  }, [puuid]);
 
-  // Track current page
+  // Track current page using IntersectionObserver
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !containerRef.current) return;
+    if (!seasonStats) return; // Wait until content is rendered
     
-    const container = document.querySelector('.chronicle-container');
-    if (!container) return;
-
-    const handleScroll = () => {
-      const scrollPosition = container.scrollTop;
-      const pageHeight = window.innerHeight;
-      const newPage = Math.floor(scrollPosition / pageHeight);
-      setCurrentPage(newPage);
-    };
-
-    handleScroll();
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Fallback season stats for when season stats API is not available
-  const fallbackSeasonStats = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    const seasonStart = new Date(currentYear, 0, 1); // January 1st
-
-    const seasonMatches = matches.filter(
-      (match) => new Date(match.gameCreation) >= seasonStart
-    );
-
-    let totalKills = 0;
-    let totalDeaths = 0;
-    let totalAssists = 0;
-    let totalCs = 0;
-    let totalDuration = 0;
-    let totalVision = 0;
-    let totalGold = 0;
-    let totalDragons = 0;
-    let totalBarons = 0;
-    let wins = 0;
-    let pentaKills = 0;
-    let quadraKills = 0;
-    const roleCount: Record<string, number> = {};
-    const championStats: Record<string, {
-      games: number;
-      wins: number;
-      kills: number;
-      deaths: number;
-      assists: number;
-      icon: string;
-    }> = {};
-
-    // Monthly performance data
-    const monthlyStats: Record<string, { wins: number; games: number; kills: number; deaths: number; assists: number }> = {};
-
-    seasonMatches.forEach((match) => {
-      const participant = match.participants.find((p) => p.puuid === puuid);
-      if (!participant) return;
-
-      // Basic stats
-      totalKills += participant.kills;
-      totalDeaths += participant.deaths;
-      totalAssists += participant.assists;
-      totalCs += participant.cs;
-      totalDuration += match.gameDuration;
-      totalVision += participant.visionScore ?? 0;
-      totalGold += participant.goldEarned;
-      totalDragons += participant.dragonKills ?? 0;
-      totalBarons += participant.baronKills ?? 0;
+    const timer = setTimeout(() => {
+      const container = containerRef.current;
+      if (!container) return;
       
-      if (participant.win) wins++;
-      
-      // Multi-kills
-      if (participant.kills >= 5 && participant.deaths === 0) pentaKills++;
-      else if (participant.kills >= 4) quadraKills++;
+      const sections = container.querySelectorAll('section');
+      if (sections.length === 0) return;
 
-      // Role tracking
-      const role = participant.role || "UNKNOWN";
-      roleCount[role] = (roleCount[role] || 0) + 1;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          // Find the section with highest intersection ratio
+          let maxRatio = 0;
+          let maxIndex = 0;
+          
+          entries.forEach((entry) => {
+            const sectionsArray = Array.from(sections);
+            const index = sectionsArray.findIndex(s => s === entry.target);
+            
+            if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
+              maxRatio = entry.intersectionRatio;
+              maxIndex = index;
+            }
+          });
+          
+          if (maxRatio > 0.3) {
+            setCurrentPage(maxIndex);
+          }
+        },
+        {
+          root: container,
+          threshold: [0, 0.25, 0.5, 0.75, 1],
+          rootMargin: '0px',
+        }
+      );
 
-      // Champion stats
-      const champName = participant.championName;
-      if (!championStats[champName]) {
-        championStats[champName] = {
-          games: 0,
-          wins: 0,
-          kills: 0,
-          deaths: 0,
-          assists: 0,
-          icon: participant.championIcon,
-        };
+      sections.forEach((section) => {
+        observer.observe(section as Element);
+      });
+
+      return () => {
+        observer.disconnect();
+      };
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [seasonStats]);
+
+  // Close share menu when clicking outside
+  useEffect(() => {
+    if (!showShareMenu) return;
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.share-menu-container')) {
+        setShowShareMenu(false);
       }
-      championStats[champName].games++;
-      if (participant.win) championStats[champName].wins++;
-      championStats[champName].kills += participant.kills;
-      championStats[champName].deaths += participant.deaths;
-      championStats[champName].assists += participant.assists;
-
-      // Monthly stats
-      const monthKey = new Date(match.gameCreation).toLocaleDateString('en-US', { month: 'short' });
-      if (!monthlyStats[monthKey]) {
-        monthlyStats[monthKey] = { wins: 0, games: 0, kills: 0, deaths: 0, assists: 0 };
-      }
-      monthlyStats[monthKey].games++;
-      if (participant.win) monthlyStats[monthKey].wins++;
-      monthlyStats[monthKey].kills += participant.kills;
-      monthlyStats[monthKey].deaths += participant.deaths;
-      monthlyStats[monthKey].assists += participant.assists;
-    });
-
-    const gamesPlayed = seasonMatches.length || 1;
-    const avgKills = totalKills / gamesPlayed;
-    const avgDeaths = totalDeaths / gamesPlayed;
-    const avgAssists = totalAssists / gamesPlayed;
-    const avgKda = totalDeaths === 0 ? (totalKills + totalAssists) : (totalKills + totalAssists) / totalDeaths;
-    const avgCs = totalCs / gamesPlayed;
-    const avgCsPerMin = totalDuration ? (totalCs / (totalDuration / 60)) : 0;
-    const avgVision = totalVision / gamesPlayed;
-    const avgGold = totalGold / gamesPlayed;
-    const winRate = wins / gamesPlayed;
-
-    // Top champions by games played
-    const topChampions = Object.entries(championStats)
-      .sort((a, b) => b[1].games - a[1].games)
-      .map(([name, stats]) => ({
-        name,
-        ...stats,
-        winRate: stats.wins / stats.games,
-        kda: stats.deaths === 0 ? (stats.kills + stats.assists) : (stats.kills + stats.assists) / stats.deaths,
-        totalTakedowns: stats.kills + stats.assists,
-        totalDamage: 0, // Not available in calculated stats
-        avgDamage: 0, // Not available in calculated stats
-        doubleKills: 0,
-        tripleKills: 0,
-        quadraKills: 0,
-        pentaKills: 0,
-        qCasts: 0, // Not available in calculated stats
-        wCasts: 0, // Not available in calculated stats
-        eCasts: 0, // Not available in calculated stats
-        rCasts: 0, // Not available in calculated stats
-      }));
-
-    // Most played role
-    const mostPlayedRole = Object.entries(roleCount)
-      .sort((a, b) => b[1] - a[1])[0]?.[0] || "UNKNOWN";
-
-    // Monthly performance chart data
-    const monthlyChartData = Object.entries(monthlyStats).map(([month, stats]) => ({
-      month,
-      winRate: (stats.wins / stats.games) * 100,
-      kda: stats.deaths === 0 ? (stats.kills + stats.assists) : (stats.kills + stats.assists) / stats.deaths,
-    }));
-
-    return {
-      gamesPlayed,
-      wins,
-      losses: gamesPlayed - wins,
-      winRate,
-      avgKills,
-      avgDeaths,
-      avgAssists,
-      avgKda,
-      avgCs,
-      avgCsPerMin,
-      avgVision,
-      avgGold,
-      totalDragons,
-      totalBarons,
-      pentaKills,
-      quadraKills,
-      mostPlayedRole,
-      topChampions,
-      monthlyChartData,
-      seasonStart: seasonStart.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
     };
-  }, [matches, puuid]);
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showShareMenu]);
 
-  // Transform API season stats data for display
+  // Season start date for display
+  const seasonStartDate = useMemo(() => {
+    const startTimestamp = seasonStats?.statsPeriodStart;
+    if (!startTimestamp) {
+      return "Season 2025";
+    }
+    const date = new Date(startTimestamp);
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }, [seasonStats]);
+
+  // Transform AWS Lambda API season stats data for display
   const displaySeasonStats = useMemo(() => {
     if (!seasonStats || !seasonStats.championStats) {
-      // Use fallback stats when season stats API is not available
-      return fallbackSeasonStats;
+      return null; // No data available - show "not ready" message
     }
 
     // Get champions directly from championStats and sort by games played
     const topChampions = Object.entries(seasonStats.championStats)
-      .sort((a, b) => b[1].gamesPlayed - a[1].gamesPlayed) // Sort by games played descending
+      .sort((a, b) => b[1].gamesPlayed - a[1].gamesPlayed)
       .map(([name, champStats]) => {
-        // Use calculated data from season stats API
-        // Note: The API provides calculated multikills, totalTakedowns, totalDamage
-        // Win rate estimation until API provides individual champion win rates
         const wins = Math.round((champStats.gamesPlayed / seasonStats.overallStats.totalMatches) * seasonStats.overallStats.wins);
         
         return {
@@ -272,42 +171,42 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
         };
       });
 
-    // Use calculated data from season stats API
-    // The API should provide calculated averages, but if not available, use fallback estimates
-    const avgKills = fallbackSeasonStats.avgKills; // Use fallback for now until API provides calculated averages
-    const avgDeaths = fallbackSeasonStats.avgDeaths; // Use fallback for now until API provides calculated averages  
-    const avgAssists = fallbackSeasonStats.avgAssists; // Use fallback for now until API provides calculated averages
+    // Calculate averages from total matches
+    const totalMatches = seasonStats.overallStats.totalMatches || 1;
+    const avgKills = seasonStats.overallStats.mostKills?.value ? seasonStats.overallStats.mostKills.value / totalMatches : 0;
+    const avgDeaths = seasonStats.overallStats.mostDeaths?.value ? seasonStats.overallStats.mostDeaths.value / totalMatches : 0;
+    const avgAssists = seasonStats.overallStats.mostAssists?.value ? seasonStats.overallStats.mostAssists.value / totalMatches : 0;
+    const avgCs = (seasonStats.overallStats.totalCS || 0) / totalMatches;
+    
+    // Calculate game duration averages
+    const avgGameDuration = ((seasonStats.overallStats.longestGameDuration || 0) + (seasonStats.overallStats.shortestGameDuration || 0)) / 2;
+    const avgCsPerMin = avgGameDuration ? avgCs / (avgGameDuration / 60) : 0;
 
     return {
-      // Use calculated data from season stats API
       gamesPlayed: seasonStats.overallStats.totalMatches,
       wins: seasonStats.overallStats.wins,
       losses: seasonStats.overallStats.losses,
       winRate: seasonStats.overallStats.wins / seasonStats.overallStats.totalMatches,
       
-      // Use calculated averages from season stats API when available, fallback otherwise
       avgKills,
       avgDeaths,
       avgAssists,
       avgKda: avgDeaths === 0 ? (avgKills + avgAssists) : (avgKills + avgAssists) / avgDeaths,
-      
-      // These fields may not be available in season stats API yet, using fallback
-      avgCs: fallbackSeasonStats.avgCs,
-      avgCsPerMin: fallbackSeasonStats.avgCsPerMin,
-      avgVision: fallbackSeasonStats.avgVision,
-      avgGold: fallbackSeasonStats.avgGold,
-      totalDragons: fallbackSeasonStats.totalDragons,
-      totalBarons: fallbackSeasonStats.totalBarons,
-      pentaKills: fallbackSeasonStats.pentaKills,
-      quadraKills: fallbackSeasonStats.quadraKills,
-      mostPlayedRole: fallbackSeasonStats.mostPlayedRole,
-      monthlyChartData: fallbackSeasonStats.monthlyChartData,
-      seasonStart: fallbackSeasonStats.seasonStart,
-      
-      // Champion data from season stats API
+      avgCs,
+      avgCsPerMin,
+      avgVision: 0, // Not available from Lambda API
+      avgGold: 0, // Not available from Lambda API
+      totalDragons: 0, // Not available from Lambda API
+      totalBarons: 0, // Not available from Lambda API
+      pentaKills: topChampions.reduce((sum, champ) => sum + champ.pentaKills, 0),
+      quadraKills: topChampions.reduce((sum, champ) => sum + champ.quadraKills, 0),
+      mostPlayedRole: "UNKNOWN", // Not available from Lambda API
+      monthlyChartData: [], // Not available from Lambda API
+      seasonStart: seasonStartDate,
       topChampions,
+      uniqueChampionsPlayed: topChampions.length, // Number of unique champions played
     };
-  }, [seasonStats, fallbackSeasonStats]);
+  }, [seasonStats, seasonStartDate]);
 
   // Get top 3 summoner spells from API
   const topSummonerSpells = useMemo(() => {
@@ -350,53 +249,95 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     router.push(`/profile/${region}/${encodeURIComponent(summoner.summonerName)}/${encodeURIComponent(summoner.tagline)}`);
   };
 
-  // Download page as image
+  // Navigate to specific page
+  const goToPage = (pageNum: number) => {
+    if (!containerRef.current) return;
+    
+    const pageHeight = window.innerHeight;
+    containerRef.current.scrollTo({
+      top: pageNum * pageHeight,
+      behavior: 'smooth',
+    });
+  };
+
+  // Download page as image using dom-to-image-more (better CSS support)
   const downloadPageAsImage = async (pageIndex: number, pageName: string) => {
     try {
-      const { default: html2canvas } = await import('html2canvas');
-      const pages = document.querySelectorAll('section');
+      const domtoimage = await import('dom-to-image-more');
+      const pages = document.querySelectorAll('.chronicle-container > section');
       const page = pages[pageIndex];
       
-      if (!page) return;
-
-      const canvas = await html2canvas(page as HTMLElement, {
-        backgroundColor: '#020617',
-        scale: 2,
+      if (!page) {
+        alert(`Could not find page ${pageIndex + 1} to download`);
+        return;
+      }
+      
+      const dataUrl = await domtoimage.toPng(page as HTMLElement, {
+        quality: 0.95,
+        bgcolor: '#020617',
+        width: page.clientWidth,
+        height: page.clientHeight,
       });
       
-      const url = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = `${pageName}-${summoner.summonerName}.png`;
-      link.href = url;
+      link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error('Error downloading page:', error);
+      alert(`Failed to download page: ${(error as Error).message}`);
     }
   };
 
   // Download entire chronicle as one image
   const downloadFullChronicle = async () => {
     try {
-      const { default: html2canvas } = await import('html2canvas');
-      const container = document.querySelector('.chronicle-container');
+      const domtoimage = await import('dom-to-image-more');
       
-      if (!container) return;
-
-      const canvas = await html2canvas(container as HTMLElement, {
-        backgroundColor: '#020617',
-        scale: 2,
-        scrollX: 0,
-        scrollY: 0,
-        height: container.scrollHeight,
+      // Get all sections to capture
+      const sections = document.querySelectorAll('.chronicle-container section');
+      if (sections.length === 0) {
+        alert('No pages found to download');
+        return;
+      }
+      
+      // Create a temporary container to stack all sections vertically
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.width = window.innerWidth + 'px';
+      tempContainer.style.backgroundColor = '#020617';
+      document.body.appendChild(tempContainer);
+      
+      // Clone and append all sections
+      sections.forEach((section) => {
+        const clone = section.cloneNode(true) as HTMLElement;
+        clone.style.position = 'relative';
+        clone.style.height = window.innerHeight + 'px';
+        clone.style.width = '100%';
+        tempContainer.appendChild(clone);
       });
       
-      const url = canvas.toDataURL('image/png');
+      const dataUrl = await domtoimage.toPng(tempContainer, {
+        quality: 0.95,
+        bgcolor: '#020617',
+      });
+      
+      // Remove temporary container
+      document.body.removeChild(tempContainer);
+      
       const link = document.createElement('a');
       link.download = `${summoner.summonerName}-Chronicle-2025.png`;
-      link.href = url;
+      link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (error) {
-      console.error('Error downloading full chronicle:', error);
+      console.error('Error downloading chronicle:', error);
+      alert(`Failed to download chronicle: ${(error as Error).message}`);
     }
   };
 
@@ -425,7 +366,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
       .map(([riotId, games]) => {
         const summonerName = riotId.split('#')[0];
         // Use season stats API data for more accurate takedowns calculation
-        const estimatedTakedowns = seasonStats.championStats ? 
+        const estimatedTakedowns = displaySeasonStats?.avgKills ? 
           Math.round(games * displaySeasonStats.avgKills) : 
           Math.round(games * 5); // Fallback estimate
         return {
@@ -435,10 +376,23 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           takedowns: estimatedTakedowns,
         };
       });
-  }, [seasonStats, displaySeasonStats.avgKills]);
+  }, [seasonStats, displaySeasonStats]);
+
+  // Show loading state while fetching data
+  if (isLoadingSeasonStats || !displaySeasonStats) {
+    return (
+      <div className="relative h-screen w-full flex items-center justify-center bg-slate-950">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.3),transparent_65%)]" />
+        <div className="relative z-10 text-center space-y-4 animate-in fade-in duration-700">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-violet-500 border-r-transparent" />
+          <p className="text-xl text-slate-300">Loading your Season Rewind...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="chronicle-container relative h-screen w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth scrollbar-hide">
+    <div ref={containerRef} className="chronicle-container relative h-screen w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth scrollbar-hide">
       {/* Fixed Back Button */}
       <div className="fixed top-4 left-4 z-50 animate-in fade-in slide-in-from-left-5 duration-500">
         <Button
@@ -452,18 +406,67 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
         </Button>
       </div>
 
+      {/* Page Indicator - Vertical Bars */}
+      <div className="fixed right-8 top-1/2 -translate-y-1/2 z-50 animate-in fade-in slide-in-from-right-5 duration-500">
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2, 3, 4].map((pageNum) => (
+            <button
+              key={pageNum}
+              onClick={() => goToPage(pageNum)}
+              className={`w-1.5 h-10 rounded-full transition-all duration-300 cursor-pointer ${
+                currentPage === pageNum
+                  ? 'bg-violet-400 shadow-[0_0_12px_rgba(139,92,246,0.8)] w-2'
+                  : 'bg-slate-600 hover:bg-slate-400 hover:w-2'
+              }`}
+              title={`Page ${pageNum + 1}`}
+              aria-label={`Go to page ${pageNum + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* Share Button Component */}
       <div className="fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-right-5 duration-500">
-        <div className="flex gap-2">
-          {(currentPage >= 0 && currentPage < 4) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => downloadPageAsImage(currentPage, `Page-${currentPage + 1}`)}
-              className="bg-slate-950/80 backdrop-blur-sm text-slate-300 hover:text-slate-100 border border-white/10 transition-all duration-300 hover:scale-105"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+        <div className="relative share-menu-container">
+          {(currentPage >= 0 && currentPage < 5) && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowShareMenu(!showShareMenu)}
+                className="bg-slate-950/80 backdrop-blur-sm text-slate-300 hover:text-slate-100 border border-white/10 transition-all duration-300 hover:scale-105"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+              
+              {/* Share Menu Dropdown */}
+              {showShareMenu && (
+                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-white/10 bg-slate-950/95 backdrop-blur-sm shadow-xl animate-in fade-in zoom-in duration-200">
+                  <div className="p-2 flex flex-col gap-1">
+                    <button
+                      onClick={() => {
+                        copyShareableLink();
+                        setShowShareMenu(false);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-md text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 transition-all duration-200 text-sm"
+                    >
+                      <Link className="h-4 w-4" />
+                      Share as Link
+                    </button>
+                    <button
+                      onClick={() => {
+                        downloadPageAsImage(currentPage, `Chronicle-Page-${currentPage + 1}`);
+                        setShowShareMenu(false);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-md text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 transition-all duration-200 text-sm"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Page
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -553,9 +556,9 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                 </div>
                 <div className="text-center p-4 rounded-xl bg-slate-800/40 backdrop-blur-sm border border-violet-400/10 hover:border-violet-400/30 transition-all duration-300 hover:scale-105">
                   <p className="text-3xl font-bold text-orange-400 mb-1">
-                    {displaySeasonStats.topChampions.length}
+                    {displaySeasonStats.uniqueChampionsPlayed}
                   </p>
-                  <p className="text-sm text-slate-400 uppercase tracking-wide">Champions</p>
+                  <p className="text-sm text-slate-400 uppercase tracking-wide">Unique Champions</p>
                 </div>
               </div>
             </div>
@@ -587,16 +590,16 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           </div>
         </div>
 
-        <div className="relative z-10 h-full flex flex-col justify-center px-8 py-4">
+        <div className="relative z-10 h-full flex flex-col justify-center px-8 py-12">
           <div className="mx-auto max-w-7xl w-full">
             <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400 mb-2 text-center animate-in fade-in slide-in-from-top-5 duration-700">
-              Season Champion Pool
+              Your Most Played Champions
             </h2>
             <p className="text-base text-slate-400 text-center mb-3 animate-in fade-in duration-700 delay-150">
               Your most played champions this season
             </p>
             
-            <div className="flex flex-col gap-3 max-h-[560px] overflow-y-auto scrollbar-hide">
+            <div className="flex flex-col gap-3 max-h-[720px] overflow-y-auto scrollbar-hide">
               {displaySeasonStats.topChampions.slice(0, 5).map((champ, index) => (
                 <div
                   key={champ.name}
@@ -612,141 +615,152 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                   {/* Dark overlay for better text readability */}
                   <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/60 to-transparent transition-all duration-500 group-hover:from-slate-900/90" />
                   
-                  {/* Stats Content */}
+                  {/* Stats Content - Split Left/Right Layout */}
                   <div className="relative h-full flex flex-col justify-between py-4 px-6">
-                    {/* Top Section - Rank, Name, Stats */}
-                    <div className="flex items-center gap-4">
-                      {/* Rank Indicator */}
-                      <div className="text-3xl font-bold text-violet-400 transition-all duration-300 hover:scale-110">
-                        #{index + 1}
-                      </div>
-                      
-                      {/* Champion Name */}
-                      <div className="flex flex-col">
+                    {/* Top Row - Rank + Name (Left) and Stats (Right) */}
+                    <div className="flex items-start justify-between gap-6">
+                      {/* Left: Rank and Champion Name */}
+                      <div className="flex items-top gap-4">
+                        <div className="text-3xl font-bold text-violet-400 transition-all duration-300 hover:scale-110">
+                          #{index + 1}
+                        </div>
                         <span className="text-xl font-bold text-slate-100 transition-all duration-300">{champ.name}</span>
                       </div>
                       
-                      {/* Champion Stats - Horizontal Compact Layout */}
-                      <div className="flex items-top gap-4 text-sm ml-auto">
+                      {/* Right: All Stats */}
+                      <div className="flex items-top gap-4 flex-wrap">
                         <div className="flex flex-col items-center transition-all duration-300 hover:scale-110">
-                          <span className="text-xs text-slate-400 uppercase tracking-wide">Games</span>
-                          <span className="text-lg font-bold text-slate-100">{champ.games}</span>
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Games</span>
+                          <span className="text-xl font-bold text-slate-100">{champ.games}</span>
                         </div>
                         
                         <div className="flex flex-col items-center transition-all duration-300 hover:scale-110">
-                          <span className="text-xs text-slate-400 uppercase tracking-wide">Win Rate</span>
-                          <span className={`text-lg font-bold ${champ.winRate >= 0.55 ? 'text-green-400' : champ.winRate >= 0.45 ? 'text-slate-100' : 'text-red-400'}`}>
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Win Rate</span>
+                          <span className={`text-xl font-bold ${champ.winRate >= 0.55 ? 'text-green-400' : champ.winRate >= 0.45 ? 'text-slate-100' : 'text-red-400'}`}>
                             {Math.round(champ.winRate * 100)}%
                           </span>
                         </div>
                         
                         <div className="flex flex-col items-center transition-all duration-300 hover:scale-110">
-                          <span className="text-xs text-slate-400 uppercase tracking-wide">Damage</span>
-                          <span className="text-lg font-bold text-orange-400">
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Damage</span>
+                          <span className="text-xl font-bold text-orange-400">
                             {(champ.totalDamage / 1000).toFixed(0)}k
                           </span>
                         </div>
                         
                         <div className="flex flex-col items-center transition-all duration-300 hover:scale-110">
-                          <span className="text-xs text-slate-400 uppercase tracking-wide">Takedowns</span>
-                          <span className="text-lg font-bold text-cyan-400">{champ.totalTakedowns}</span>
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Takedowns</span>
+                          <span className="text-xl font-bold text-cyan-400">{champ.totalTakedowns}</span>
                         </div>
-
-                        {/* Multikills Column */}
-                        {(champ.pentaKills > 0 || champ.quadraKills > 0 || champ.tripleKills > 0 || champ.doubleKills > 0) && (
-                          <div className="flex flex-col transition-all duration-300 hover:scale-110">
-                            <span className="text-xs text-slate-400 uppercase tracking-wide">Multikills</span>
-                            <div className="flex flex-col gap-0.5 mt-1">
-                              {champ.pentaKills > 0 && (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-yellow-500/20 border border-yellow-500/40">
-                                  <span className="text-yellow-400 font-bold text-[10px]">{champ.pentaKills}</span>
-                                  <span className="text-yellow-300 text-[10px]">Penta</span>
-                                </div>
-                              )}
-                              {champ.quadraKills > 0 && (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/40">
-                                  <span className="text-purple-400 font-bold text-[10px]">{champ.quadraKills}</span>
-                                  <span className="text-purple-300 text-[10px]">Quadra</span>
-                                </div>
-                              )}
-                              {champ.tripleKills > 0 && (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/40">
-                                  <span className="text-cyan-400 font-bold text-[10px]">{champ.tripleKills}</span>
-                                  <span className="text-cyan-300 text-[10px]">Triple</span>
-                                </div>
-                              )}
-                              {champ.doubleKills > 0 && (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-500/20 border border-blue-500/40">
-                                  <span className="text-blue-400 font-bold text-[10px]">{champ.doubleKills}</span>
-                                  <span className="text-blue-300 text-[10px]">Double</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
 
-                    {/* Bottom Section - Ability Icons */}
-                    {(champ.qCasts > 0 || champ.wCasts > 0 || champ.eCasts > 0 || champ.rCasts > 0) && (
-                      <div className="flex flex-col gap-2 mt-2">
-                        <span className="text-xs text-slate-400 uppercase tracking-wide">Ability Casts</span>
-                        <div className="flex items-center gap-3">
-                          {champ.qCasts > 0 && (
-                            <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-red-400/50 bg-slate-900/80 hover:scale-110 transition-all duration-300">
-                              <Image
-                                src={`https://ddragon.leagueoflegends.com/cdn/15.21.1/img/spell/${champ.name}Q.png`}
-                                alt="Q Ability"
-                                fill
-                                className="object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                <span className="text-white font-bold text-xs">{champ.qCasts.toLocaleString()}</span>
+                    {/* Bottom Row - Ability Icons (Left) and Multikills (Right) */}
+                    <div className="flex items-end justify-between gap-6">
+                      {/* Left: Ability Icons */}
+                      {(champ.qCasts > 0 || champ.wCasts > 0 || champ.eCasts > 0 || champ.rCasts > 0) && (
+                        <div className="flex flex-col gap-2">
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Ability Casts</span>
+                          <div className="flex items-center gap-3">
+                            {champ.qCasts > 0 && (
+                              <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-red-400/50 bg-slate-900/80 hover:scale-110 transition-all duration-300">
+                                <Image
+                                  src={`https://ddragon.leagueoflegends.com/cdn/15.21.1/img/spell/${champ.name}Q.png`}
+                                  alt="Q Ability"
+                                  fill
+                                  className="object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                  <span className="text-white font-bold text-xs">{champ.qCasts.toLocaleString()}</span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {champ.wCasts > 0 && (
-                            <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-blue-400/50 bg-slate-900/80 hover:scale-110 transition-all duration-300">
-                              <Image
-                                src={`https://ddragon.leagueoflegends.com/cdn/15.21.1/img/spell/${champ.name}W.png`}
-                                alt="W Ability"
-                                fill
-                                className="object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                <span className="text-white font-bold text-xs">{champ.wCasts.toLocaleString()}</span>
+                            )}
+                            {champ.wCasts > 0 && (
+                              <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-blue-400/50 bg-slate-900/80 hover:scale-110 transition-all duration-300">
+                                <Image
+                                  src={`https://ddragon.leagueoflegends.com/cdn/15.21.1/img/spell/${champ.name}W.png`}
+                                  alt="W Ability"
+                                  fill
+                                  className="object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                  <span className="text-white font-bold text-xs">{champ.wCasts.toLocaleString()}</span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {champ.eCasts > 0 && (
-                            <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-green-400/50 bg-slate-900/80 hover:scale-110 transition-all duration-300">
-                              <Image
-                                src={`https://ddragon.leagueoflegends.com/cdn/15.21.1/img/spell/${champ.name}E.png`}
-                                alt="E Ability"
-                                fill
-                                className="object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                <span className="text-white font-bold text-xs">{champ.eCasts.toLocaleString()}</span>
+                            )}
+                            {champ.eCasts > 0 && (
+                              <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-green-400/50 bg-slate-900/80 hover:scale-110 transition-all duration-300">
+                                <Image
+                                  src={`https://ddragon.leagueoflegends.com/cdn/15.21.1/img/spell/${champ.name}E.png`}
+                                  alt="E Ability"
+                                  fill
+                                  className="object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                  <span className="text-white font-bold text-xs">{champ.eCasts.toLocaleString()}</span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {champ.rCasts > 0 && (
-                            <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-purple-400/50 bg-slate-900/80 hover:scale-110 transition-all duration-300">
-                              <Image
-                                src={`https://ddragon.leagueoflegends.com/cdn/15.21.1/img/spell/${champ.name}R.png`}
-                                alt="R Ability"
-                                fill
-                                className="object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                <span className="text-white font-bold text-xs">{champ.rCasts.toLocaleString()}</span>
+                            )}
+                            {champ.rCasts > 0 && (
+                              <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-purple-400/50 bg-slate-900/80 hover:scale-110 transition-all duration-300">
+                                <Image
+                                  src={`https://ddragon.leagueoflegends.com/cdn/15.21.1/img/spell/${champ.name}R.png`}
+                                  alt="R Ability"
+                                  fill
+                                  className="object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                  <span className="text-white font-bold text-xs">{champ.rCasts.toLocaleString()}</span>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+
+                      {/* Right: Multikills */}
+                      {(champ.pentaKills > 0 || champ.quadraKills > 0 || champ.tripleKills > 0 || champ.doubleKills > 0) && (
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="text-sm text-slate-400 uppercase tracking-wide">Multikills</span>
+                          <div className="flex flex-row gap-2 flex-wrap justify-end">
+                            {champ.pentaKills > 0 && (
+                              <div className="relative flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-yellow-400/40 via-orange-500/40 to-red-500/40 border-2 border-yellow-300/80 shadow-[0_0_20px_rgba(251,191,36,0.5)] transition-all duration-300 hover:scale-110 hover:shadow-[0_0_30px_rgba(251,191,36,0.7)] animate-pulse">
+                                <Crown className="h-5 w-5 text-yellow-200 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-yellow-100 font-black text-lg drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{champ.pentaKills}</span>
+                                  <span className="text-yellow-100 font-bold text-sm uppercase tracking-wider drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">Penta</span>
+                                </div>
+                                {/* Sparkle effect overlay */}
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-300 rounded-full animate-ping" />
+                              </div>
+                            )}
+                            {champ.quadraKills > 0 && (
+                              <div className="relative flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-br from-purple-400/40 via-pink-500/40 to-fuchsia-500/40 border-2 border-purple-300/80 shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-all duration-300 hover:scale-110 hover:shadow-[0_0_25px_rgba(168,85,247,0.6)]">
+                                <Sparkles className="h-4 w-4 text-purple-200 drop-shadow-[0_0_6px_rgba(168,85,247,0.8)]" />
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-purple-100 font-bold text-base drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">{champ.quadraKills}</span>
+                                  <span className="text-purple-100 font-semibold text-sm uppercase tracking-wide drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">Quadra</span>
+                                </div>
+                              </div>
+                            )}
+                            {champ.tripleKills > 0 && (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gradient-to-r from-cyan-500/30 to-blue-500/30 border border-cyan-400/60 shadow-sm shadow-cyan-500/20 transition-all duration-300 hover:scale-105 hover:shadow-cyan-500/40">
+                                <Crosshair className="h-3.5 w-3.5 text-cyan-300" />
+                                <span className="text-cyan-200 font-bold text-xs">{champ.tripleKills}</span>
+                                <span className="text-cyan-200 font-semibold text-xs uppercase tracking-wide">Triple</span>
+                              </div>
+                            )}
+                            {champ.doubleKills > 0 && (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gradient-to-r from-blue-500/25 to-indigo-500/25 border border-blue-400/50 shadow-sm shadow-blue-500/10 transition-all duration-300 hover:scale-105 hover:shadow-blue-500/30">
+                                <Swords className="h-3.5 w-3.5 text-blue-300" />
+                                <span className="text-blue-200 font-bold text-xs">{champ.doubleKills}</span>
+                                <span className="text-blue-200 font-semibold text-xs uppercase tracking-wide">Double</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -790,7 +804,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                   {topSummonerSpells.slice(0, 3).map((spell, index) => (
                     <div
                       key={spell.name}
-                      className="relative h-48 overflow-hidden rounded-2xl border-2 border-violet-400/40 bg-slate-900/50 shadow-lg hover:shadow-violet-500/40 transition-all duration-500 hover:scale-105 hover:border-violet-400/80 animate-in zoom-in duration-700"
+                      className="relative aspect-[1530/1024] overflow-hidden rounded-2xl border-2 border-violet-400/40 bg-slate-900/50 shadow-lg hover:shadow-violet-500/40 transition-all duration-500 hover:scale-105 hover:border-violet-400/80 animate-in zoom-in duration-700"
                       style={{
                         backgroundImage: `url('${spell.icon}')`,
                         backgroundSize: 'cover',
@@ -822,7 +836,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                   {topSummonerSpells.slice(3, 5).map((spell, index) => (
                     <div
                       key={spell.name}
-                      className="relative h-40 w-[calc((100vw-10rem)/2.2)] max-w-[450px] min-w-[280px] overflow-hidden rounded-2xl border-2 border-violet-400/40 bg-slate-900/50 shadow-lg hover:shadow-violet-500/40 transition-all duration-500 hover:scale-105 hover:border-violet-400/80 animate-in zoom-in duration-700"
+                      className="relative w-[calc((100vw-10rem)/2.2)] max-w-[450px] min-w-[280px] aspect-[1530/1024] overflow-hidden rounded-2xl border-2 border-violet-400/40 bg-slate-900/50 shadow-lg hover:shadow-violet-500/40 transition-all duration-500 hover:scale-105 hover:border-violet-400/80 animate-in zoom-in duration-700"
                       style={{
                         backgroundImage: `url('${spell.icon}')`,
                         backgroundSize: 'cover',
