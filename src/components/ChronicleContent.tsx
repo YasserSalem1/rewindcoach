@@ -278,6 +278,21 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
         bgcolor: '#020617',
         width: page.clientWidth,
         height: page.clientHeight,
+        style: {
+          margin: '0',
+          padding: '0',
+          border: 'none',
+          outline: 'none',
+          boxShadow: 'none',
+        },
+        filter: (node: HTMLElement) => {
+          // Remove any debug borders or outlines
+          if (node.style) {
+            node.style.outline = 'none';
+            node.style.border = node.style.border?.includes('border-') ? node.style.border : 'none';
+          }
+          return true;
+        },
       });
       
       const link = document.createElement('a');
@@ -311,6 +326,10 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
       tempContainer.style.top = '0';
       tempContainer.style.width = window.innerWidth + 'px';
       tempContainer.style.backgroundColor = '#020617';
+      tempContainer.style.margin = '0';
+      tempContainer.style.padding = '0';
+      tempContainer.style.border = 'none';
+      tempContainer.style.outline = 'none';
       document.body.appendChild(tempContainer);
       
       // Clone and append all sections
@@ -319,12 +338,35 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
         clone.style.position = 'relative';
         clone.style.height = window.innerHeight + 'px';
         clone.style.width = '100%';
+        clone.style.margin = '0';
+        clone.style.padding = '0';
+        clone.style.border = 'none';
+        clone.style.outline = 'none';
         tempContainer.appendChild(clone);
       });
       
       const dataUrl = await domtoimage.toPng(tempContainer, {
         quality: 0.95,
         bgcolor: '#020617',
+        style: {
+          margin: '0',
+          padding: '0',
+          border: 'none',
+          outline: 'none',
+          boxShadow: 'none',
+        },
+        filter: (node: HTMLElement) => {
+          // Remove any debug borders or outlines
+          if (node.style) {
+            node.style.outline = 'none';
+            const currentBorder = node.style.border;
+            // Only remove border if it's not a styled border (keep intentional borders)
+            if (currentBorder && !currentBorder.includes('border-')) {
+              node.style.border = 'none';
+            }
+          }
+          return true;
+        },
       });
       
       // Remove temporary container
