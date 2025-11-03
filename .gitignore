@@ -16,6 +16,7 @@
 # next.js
 /.next/
 /out/
+season stats.txt
 
 # production
 /build
@@ -41,3 +42,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+season stats.txt

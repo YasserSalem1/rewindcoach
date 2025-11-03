@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { MatchList } from "@/components/MatchList";
@@ -259,9 +259,10 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
                 onClick={handleSeasonRewind}
                 disabled={isGenerating}
                 variant="default"
-                className="group w-full rounded-lg border border-white/20 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-950 shadow-[0_12px_35px_rgba(232,121,249,0.45)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(167,139,250,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 md:w-auto"
+                className="group relative w-full rounded-lg border border-white/20 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-950 shadow-[0_12px_35px_rgba(232,121,249,0.45)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(167,139,250,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-[0_12px_35px_rgba(232,121,249,0.45)] md:w-auto"
               >
                 <span className="flex items-center justify-center gap-2">
+                  {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
                   {buttonText}
                 </span>
               </Button>

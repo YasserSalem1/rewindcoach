@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { ArrowLeft, Trophy, Target, Flame, ChevronDown, Award, Clock, Package, Skull, HeartHandshake, Share2, Download, Link, Crown, Sparkles, Crosshair, Swords } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -382,11 +383,151 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   // Show loading state while fetching data
   if (isLoadingSeasonStats || !displaySeasonStats) {
     return (
-      <div className="relative h-screen w-full flex items-center justify-center bg-slate-950">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.3),transparent_65%)]" />
-        <div className="relative z-10 text-center space-y-4 animate-in fade-in duration-700">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-violet-500 border-r-transparent" />
-          <p className="text-xl text-slate-300">Loading your Season Rewind...</p>
+      <div className="relative h-screen w-full flex items-center justify-center bg-slate-950 overflow-hidden">
+        {/* Animated background */}
+        <motion.div
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.4),transparent_70%)]"
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+
+        {/* Floating particles */}
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute h-1 w-1 rounded-full bg-violet-400/30"
+            style={{
+              left: `${20 + i * 10}%`,
+              top: `${30 + (i % 3) * 20}%`,
+            }}
+            animate={{
+              y: [0, -100, 0],
+              opacity: [0, 1, 0],
+              scale: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 3 + i * 0.3,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.2,
+            }}
+          />
+        ))}
+
+        <div className="relative z-10 text-center space-y-6">
+          {/* Triple ring spinner */}
+          <div className="relative inline-flex items-center justify-center h-32 w-32">
+            {/* Outer ring */}
+            <motion.div
+              className="absolute h-32 w-32 rounded-full border-2 border-violet-400/30"
+              animate={{
+                rotate: 360,
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+                scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+              }}
+            />
+            
+            {/* Middle ring */}
+            <motion.div
+              className="absolute h-24 w-24 rounded-full border-2 border-fuchsia-400/40"
+              animate={{
+                rotate: -360,
+                scale: [1, 1.05, 1],
+              }}
+              transition={{
+                rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                scale: { duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
+              }}
+            />
+            
+            {/* Inner ring */}
+            <motion.div
+              className="absolute h-16 w-16 rounded-full border-4 border-violet-500 border-r-transparent"
+              animate={{
+                rotate: 360,
+              }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
+            
+            {/* Center glow */}
+            <motion.div
+              className="absolute h-8 w-8 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 blur-xl"
+              animate={{
+                opacity: [0.4, 0.8, 0.4],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          </div>
+
+          {/* Animated title */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <motion.h2
+              className="text-3xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent"
+              animate={{
+                backgroundPosition: ["0%", "100%", "0%"],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              style={{
+                backgroundSize: "200% 100%",
+              }}
+            >
+              Loading Your Season Rewind
+            </motion.h2>
+          </motion.div>
+
+          <motion.p
+            className="text-slate-300/80"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            Preparing your chronicle...
+          </motion.p>
+
+          {/* Progress bar animation */}
+          <div className="mx-auto w-64 h-1 bg-slate-800/50 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500"
+              animate={{
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              style={{
+                width: "50%",
+              }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -491,17 +632,15 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 h-full flex items-center justify-center px-8">
-          <div className="max-w-6xl w-full flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-1000">
-            {/* Hero Content Card */}
-            <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-slate-950/90 p-8 shadow-[0_0_80px_rgba(99,102,241,0.3)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-              {/* Glow effect */}
+        <div className="relative z-10 h-full flex items-center justify-center px-4 md:px-8 overflow-y-auto scrollbar-hide py-4">
+          <div className="max-w-7xl w-full flex flex-col items-center gap-4">
+            {/* Hero Section - Summoner Info */}
+            <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-slate-950/90 p-4 shadow-[0_0_60px_rgba(99,102,241,0.3)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="pointer-events-none absolute -top-40 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-violet-500/30 blur-3xl" />
               
-              {/* Summoner Info */}
-              <div className="relative flex items-center gap-8 mb-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
-                {/* Profile Icon */}
-                <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-3xl border-4 border-violet-400/50 shadow-[0_20px_60px_rgba(124,58,237,0.4)] transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_80px_rgba(124,58,237,0.6)]">
+              {/* Summoner Info - Compact */}
+              <div className="relative flex items-center gap-4 mb-2">
+                <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-violet-400/50 shadow-lg">
                   <Image
                     src={summoner.profileIcon}
                     alt={`${summoner.summonerName} icon`}
@@ -509,68 +648,155 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                     className="object-cover"
                   />
                 </div>
-                
-                {/* Summoner Details */}
-                <div className="flex flex-col gap-2 flex-1">
-                  <h2 className="text-4xl font-bold text-slate-100 leading-tight">
-                    {summoner.summonerName}
+                <div className="flex flex-col gap-1 flex-1">
+                  <h2 className="text-2xl font-bold text-slate-100 leading-tight">
+                    {summoner.summonerName}<span className="text-slate-400 text-lg">#{summoner.tagline}</span>
                   </h2>
-                  <p className="text-xl text-slate-400 font-medium">
-                    #{summoner.tagline}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3 mt-2">
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/20 border border-violet-400/30">
-                      <Trophy className="h-4 w-4 text-violet-400" />
-                      <span className="text-slate-200 text-sm font-medium">{displaySeasonStats.gamesPlayed} Games</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 border border-green-400/30">
-                      <span className="text-green-400 text-sm font-bold">{Math.round(displaySeasonStats.winRate * 100)}%</span>
-                      <span className="text-slate-300 text-sm">Win Rate</span>
-                    </div>
-                  </div>
                 </div>
               </div>
               
               {/* Main Heading */}
-              <div className="relative text-center animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-600">
-                <h1 className="font-heading text-6xl md:text-7xl lg:text-8xl text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 tracking-tight mb-4 drop-shadow-[0_10px_40px_rgba(139,92,246,0.5)]">
-                  Let&apos;s Rewind 2025
+              <div className="relative text-center">
+                <h1 className="font-heading text-4xl md:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 tracking-tight mb-2 drop-shadow-[0_10px_40px_rgba(139,92,246,0.5)]">
+                  Season Chronicle 2025
                 </h1>
-                <p className="text-xl md:text-2xl text-slate-300 font-light tracking-wide">
-                  Your journey through the rift awaits
-                </p>
+                <p className="text-sm text-slate-400">Your journey through the rift</p>
               </div>
+            </div>
 
-              {/* Stats Preview */}
-              <div className="relative grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-700 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-800">
-                <div className="text-center p-4 rounded-xl bg-slate-800/40 backdrop-blur-sm border border-violet-400/10 hover:border-violet-400/30 transition-all duration-300 hover:scale-105">
-                  <p className="text-3xl font-bold text-cyan-400 mb-1">
-                    {(displaySeasonStats.avgKills + displaySeasonStats.avgAssists).toFixed(0)}
-                  </p>
-                  <p className="text-sm text-slate-400 uppercase tracking-wide">Avg Takedowns</p>
+            {/* Primary Stats - Big Numbers */}
+            <div className="w-full max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+              <div className="relative overflow-hidden rounded-xl border border-violet-400/30 bg-slate-900/70 p-4 shadow-lg hover:shadow-violet-500/40 transition-all duration-300 hover:scale-105 hover:border-violet-400/60 group">
+                <div className="absolute top-0 right-0 h-20 w-20 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all" />
+                <Trophy className="h-5 w-5 text-violet-400 mb-2" />
+                <p className="text-3xl md:text-4xl font-bold text-slate-100">{displaySeasonStats.gamesPlayed}</p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider">Games Played</p>
+              </div>
+              <div className="relative overflow-hidden rounded-xl border border-green-400/30 bg-slate-900/70 p-4 shadow-lg hover:shadow-green-500/40 transition-all duration-300 hover:scale-105 hover:border-green-400/60 group">
+                <div className="absolute top-0 right-0 h-20 w-20 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-all" />
+                <Target className="h-5 w-5 text-green-400 mb-2" />
+                <p className="text-3xl md:text-4xl font-bold text-slate-100">{displaySeasonStats.wins}</p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider">Victories</p>
+              </div>
+              <div className="relative overflow-hidden rounded-xl border border-cyan-400/30 bg-slate-900/70 p-4 shadow-lg hover:shadow-cyan-500/40 transition-all duration-300 hover:scale-105 hover:border-cyan-400/60 group">
+                <div className="absolute top-0 right-0 h-20 w-20 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all" />
+                <Flame className="h-5 w-5 text-cyan-400 mb-2" />
+                <p className="text-3xl md:text-4xl font-bold text-slate-100">{Math.round(displaySeasonStats.winRate * 100)}%</p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider">Win Rate</p>
+              </div>
+              <div className="relative overflow-hidden rounded-xl border border-orange-400/30 bg-slate-900/70 p-4 shadow-lg hover:shadow-orange-500/40 transition-all duration-300 hover:scale-105 hover:border-orange-400/60 group">
+                <div className="absolute top-0 right-0 h-20 w-20 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-all" />
+                <Award className="h-5 w-5 text-orange-400 mb-2" />
+                <p className="text-3xl md:text-4xl font-bold text-slate-100">{displaySeasonStats.uniqueChampionsPlayed}</p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider">Champions</p>
+              </div>
+            </div>
+
+            {/* Glory Moments */}
+            <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+              <h3 className="text-lg font-bold text-slate-300 mb-2 text-center uppercase tracking-wider">
+                ⚡ Glory Moments
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="relative overflow-hidden rounded-xl border-2 border-yellow-400/40 bg-gradient-to-br from-yellow-900/30 via-orange-900/30 to-red-900/30 p-3 shadow-[0_0_20px_rgba(251,191,36,0.3)] hover:shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all duration-300 hover:scale-105 group">
+                  <div className="absolute top-0 right-0 h-16 w-16 bg-yellow-500/20 rounded-full blur-xl group-hover:bg-yellow-500/30 transition-all" />
+                  <Crown className="h-6 w-6 text-yellow-400 mb-1 mx-auto animate-pulse" />
+                  <p className="text-3xl font-black text-yellow-100 text-center drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{displaySeasonStats.pentaKills}</p>
+                  <p className="text-xs text-yellow-200 text-center uppercase tracking-wider font-bold">Pentakills</p>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-slate-800/40 backdrop-blur-sm border border-violet-400/10 hover:border-violet-400/30 transition-all duration-300 hover:scale-105">
-                  <p className="text-3xl font-bold text-purple-400 mb-1">
-                    {displaySeasonStats.avgKda.toFixed(1)}
-                  </p>
-                  <p className="text-sm text-slate-400 uppercase tracking-wide">Avg KDA</p>
+                <div className="relative overflow-hidden rounded-xl border-2 border-purple-400/40 bg-gradient-to-br from-purple-900/30 via-pink-900/30 to-fuchsia-900/30 p-3 shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.5)] transition-all duration-300 hover:scale-105 group">
+                  <div className="absolute top-0 right-0 h-16 w-16 bg-purple-500/20 rounded-full blur-xl group-hover:bg-purple-500/30 transition-all" />
+                  <Sparkles className="h-6 w-6 text-purple-400 mb-1 mx-auto" />
+                  <p className="text-3xl font-black text-purple-100 text-center drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{displaySeasonStats.quadraKills}</p>
+                  <p className="text-xs text-purple-200 text-center uppercase tracking-wider font-bold">Quadras</p>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-slate-800/40 backdrop-blur-sm border border-violet-400/10 hover:border-violet-400/30 transition-all duration-300 hover:scale-105">
-                  <p className="text-3xl font-bold text-orange-400 mb-1">
-                    {displaySeasonStats.uniqueChampionsPlayed}
-                  </p>
-                  <p className="text-sm text-slate-400 uppercase tracking-wide">Unique Champions</p>
+                <div className="relative overflow-hidden rounded-xl border border-cyan-400/40 bg-gradient-to-br from-cyan-900/25 to-blue-900/25 p-3 shadow-sm shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-300 hover:scale-105 group">
+                  <div className="absolute top-0 right-0 h-16 w-16 bg-cyan-500/20 rounded-full blur-xl group-hover:bg-cyan-500/30 transition-all" />
+                  <Crosshair className="h-6 w-6 text-cyan-400 mb-1 mx-auto" />
+                  <p className="text-3xl font-black text-cyan-100 text-center">{displaySeasonStats.topChampions.reduce((sum, champ) => sum + champ.tripleKills, 0)}</p>
+                  <p className="text-xs text-cyan-200 text-center uppercase tracking-wider font-bold">Triple Kills</p>
                 </div>
               </div>
             </div>
 
-            {/* Scroll Indicator */}
-            <div className="flex flex-col items-center gap-3 animate-bounce animate-in fade-in duration-1000 delay-1000">
-              <div className="flex flex-col items-center gap-1">
-                <ChevronDown className="h-6 w-6 text-violet-400 animate-pulse" />
-                <ChevronDown className="h-4 w-4 text-violet-400/60 animate-pulse" style={{ animationDelay: '0.15s' }} />
+            {/* Top 5 Champions Preview */}
+            <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-700 delay-400">
+              <h3 className="text-lg font-bold text-slate-300 mb-2 text-center uppercase tracking-wider">
+                👑 Top Champions
+              </h3>
+              <div className="grid grid-cols-5 gap-3">
+                {displaySeasonStats.topChampions.slice(0, 5).map((champ, index) => (
+                  <div
+                    key={champ.name}
+                    className="relative h-32 overflow-hidden rounded-xl border border-violet-400/30 shadow-lg hover:shadow-violet-500/40 transition-all duration-300 hover:scale-105 hover:border-violet-400/60 group"
+                    style={{
+                      backgroundImage: `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${champ.name}_0.jpg')`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
+                    <div className="relative h-full flex flex-col justify-between p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="text-xl font-bold text-violet-400">#{index + 1}</div>
+                        <span className="text-sm font-bold text-slate-100">{champ.name}</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Games</span>
+                          <span className="font-bold text-slate-200">{champ.games}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Damage</span>
+                          <span className="font-bold text-orange-400">{(champ.totalDamage / 1000).toFixed(0)}k</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <span className="text-sm text-slate-300 uppercase tracking-wider font-medium">Explore Your Chronicle</span>
+            </div>
+
+            {/* Quick Highlights */}
+            {seasonStats?.overallStats && (
+              <div className="w-full max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-2 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
+                {seasonStats.overallStats.mostKills && (
+                  <div className="border border-slate-700/50 bg-slate-900/50 rounded-lg p-2">
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-0.5">Most Deadly</p>
+                    <p className="text-lg font-bold text-green-400">{seasonStats.overallStats.mostKills.value} Kills</p>
+                    <p className="text-[10px] text-slate-400">{seasonStats.overallStats.mostKills.champion}</p>
+                  </div>
+                )}
+                {seasonStats.overallStats.totalCS && (
+                  <div className="border border-slate-700/50 bg-slate-900/50 rounded-lg p-2">
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-0.5">Total CS</p>
+                    <p className="text-lg font-bold text-orange-400">{(seasonStats.overallStats.totalCS / 1000).toFixed(1)}k</p>
+                    <p className="text-[10px] text-slate-400">Across all games</p>
+                  </div>
+                )}
+                {seasonStats.overallStats.longestGameDuration && (
+                  <div className="border border-slate-700/50 bg-slate-900/50 rounded-lg p-2">
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-0.5">Epic Game</p>
+                    <p className="text-lg font-bold text-purple-400">
+                      {Math.floor(seasonStats.overallStats.longestGameDuration / 60)}m {seasonStats.overallStats.longestGameDuration % 60}s
+                    </p>
+                    <p className="text-[10px] text-slate-400">Longest match</p>
+                  </div>
+                )}
+                {playersWithTakedowns[0] && (
+                  <div className="border border-slate-700/50 bg-slate-900/50 rounded-lg p-2">
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-0.5">Best Duo</p>
+                    <p className="text-lg font-bold text-cyan-400">{playersWithTakedowns[0].gamesPlayed} Games</p>
+                    <p className="text-[10px] text-slate-400 truncate">{playersWithTakedowns[0].summonerName}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Scroll Indicator */}
+            <div className="flex flex-col items-center gap-2 animate-bounce animate-in fade-in duration-1000 delay-700 mt-2">
+              <ChevronDown className="h-5 w-5 text-violet-400 animate-pulse" />
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Scroll to Explore</span>
             </div>
           </div>
         </div>
@@ -601,7 +827,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
             </p>
             
             <div className="flex flex-col gap-3 max-h-[720px] overflow-y-auto scrollbar-hide">
-              {displaySeasonStats.topChampions.slice(0, 5).map((champ, index) => (
+              {displaySeasonStats.topChampions.slice(0, 3).map((champ, index) => (
                 <div
                   key={champ.name}
                   className="relative h-[240px] overflow-hidden rounded-xl border border-violet-400/30 shadow-lg hover:shadow-violet-500/30 transition-all duration-500 hover:scale-[1.02] hover:border-violet-400/60 animate-in fade-in slide-in-from-left-10 duration-700"
