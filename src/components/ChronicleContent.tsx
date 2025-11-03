@@ -742,7 +742,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
             </p>
             
             <div className="flex flex-col gap-3 max-h-[720px] overflow-y-auto scrollbar-hide">
-              {displaySeasonStats.topChampions.slice(0, 5).map((champ, index) => (
+              {displaySeasonStats.topChampions.slice(0, 3).map((champ, index) => (
                 <div
                   key={champ.name}
                   className="relative h-[240px] overflow-hidden rounded-xl border border-violet-400/30 shadow-lg hover:shadow-violet-500/30 transition-all duration-500 hover:scale-[1.02] hover:border-violet-400/60 animate-in fade-in slide-in-from-left-10 duration-700"
