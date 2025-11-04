@@ -27,9 +27,11 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMatchesUpdate = useCallback((updatedMatches: RiotMatch[]) => {
-    // Recalculate style DNA with all matches
-    const { styleDNA: newStyleDNA } = summarizeMatches(updatedMatches, puuid);
-    setStyleDNA(newStyleDNA);
+    // Only recalculate if we have significantly more matches (every 5)
+    if (updatedMatches.length % 5 === 0) {
+      const { styleDNA: newStyleDNA } = summarizeMatches(updatedMatches, puuid);
+      setStyleDNA(newStyleDNA);
+    }
   }, [puuid]);
 
   const handleBack = () => {
@@ -73,10 +75,10 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
     // Initial check
     checkStatus();
     
-    // Poll every 10 seconds
+    // Poll every 15 seconds (reduced from 10 for better performance)
     pollingIntervalRef.current = setInterval(() => {
       checkStatus();
-    }, 10000);
+    }, 15000);
   }, [checkStatus]);
 
   // Check status on page load

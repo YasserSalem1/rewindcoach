@@ -52,7 +52,8 @@ export async function backendFetch<T>(path: string): Promise<T> {
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
   const resp = await fetch(url, {
     headers: BACKEND_API_KEY ? { "x-api-key": BACKEND_API_KEY } : undefined,
-    cache: "no-store",
+    // Cache for 30 seconds to reduce duplicate requests during page loads
+    next: { revalidate: 30 },
   });
 
   if (!resp.ok) {

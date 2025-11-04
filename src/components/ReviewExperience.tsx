@@ -142,6 +142,7 @@ export function ReviewExperience({
     [coachEvents, visibleCoachEvents],
   );
 
+  // Memoize heavy timeline computation with stable dependencies
   const { statsByMinute, totalMinutes, objectivesByMinute } = useMemo(() => {
     const totalMinutes = Math.max(0, Math.ceil(gameDuration / 60));
     const sortedEvents = [...events].sort((a, b) => a.timestamp - b.timestamp);

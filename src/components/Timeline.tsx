@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { Sword, Skull, Castle, Flame, Crown, Mountain, Eye, EyeOff, Users, UserPlus } from "lucide-react";
 
 import type { CoachParsedEvent, CoachEventCategory } from "@/lib/parseReviewOutput";
@@ -109,7 +109,7 @@ function getEventColor(type: TimelineEventType) {
   }
 }
 
-export function Timeline({
+const TimelineComponent = ({
   events,
   duration,
   currentTime,
@@ -117,7 +117,7 @@ export function Timeline({
   onScrub,
   onSelectEvent,
   selectedPuuid,
-}: TimelineProps) {
+}: TimelineProps) => {
   const currentPercent = duration ? clampPercent((currentTime / duration) * 100) : 0;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -252,4 +252,15 @@ export function Timeline({
       </div>
     </div>
   );
-}
+};
+
+// Memoize Timeline to prevent expensive re-renders during scrubbing
+export const Timeline = memo(TimelineComponent, (prevProps, nextProps) => {
+  // Only re-render if essential props change
+  return (
+    prevProps.currentEventIndex === nextProps.currentEventIndex &&
+    prevProps.events.length === nextProps.events.length &&
+    prevProps.selectedPuuid === nextProps.selectedPuuid &&
+    Math.floor(prevProps.currentTime) === Math.floor(nextProps.currentTime)
+  );
+});

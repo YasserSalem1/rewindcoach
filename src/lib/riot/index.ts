@@ -92,27 +92,28 @@ export async function getProfileBundle(
   // Fetch matches
   const matchIds = await fetchMatches(account.puuid, region, matchCount);
 
-  const matchDtos: RiotMatchDto[] = [];
-  for (const id of matchIds) {
-    try {
-      const response = await fetchMatch(id);
-      // New API returns { matchId, region, metadata, info }
-      // Convert to RiotMatchDto format
-      const dto: RiotMatchDto = {
-        metadata: response.metadata,
-        info: response.info,
-      };
-      matchDtos.push(dto);
-    } catch (error) {
-      console.warn(`[backend] Failed to load match ${id}`, error);
-    }
-  }
+  // Fetch all matches in parallel for better performance
+  const matchDtos: RiotMatchDto[] = await Promise.all(
+    matchIds.map(async (id) => {
+      try {
+        const response = await fetchMatch(id);
+        // New API returns { matchId, region, metadata, info }
+        // Convert to RiotMatchDto format
+        return {
+          metadata: response.metadata,
+          info: response.info,
+        };
+      } catch (error) {
+        console.warn(`[backend] Failed to load match ${id}`, error);
+        return null;
+      }
+    })
+  ).then(results => results.filter((dto): dto is RiotMatchDto => dto !== null));
 
-  const matches: RiotMatch[] = [];
-  for (const dto of matchDtos) {
-    const riotMatch = await mapParticipantData(dto, region, account.puuid);
-    matches.push(riotMatch);
-  }
+  // Process matches in parallel
+  const matches: RiotMatch[] = await Promise.all(
+    matchDtos.map(dto => mapParticipantData(dto, region, account.puuid))
+  );
 
   const { highlights, styleDNA } = summarizeMatches(matches, account.puuid);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -24,13 +24,13 @@ const rowVariants = {
   animate: { opacity: 1, y: 0 },
 };
 
-export function MatchRow({
+const MatchRowComponent = ({
   match,
   participant,
   onReview,
   gameName,
   tagLine,
-}: MatchRowProps) {
+}: MatchRowProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const isWin = participant.win;
@@ -260,4 +260,11 @@ export function MatchRow({
       </motion.div>
     </motion.article>
   );
-}
+};
+
+// Memoize to prevent unnecessary re-renders
+export const MatchRow = memo(MatchRowComponent, (prevProps, nextProps) => {
+  // Only re-render if match ID changes
+  return prevProps.match.id === nextProps.match.id &&
+         prevProps.participant.puuid === nextProps.participant.puuid;
+});

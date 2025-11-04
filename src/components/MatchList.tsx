@@ -28,6 +28,7 @@ export function MatchList({
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  // Memoize match entries with stable reference
   const matchEntries = useMemo(
     () =>
       matches.map((match) => {
@@ -35,9 +36,9 @@ export function MatchList({
           (p) => p.puuid === match.primaryParticipantPuuid,
         );
         return participant ? { match, participant } : null;
-      }),
+      }).filter(Boolean) as Array<{ match: RiotMatch; participant: RiotMatch["participants"][number] }>,
     [matches],
-  ).filter(Boolean) as Array<{ match: RiotMatch; participant: RiotMatch["participants"][number] }>;
+  );
 
   const loadMoreMatches = useCallback(async () => {
     if (!puuid || !region || isLoading) return;
