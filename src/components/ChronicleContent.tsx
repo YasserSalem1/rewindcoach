@@ -355,9 +355,9 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           outline: 'none',
           boxShadow: 'none',
         },
-        filter: (node: HTMLElement) => {
+        filter: (node: Node) => {
           // Remove any debug borders or outlines
-          if (node.style) {
+          if (node instanceof HTMLElement && node.style) {
             node.style.outline = 'none';
             const currentBorder = node.style.border;
             // Only remove border if it's not a styled border (keep intentional borders)
