@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
 
 import { MatchList } from "@/components/MatchList";
 import { StyleDNA } from "@/components/StyleDNA";
-import { ProfileCoachChat } from "@/components/ProfileCoachChat";
 import { Button } from "@/components/ui/button";
-import type { ProfileBundle, RiotMatch, StyleDNA as StyleDNAType, ProfileHighlights } from "@/lib/riot";
+import type { ProfileBundle, RiotMatch, StyleDNA as StyleDNAType } from "@/lib/riot";
 import { summarizeMatches } from "@/lib/riot";
 
 interface ProfileContentProps {
@@ -23,23 +21,172 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
   const { profile: summoner, puuid } = bundle;
   
   const [styleDNA, setStyleDNA] = useState<StyleDNAType>(bundle.styleDNA);
-  const [highlights, setHighlights] = useState<ProfileHighlights>(bundle.highlights);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [buttonText, setButtonText] = useState("Your Season Rewind");
+  
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMatchesUpdate = useCallback((updatedMatches: RiotMatch[]) => {
-    // Recalculate style DNA and highlights with all matches
-    const { styleDNA: newStyleDNA, highlights: newHighlights } = summarizeMatches(updatedMatches, puuid);
+    // Recalculate style DNA with all matches
+    const { styleDNA: newStyleDNA } = summarizeMatches(updatedMatches, puuid);
     setStyleDNA(newStyleDNA);
-    setHighlights(newHighlights);
   }, [puuid]);
 
   const handleBack = () => {
     router.back();
   };
 
-  const handleGenerateChronicle = () => {
-    router.push(
-      `/profile/${region}/${encodeURIComponent(summoner.summonerName)}/${encodeURIComponent(summoner.tagline)}/chronicle`,
-    );
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  }, []);
+
+  const checkStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
+      const data = await response.json();
+
+      if (response.status === 200) {
+        if (data.status === "COMPLETE") {
+          // Stop polling and navigate to chronicle page
+          stopPolling();
+          setIsGenerating(false);
+          setButtonText("View Your Season Rewind");
+          // Navigate to chronicle page to display the stats
+          router.push(
+            `/profile/${region}/${encodeURIComponent(summoner.summonerName)}/${encodeURIComponent(summoner.tagline)}/chronicle`,
+          );
+        } else if (data.status === "CALCULATING") {
+          // Keep polling - button stays in generating state
+          // Polling will continue via the interval
+        }
+      }
+    } catch (error) {
+      console.error("Error checking status:", error);
+      // Continue polling on error
+    }
+  }, [puuid, region, summoner.summonerName, summoner.tagline, router, stopPolling]);
+
+  const startPolling = useCallback(() => {
+    // Initial check
+    checkStatus();
+    
+    // Poll every 10 seconds
+    pollingIntervalRef.current = setInterval(() => {
+      checkStatus();
+    }, 10000);
+  }, [checkStatus]);
+
+  // Check status on page load
+  useEffect(() => {
+    const checkInitialStatus = async () => {
+      try {
+        const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
+        const data = await response.json();
+
+        if (response.status === 404) {
+          // Not found - keep default state (clickable, "Your Season Rewind")
+          setIsGenerating(false);
+          setButtonText("Your Season Rewind");
+        } else if (response.status === 200) {
+          if (data.status === "CALCULATING") {
+            // Currently calculating - disable button and start polling
+            setIsGenerating(true);
+            setButtonText("Generating your rewind...");
+            startPolling();
+          } else if (data.status === "COMPLETE") {
+            // Already complete - enable button with view text
+            setIsGenerating(false);
+            setButtonText("View Your Season Rewind");
+          }
+        }
+      } catch (error) {
+        console.error("Error checking initial status:", error);
+        // On error, keep default state
+        setIsGenerating(false);
+        setButtonText("Your Season Rewind");
+      }
+    };
+
+    checkInitialStatus();
+  }, [puuid, startPolling]);
+
+  // Clean up polling interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const initiateCalculation = async () => {
+    try {
+      const response = await fetch("/api/season-rewind", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          gameName: summoner.summonerName,
+          tagLine: summoner.tagline,
+        }),
+      });
+
+      if (response.ok) {
+        // Start polling after successful initiation
+        startPolling();
+      } else {
+        // Handle error - re-enable button
+        setIsGenerating(false);
+        setButtonText("Your Season Rewind");
+        alert("Failed to initiate season rewind. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error initiating calculation:", error);
+      setIsGenerating(false);
+      setButtonText("Your Season Rewind");
+      alert("Failed to initiate season rewind. Please try again.");
+    }
+  };
+
+  const handleSeasonRewind = async () => {
+    // Disable button and set loading state
+    setIsGenerating(true);
+    setButtonText("Generating your rewind...");
+
+    try {
+      const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
+      const data = await response.json();
+
+      if (response.status === 404) {
+        // Not found - initiate calculation
+        await initiateCalculation();
+      } else if (response.status === 200) {
+        if (data.status === "CALCULATING") {
+          // Already calculating - start polling
+          startPolling();
+        } else if (data.status === "COMPLETE") {
+          // Already complete - navigate to chronicle
+          setIsGenerating(false);
+          router.push(
+            `/profile/${region}/${encodeURIComponent(summoner.summonerName)}/${encodeURIComponent(summoner.tagline)}/chronicle`,
+          );
+        }
+      } else {
+        // Unexpected status - re-enable button
+        setIsGenerating(false);
+        setButtonText("Your Season Rewind");
+        alert("Unexpected response. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error fetching season rewind:", error);
+      setIsGenerating(false);
+      setButtonText("Your Season Rewind");
+      alert("Failed to fetch season rewind. Please try again.");
+    }
   };
 
   // Format rank display
@@ -61,7 +208,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
       : "text-slate-400";
 
   return (
-    <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
+    <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 pb-32">
       {/* Back Button */}
       <div className="flex items-center gap-4">
         <Button
@@ -98,15 +245,10 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
                   <p>
                     Level {summoner.level} • {region}
                   </p>
-                  <div className="group relative inline-flex items-center gap-2 rounded-full border border-white/12 bg-slate-900/75 px-4 py-1 backdrop-blur-sm transition-shadow duration-200 hover:shadow-[0_12px_35px_rgba(79,70,229,0.25)]">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-slate-900/75 px-4 py-1 backdrop-blur-sm transition-shadow duration-200 hover:shadow-[0_12px_35px_rgba(79,70,229,0.25)]">
                     <span className={`font-heading text-base font-semibold tracking-tight ${rankColor}`}>
                       {rankDisplay}
                     </span>
-                    {summoner.rankedTier !== "UNRANKED" && (
-                      <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 translate-y-1 rounded-full border border-violet-400/40 bg-slate-900/95 px-3 py-1 text-xs font-medium text-slate-200 opacity-0 shadow-[0_12px_30px_rgba(79,70,229,0.35)] transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-                        {typeof summoner.rankedLp === "number" ? `${summoner.rankedLp} LP` : "Placement in progress"}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -114,12 +256,14 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
 
             <div className="flex w-full flex-col items-center gap-2 md:w-auto md:items-end">
               <Button
-                onClick={handleGenerateChronicle}
+                onClick={handleSeasonRewind}
+                disabled={isGenerating}
                 variant="default"
-                className="group w-full rounded-lg border border-white/20 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-950 shadow-[0_12px_35px_rgba(232,121,249,0.45)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(167,139,250,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-200 md:w-auto"
+                className="group relative w-full rounded-lg border border-white/20 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-950 shadow-[0_12px_35px_rgba(232,121,249,0.45)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(167,139,250,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-[0_12px_35px_rgba(232,121,249,0.45)] md:w-auto"
               >
                 <span className="flex items-center justify-center gap-2">
-                  Your Season Rewind
+                  {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {buttonText}
                 </span>
               </Button>
               <span className="text-xs text-slate-300/75 md:text-right">
@@ -147,13 +291,6 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
         />
       </section>
 
-      {/* Floating Profile Coach Chat */}
-      <ProfileCoachChat
-        puuid={puuid}
-        gameName={summoner.summonerName}
-        tagLine={summoner.tagline}
-        profileSummary={`Player: ${summoner.summonerName}#${summoner.tagline}, Rank: ${rankDisplay} ${summoner.rankedLp} LP, Level: ${summoner.level}, Win Rate: ${highlights.last20WinRate ? Math.round(highlights.last20WinRate * 100) : 0}%, Average KDA: ${highlights.averageKda}, CS/min: ${highlights.csPerMinute}`}
-      />
     </div>
   );
 }

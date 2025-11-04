@@ -61,31 +61,8 @@ export function SearchCard({
     const trimmedTag = tagLine.trim();
 
     try {
-      // Validate profile exists before navigating
-      const params = new URLSearchParams({
-        region,
-        gameName: trimmedGame,
-        tagLine: trimmedTag,
-      });
-
-      const response = await fetch(`/api/profile?${params.toString()}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || "Profile not found";
-        
-        if (response.status === 404 || errorMessage.includes("not found")) {
-          setError(`Player "${trimmedGame}#${trimmedTag}" not found in ${region}. Please check your spelling and region.`);
-        } else if (response.status === 500) {
-          setError("Server error. Please try again in a moment.");
-        } else {
-          setError(errorMessage);
-        }
-        setIsValidating(false);
-        return;
-      }
-
-      // Profile exists, save preference and navigate
+      // Save preference and navigate directly - validation will happen on profile page
+      // This is faster than pre-validating via API call
       setProfilePref({ region, gameName: trimmedGame, tagLine: trimmedTag });
       const path = `/profile/${region}/${encodeURIComponent(trimmedGame)}/${encodeURIComponent(trimmedTag)}`;
       
@@ -93,8 +70,8 @@ export function SearchCard({
         router.push(path);
       });
     } catch (error) {
-      console.error("[SearchCard] search failed", error);
-      setError("Network error. Please check your connection and try again.");
+      console.error("[SearchCard] navigation failed", error);
+      setError("Navigation error. Please try again.");
       setIsValidating(false);
     }
   };
@@ -104,17 +81,13 @@ export function SearchCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className={cn(className)}
+      className={cn("flex w-full justify-center", className)}
     >
       <Card className="w-full max-w-xl border-white/10 bg-slate-900/60 p-8 shadow-[0_0_60px_rgba(79,70,229,0.25)]">
         <CardHeader className="items-center text-center">
           <CardTitle className="font-heading text-3xl text-slate-100">
             Ready to rewind your season?
           </CardTitle>
-          <CardDescription className="text-base text-slate-300/80">
-            Plug in your Riot IGN and tagline to generate a personalised year in
-            review plus game-by-game coaching insights.
-          </CardDescription>
         </CardHeader>
         <CardContent className="mt-6 flex flex-col gap-5">
           <div className="grid gap-4 md:grid-cols-3">

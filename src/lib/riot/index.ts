@@ -29,7 +29,6 @@ import {
   type RiotMatch,
   type RiotMatchDto,
   type TimelineFrame,
-  CDN_BASE,
 } from "./types";
 
 import {
@@ -39,14 +38,11 @@ import {
   fetchMatches,
   fetchMatch,
   fetchTimeline,
-  fetchFullTimeline,
 } from "./fetchers";
 
 import {
   mapParticipantData,
-  mapTimeline,
   summarizeMatches,
-  mapFullTimeline,
 } from "./transformers";
 
 import { parseTimelineText } from "./timelineParser";

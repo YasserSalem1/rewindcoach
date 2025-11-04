@@ -200,7 +200,9 @@ function convertToTimelineFrames(
       summonerToPuuid.set(participant.summonerName.toLowerCase(), puuid);
       summonerToPuuid.set(participant.riotIdGameName?.toLowerCase() || '', puuid);
       championToPuuid.set(participant.championName.toLowerCase(), puuid);
-      puuidToParticipantId.set(puuid, participant.participantId);
+      if (participant.participantId !== undefined) {
+        puuidToParticipantId.set(puuid, participant.participantId);
+      }
       puuidToTeamId.set(puuid, participant.teamId);
     }
   }
@@ -288,7 +290,7 @@ function convertToTimelineFrames(
     
     // Add to appropriate frame (group by minute for timeline frames)
     const frameTimestamp = Math.floor(timestampSeconds / 60) * 60;
-    let frame = frames.find(f => f.timestamp === frameTimestamp);
+    const frame = frames.find(f => f.timestamp === frameTimestamp);
     
     if (frame) {
       frame.events.push(timelineEvent);
@@ -376,4 +378,3 @@ function extractEventParticipants(
   
   return { killerPuuid, victimPuuid, teamId };
 }
-

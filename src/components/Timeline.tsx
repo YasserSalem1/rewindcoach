@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import { Sword, Skull, Castle, Flame, Crown, Mountain, Eye, EyeOff, Users, UserPlus } from "lucide-react";
 
 import type { CoachParsedEvent, CoachEventCategory } from "@/lib/parseReviewOutput";
@@ -58,6 +57,7 @@ function clampPercent(value: number): number {
   return Math.max(0, Math.min(100, value));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getEventIcon(type: TimelineEventType) {
   switch (type) {
     case "KILL":
@@ -83,6 +83,7 @@ function getEventIcon(type: TimelineEventType) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getEventColor(type: TimelineEventType) {
   switch (type) {
     case "KILL":
@@ -119,6 +120,7 @@ export function Timeline({
 }: TimelineProps) {
   const currentPercent = duration ? clampPercent((currentTime / duration) * 100) : 0;
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const groupSizes = useMemo(() => {
     const map = new Map<number, number>();
     events.forEach((event) => {

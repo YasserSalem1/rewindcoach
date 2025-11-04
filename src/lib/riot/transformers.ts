@@ -16,6 +16,7 @@ import {
   type TimelineEvent,
   type TimelineEventType,
   type RiotTimelineDto,
+  type RiotTimelineParticipantFrame,
   type StyleDNA,
   type ProfileHighlights,
   type TimelineParticipantState,
@@ -696,7 +697,6 @@ export function summarizeMatches(matches: RiotMatch[], focusPuuid: string) {
     csPerMinute: parseFloat(avgCsPerMinute.toFixed(2)),
     topChampions: Array.from(championStats.entries())
       .sort((a, b) => b[1].games - a[1].games)
-      .slice(0, 3)
       .map(([championName, data]) => ({
         championId: championName,
         championName,
@@ -751,20 +751,19 @@ export function mapFullTimeline(
   const frames: TimelineFrame[] = [];
   
   // The backend returns timeline with info.frames structure
-  const timelineData = (timelineResponse.timeline as any);
-  const framesData = timelineData?.info?.frames || timelineData?.frames;
+  const timelineData = timelineResponse.timeline;
+  const framesData = timelineData?.frames ?? [];
   
-  if (!framesData || framesData.length === 0) {
+  if (framesData.length === 0) {
     return frames;
   }
 
   // Create a map of participantId to puuid
   const participantIdToPuuid = new Map<number, string>();
-  matchDto.info.participants.forEach((p: any, index: number) => {
-    participantIdToPuuid.set(p.participantId ?? index + 1, p.puuid);
+  matchDto.info.participants.forEach((participant, index) => {
+    participantIdToPuuid.set(participant.participantId ?? index + 1, participant.puuid);
   });
 
-  let frameIndex = 0;
   for (const riotFrame of framesData) {
     const timestamp = Math.floor((riotFrame.timestamp ?? 0) / 1000); // Convert ms to seconds
     
@@ -772,51 +771,57 @@ export function mapFullTimeline(
     const participants: Record<string, TimelineParticipantState> = {};
     
     if (riotFrame.participantFrames) {
-      for (const [participantIdStr, frameData] of Object.entries(riotFrame.participantFrames)) {
+      const participantFrames = riotFrame.participantFrames as Record<string, RiotTimelineParticipantFrame>;
+      for (const participantIdStr of Object.keys(participantFrames)) {
+        const frameData = participantFrames[participantIdStr];
         const participantId = parseInt(participantIdStr, 10);
         const puuid = participantIdToPuuid.get(participantId);
         
         if (!puuid) continue;
         
-        const participant = matchDto.info.participants.find((p: any) => p.puuid === puuid);
+        const participant = matchDto.info.participants.find((matchParticipant) => matchParticipant.puuid === puuid);
         if (!participant) continue;
 
-        // Extract item data from frame
-        const frameDataAny = frameData as any;
+        const frameRecord = frameData as Record<string, unknown>;
+
         const items: number[] = [];
-        
-        // Items are in item0-item6 fields
         for (let i = 0; i <= 6; i++) {
-          const itemId = frameDataAny[`item${i}`];
-          if (itemId && typeof itemId === 'number' && itemId > 0) {
-            items.push(itemId);
+          const itemValue = frameRecord[`item${i}`];
+          if (typeof itemValue === "number" && itemValue > 0) {
+            items.push(itemValue);
           }
         }
 
-        const minionsKilled = frameDataAny.minionsKilled ?? 0;
-        const jungleMinionsKilled = frameDataAny.jungleMinionsKilled ?? 0;
+        const minionsKilledValue = frameRecord["minionsKilled"];
+        const jungleMinionsKilledValue = frameRecord["jungleMinionsKilled"];
+        const levelValue = frameRecord["level"];
+        const totalGoldValue = frameRecord["totalGold"];
+        const currentGoldValue = frameRecord["currentGold"];
+
+        const minionsKilled = typeof minionsKilledValue === "number" ? minionsKilledValue : 0;
+        const jungleMinionsKilled = typeof jungleMinionsKilledValue === "number" ? jungleMinionsKilledValue : 0;
+        const level = typeof levelValue === "number" ? levelValue : 1;
+        const totalGold = typeof totalGoldValue === "number" ? totalGoldValue : undefined;
+        const currentGold = typeof currentGoldValue === "number" ? currentGoldValue : undefined;
+        const gold = totalGold ?? currentGold ?? 0;
+        const cs = minionsKilled + jungleMinionsKilled;
 
         participants[puuid] = {
           puuid,
           participantId,
           teamId: participant.teamId,
-          level: frameDataAny.level ?? 1,
-          cs: minionsKilled + jungleMinionsKilled,
-          gold: frameDataAny.totalGold ?? frameDataAny.currentGold ?? 0,
+          level,
+          cs,
+          gold,
           position: frameData.position,
           items,
         };
       }
     }
-    
-    frameIndex++;
 
-    // Convert events (minimal conversion for now)
-    const events: TimelineEvent[] = [];
-    
     frames.push({
       timestamp,
-      events,
+      events: [],
       participants,
     });
   }

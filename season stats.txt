@@ -1,0 +1,2515 @@
+{
+  "puuid": {
+    "S": "Sxw2Jyt_BY8ixp5CIjjwmAz54qHV-JBbROntvy3A2-CZDtNPPHD7Gc8vUyaNif_8IETJufi-yJiNyw"
+  },
+  "gameName": {
+    "S": "moghazy99"
+  },
+  "lastUpdateTimestamp": {
+    "N": "1762178948"
+  },
+  "seasonStats": {
+    "M": {
+      "championStats": {
+        "M": {
+          "Alistar": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "17"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "29"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "4"
+              },
+              "totalDamage": {
+                "N": "5991"
+              },
+              "totalTakedowns": {
+                "N": "18"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "24"
+              }
+            }
+          },
+          "Amumu": {
+            "M": {
+              "doubleKills": {
+                "N": "2"
+              },
+              "eCasts": {
+                "N": "931"
+              },
+              "gamesPlayed": {
+                "N": "6"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "447"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "59"
+              },
+              "totalDamage": {
+                "N": "143080"
+              },
+              "totalTakedowns": {
+                "N": "128"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "537"
+              }
+            }
+          },
+          "Ashe": {
+            "M": {
+              "doubleKills": {
+                "N": "3"
+              },
+              "eCasts": {
+                "N": "33"
+              },
+              "gamesPlayed": {
+                "N": "5"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "177"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "54"
+              },
+              "totalDamage": {
+                "N": "108741"
+              },
+              "totalTakedowns": {
+                "N": "90"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "453"
+              }
+            }
+          },
+          "AurelionSol": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "117"
+              },
+              "gamesPlayed": {
+                "N": "3"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "204"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "15"
+              },
+              "totalDamage": {
+                "N": "34727"
+              },
+              "totalTakedowns": {
+                "N": "28"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "52"
+              }
+            }
+          },
+          "Azir": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "5"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "26"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "2"
+              },
+              "totalDamage": {
+                "N": "2837"
+              },
+              "totalTakedowns": {
+                "N": "2"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "72"
+              }
+            }
+          },
+          "Brand": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "104"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "119"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "11"
+              },
+              "totalDamage": {
+                "N": "42196"
+              },
+              "totalTakedowns": {
+                "N": "20"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "113"
+              }
+            }
+          },
+          "Caitlyn": {
+            "M": {
+              "doubleKills": {
+                "N": "46"
+              },
+              "eCasts": {
+                "N": "1102"
+              },
+              "gamesPlayed": {
+                "N": "67"
+              },
+              "pentaKills": {
+                "N": "1"
+              },
+              "qCasts": {
+                "N": "4009"
+              },
+              "quadraKills": {
+                "N": "1"
+              },
+              "rCasts": {
+                "N": "490"
+              },
+              "totalDamage": {
+                "N": "1582512"
+              },
+              "totalTakedowns": {
+                "N": "896"
+              },
+              "tripleKills": {
+                "N": "5"
+              },
+              "wCasts": {
+                "N": "1789"
+              }
+            }
+          },
+          "Corki": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "116"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "155"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "134"
+              },
+              "totalDamage": {
+                "N": "60737"
+              },
+              "totalTakedowns": {
+                "N": "45"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "85"
+              }
+            }
+          },
+          "Diana": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "320"
+              },
+              "gamesPlayed": {
+                "N": "7"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "475"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "37"
+              },
+              "totalDamage": {
+                "N": "66453"
+              },
+              "totalTakedowns": {
+                "N": "40"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "287"
+              }
+            }
+          },
+          "Draven": {
+            "M": {
+              "doubleKills": {
+                "N": "4"
+              },
+              "eCasts": {
+                "N": "29"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "111"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "13"
+              },
+              "totalDamage": {
+                "N": "75078"
+              },
+              "totalTakedowns": {
+                "N": "37"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "85"
+              }
+            }
+          },
+          "DrMundo": {
+            "M": {
+              "doubleKills": {
+                "N": "2"
+              },
+              "eCasts": {
+                "N": "309"
+              },
+              "gamesPlayed": {
+                "N": "5"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "890"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "35"
+              },
+              "totalDamage": {
+                "N": "102393"
+              },
+              "totalTakedowns": {
+                "N": "71"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "192"
+              }
+            }
+          },
+          "Ekko": {
+            "M": {
+              "doubleKills": {
+                "N": "2"
+              },
+              "eCasts": {
+                "N": "100"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "119"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "7"
+              },
+              "totalDamage": {
+                "N": "26715"
+              },
+              "totalTakedowns": {
+                "N": "19"
+              },
+              "tripleKills": {
+                "N": "1"
+              },
+              "wCasts": {
+                "N": "63"
+              }
+            }
+          },
+          "Elise": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "109"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "99"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "30"
+              },
+              "totalDamage": {
+                "N": "29154"
+              },
+              "totalTakedowns": {
+                "N": "32"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "70"
+              }
+            }
+          },
+          "Ezreal": {
+            "M": {
+              "doubleKills": {
+                "N": "21"
+              },
+              "eCasts": {
+                "N": "1151"
+              },
+              "gamesPlayed": {
+                "N": "35"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "8490"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "383"
+              },
+              "totalDamage": {
+                "N": "821563"
+              },
+              "totalTakedowns": {
+                "N": "409"
+              },
+              "tripleKills": {
+                "N": "3"
+              },
+              "wCasts": {
+                "N": "1559"
+              }
+            }
+          },
+          "Garen": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "58"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "79"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "3"
+              },
+              "totalDamage": {
+                "N": "13740"
+              },
+              "totalTakedowns": {
+                "N": "4"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "17"
+              }
+            }
+          },
+          "Graves": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "240"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "229"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "27"
+              },
+              "totalDamage": {
+                "N": "64060"
+              },
+              "totalTakedowns": {
+                "N": "40"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "65"
+              }
+            }
+          },
+          "Ivern": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "31"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "94"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "8"
+              },
+              "totalDamage": {
+                "N": "8359"
+              },
+              "totalTakedowns": {
+                "N": "15"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "36"
+              }
+            }
+          },
+          "JarvanIV": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "234"
+              },
+              "gamesPlayed": {
+                "N": "3"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "330"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "30"
+              },
+              "totalDamage": {
+                "N": "55222"
+              },
+              "totalTakedowns": {
+                "N": "65"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "240"
+              }
+            }
+          },
+          "Jax": {
+            "M": {
+              "doubleKills": {
+                "N": "3"
+              },
+              "eCasts": {
+                "N": "117"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "168"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "16"
+              },
+              "totalDamage": {
+                "N": "57289"
+              },
+              "totalTakedowns": {
+                "N": "44"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "353"
+              }
+            }
+          },
+          "Jhin": {
+            "M": {
+              "doubleKills": {
+                "N": "22"
+              },
+              "eCasts": {
+                "N": "763"
+              },
+              "gamesPlayed": {
+                "N": "30"
+              },
+              "pentaKills": {
+                "N": "1"
+              },
+              "qCasts": {
+                "N": "2403"
+              },
+              "quadraKills": {
+                "N": "2"
+              },
+              "rCasts": {
+                "N": "653"
+              },
+              "totalDamage": {
+                "N": "658093"
+              },
+              "totalTakedowns": {
+                "N": "418"
+              },
+              "tripleKills": {
+                "N": "5"
+              },
+              "wCasts": {
+                "N": "1089"
+              }
+            }
+          },
+          "Jinx": {
+            "M": {
+              "doubleKills": {
+                "N": "99"
+              },
+              "eCasts": {
+                "N": "785"
+              },
+              "gamesPlayed": {
+                "N": "69"
+              },
+              "pentaKills": {
+                "N": "1"
+              },
+              "qCasts": {
+                "N": "6959"
+              },
+              "quadraKills": {
+                "N": "3"
+              },
+              "rCasts": {
+                "N": "728"
+              },
+              "totalDamage": {
+                "N": "1762926"
+              },
+              "totalTakedowns": {
+                "N": "1104"
+              },
+              "tripleKills": {
+                "N": "18"
+              },
+              "wCasts": {
+                "N": "3471"
+              }
+            }
+          },
+          "Kaisa": {
+            "M": {
+              "doubleKills": {
+                "N": "95"
+              },
+              "eCasts": {
+                "N": "7714"
+              },
+              "gamesPlayed": {
+                "N": "89"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "6650"
+              },
+              "quadraKills": {
+                "N": "1"
+              },
+              "rCasts": {
+                "N": "485"
+              },
+              "totalDamage": {
+                "N": "1919890"
+              },
+              "totalTakedowns": {
+                "N": "1237"
+              },
+              "tripleKills": {
+                "N": "19"
+              },
+              "wCasts": {
+                "N": "3030"
+              }
+            }
+          },
+          "Kalista": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "50"
+              },
+              "gamesPlayed": {
+                "N": "3"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "145"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "0"
+              },
+              "totalDamage": {
+                "N": "26805"
+              },
+              "totalTakedowns": {
+                "N": "19"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "18"
+              }
+            }
+          },
+          "Karthus": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "71"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "487"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "10"
+              },
+              "totalDamage": {
+                "N": "38682"
+              },
+              "totalTakedowns": {
+                "N": "15"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "40"
+              }
+            }
+          },
+          "Kindred": {
+            "M": {
+              "doubleKills": {
+                "N": "8"
+              },
+              "eCasts": {
+                "N": "1015"
+              },
+              "gamesPlayed": {
+                "N": "18"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "2564"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "87"
+              },
+              "totalDamage": {
+                "N": "354966"
+              },
+              "totalTakedowns": {
+                "N": "218"
+              },
+              "tripleKills": {
+                "N": "3"
+              },
+              "wCasts": {
+                "N": "997"
+              }
+            }
+          },
+          "KogMaw": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "91"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "90"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "110"
+              },
+              "totalDamage": {
+                "N": "65866"
+              },
+              "totalTakedowns": {
+                "N": "36"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "69"
+              }
+            }
+          },
+          "Lillia": {
+            "M": {
+              "doubleKills": {
+                "N": "3"
+              },
+              "eCasts": {
+                "N": "211"
+              },
+              "gamesPlayed": {
+                "N": "3"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "489"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "17"
+              },
+              "totalDamage": {
+                "N": "72336"
+              },
+              "totalTakedowns": {
+                "N": "59"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "186"
+              }
+            }
+          },
+          "Lucian": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "236"
+              },
+              "gamesPlayed": {
+                "N": "4"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "338"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "39"
+              },
+              "totalDamage": {
+                "N": "120501"
+              },
+              "totalTakedowns": {
+                "N": "66"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "214"
+              }
+            }
+          },
+          "Maokai": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "55"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "40"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "11"
+              },
+              "totalDamage": {
+                "N": "10856"
+              },
+              "totalTakedowns": {
+                "N": "18"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "23"
+              }
+            }
+          },
+          "Mel": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "57"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "86"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "3"
+              },
+              "totalDamage": {
+                "N": "26661"
+              },
+              "totalTakedowns": {
+                "N": "38"
+              },
+              "tripleKills": {
+                "N": "1"
+              },
+              "wCasts": {
+                "N": "6"
+              }
+            }
+          },
+          "Milio": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "57"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "58"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "6"
+              },
+              "totalDamage": {
+                "N": "6443"
+              },
+              "totalTakedowns": {
+                "N": "6"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "26"
+              }
+            }
+          },
+          "MissFortune": {
+            "M": {
+              "doubleKills": {
+                "N": "14"
+              },
+              "eCasts": {
+                "N": "210"
+              },
+              "gamesPlayed": {
+                "N": "11"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "1303"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "79"
+              },
+              "totalDamage": {
+                "N": "274807"
+              },
+              "totalTakedowns": {
+                "N": "178"
+              },
+              "tripleKills": {
+                "N": "2"
+              },
+              "wCasts": {
+                "N": "594"
+              }
+            }
+          },
+          "MonkeyKing": {
+            "M": {
+              "doubleKills": {
+                "N": "3"
+              },
+              "eCasts": {
+                "N": "369"
+              },
+              "gamesPlayed": {
+                "N": "6"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "809"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "75"
+              },
+              "totalDamage": {
+                "N": "84381"
+              },
+              "totalTakedowns": {
+                "N": "70"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "260"
+              }
+            }
+          },
+          "Morgana": {
+            "M": {
+              "doubleKills": {
+                "N": "6"
+              },
+              "eCasts": {
+                "N": "208"
+              },
+              "gamesPlayed": {
+                "N": "11"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "1020"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "57"
+              },
+              "totalDamage": {
+                "N": "227187"
+              },
+              "totalTakedowns": {
+                "N": "180"
+              },
+              "tripleKills": {
+                "N": "1"
+              },
+              "wCasts": {
+                "N": "1300"
+              }
+            }
+          },
+          "Naafiri": {
+            "M": {
+              "doubleKills": {
+                "N": "43"
+              },
+              "eCasts": {
+                "N": "7008"
+              },
+              "gamesPlayed": {
+                "N": "62"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "11522"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "756"
+              },
+              "totalDamage": {
+                "N": "1233571"
+              },
+              "totalTakedowns": {
+                "N": "931"
+              },
+              "tripleKills": {
+                "N": "3"
+              },
+              "wCasts": {
+                "N": "2666"
+              }
+            }
+          },
+          "Nilah": {
+            "M": {
+              "doubleKills": {
+                "N": "9"
+              },
+              "eCasts": {
+                "N": "188"
+              },
+              "gamesPlayed": {
+                "N": "7"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "776"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "51"
+              },
+              "totalDamage": {
+                "N": "146234"
+              },
+              "totalTakedowns": {
+                "N": "110"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "110"
+              }
+            }
+          },
+          "Nocturne": {
+            "M": {
+              "doubleKills": {
+                "N": "6"
+              },
+              "eCasts": {
+                "N": "643"
+              },
+              "gamesPlayed": {
+                "N": "17"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "2084"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "369"
+              },
+              "totalDamage": {
+                "N": "381098"
+              },
+              "totalTakedowns": {
+                "N": "317"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "421"
+              }
+            }
+          },
+          "Pyke": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "45"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "80"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "11"
+              },
+              "totalDamage": {
+                "N": "15334"
+              },
+              "totalTakedowns": {
+                "N": "25"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "66"
+              }
+            }
+          },
+          "Rammus": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "22"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "66"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "9"
+              },
+              "totalDamage": {
+                "N": "11845"
+              },
+              "totalTakedowns": {
+                "N": "11"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "60"
+              }
+            }
+          },
+          "Rumble": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "59"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "73"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "10"
+              },
+              "totalDamage": {
+                "N": "22948"
+              },
+              "totalTakedowns": {
+                "N": "32"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "72"
+              }
+            }
+          },
+          "Samira": {
+            "M": {
+              "doubleKills": {
+                "N": "11"
+              },
+              "eCasts": {
+                "N": "80"
+              },
+              "gamesPlayed": {
+                "N": "4"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "564"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "23"
+              },
+              "totalDamage": {
+                "N": "94443"
+              },
+              "totalTakedowns": {
+                "N": "60"
+              },
+              "tripleKills": {
+                "N": "4"
+              },
+              "wCasts": {
+                "N": "51"
+              }
+            }
+          },
+          "Sejuani": {
+            "M": {
+              "doubleKills": {
+                "N": "2"
+              },
+              "eCasts": {
+                "N": "554"
+              },
+              "gamesPlayed": {
+                "N": "6"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "323"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "60"
+              },
+              "totalDamage": {
+                "N": "123591"
+              },
+              "totalTakedowns": {
+                "N": "124"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "715"
+              }
+            }
+          },
+          "Senna": {
+            "M": {
+              "doubleKills": {
+                "N": "3"
+              },
+              "eCasts": {
+                "N": "126"
+              },
+              "gamesPlayed": {
+                "N": "8"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "489"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "59"
+              },
+              "totalDamage": {
+                "N": "168247"
+              },
+              "totalTakedowns": {
+                "N": "171"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "275"
+              }
+            }
+          },
+          "Singed": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "16"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "57"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "4"
+              },
+              "totalDamage": {
+                "N": "8247"
+              },
+              "totalTakedowns": {
+                "N": "2"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "9"
+              }
+            }
+          },
+          "Sivir": {
+            "M": {
+              "doubleKills": {
+                "N": "10"
+              },
+              "eCasts": {
+                "N": "318"
+              },
+              "gamesPlayed": {
+                "N": "21"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "1599"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "151"
+              },
+              "totalDamage": {
+                "N": "483413"
+              },
+              "totalTakedowns": {
+                "N": "301"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "944"
+              }
+            }
+          },
+          "Skarner": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "48"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "203"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "10"
+              },
+              "totalDamage": {
+                "N": "23584"
+              },
+              "totalTakedowns": {
+                "N": "18"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "90"
+              }
+            }
+          },
+          "Smolder": {
+            "M": {
+              "doubleKills": {
+                "N": "76"
+              },
+              "eCasts": {
+                "N": "3030"
+              },
+              "gamesPlayed": {
+                "N": "92"
+              },
+              "pentaKills": {
+                "N": "1"
+              },
+              "qCasts": {
+                "N": "15336"
+              },
+              "quadraKills": {
+                "N": "1"
+              },
+              "rCasts": {
+                "N": "830"
+              },
+              "totalDamage": {
+                "N": "2531322"
+              },
+              "totalTakedowns": {
+                "N": "1286"
+              },
+              "tripleKills": {
+                "N": "14"
+              },
+              "wCasts": {
+                "N": "6384"
+              }
+            }
+          },
+          "Taliyah": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "50"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "171"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "9"
+              },
+              "totalDamage": {
+                "N": "47674"
+              },
+              "totalTakedowns": {
+                "N": "61"
+              },
+              "tripleKills": {
+                "N": "1"
+              },
+              "wCasts": {
+                "N": "45"
+              }
+            }
+          },
+          "Tristana": {
+            "M": {
+              "doubleKills": {
+                "N": "4"
+              },
+              "eCasts": {
+                "N": "309"
+              },
+              "gamesPlayed": {
+                "N": "7"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "319"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "45"
+              },
+              "totalDamage": {
+                "N": "128861"
+              },
+              "totalTakedowns": {
+                "N": "78"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "229"
+              }
+            }
+          },
+          "Trundle": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "44"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "232"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "10"
+              },
+              "totalDamage": {
+                "N": "16109"
+              },
+              "totalTakedowns": {
+                "N": "9"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "109"
+              }
+            }
+          },
+          "Twitch": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "105"
+              },
+              "gamesPlayed": {
+                "N": "5"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "146"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "39"
+              },
+              "totalDamage": {
+                "N": "112494"
+              },
+              "totalTakedowns": {
+                "N": "61"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "128"
+              }
+            }
+          },
+          "Udyr": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "82"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "87"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "138"
+              },
+              "totalDamage": {
+                "N": "20668"
+              },
+              "totalTakedowns": {
+                "N": "16"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "55"
+              }
+            }
+          },
+          "Vayne": {
+            "M": {
+              "doubleKills": {
+                "N": "2"
+              },
+              "eCasts": {
+                "N": "12"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "141"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "7"
+              },
+              "totalDamage": {
+                "N": "32743"
+              },
+              "totalTakedowns": {
+                "N": "16"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "0"
+              }
+            }
+          },
+          "Vi": {
+            "M": {
+              "doubleKills": {
+                "N": "2"
+              },
+              "eCasts": {
+                "N": "540"
+              },
+              "gamesPlayed": {
+                "N": "4"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "470"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "47"
+              },
+              "totalDamage": {
+                "N": "73175"
+              },
+              "totalTakedowns": {
+                "N": "62"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "0"
+              }
+            }
+          },
+          "Viego": {
+            "M": {
+              "doubleKills": {
+                "N": "2"
+              },
+              "eCasts": {
+                "N": "82"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "184"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "15"
+              },
+              "totalDamage": {
+                "N": "19648"
+              },
+              "totalTakedowns": {
+                "N": "18"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "106"
+              }
+            }
+          },
+          "Viktor": {
+            "M": {
+              "doubleKills": {
+                "N": "1"
+              },
+              "eCasts": {
+                "N": "371"
+              },
+              "gamesPlayed": {
+                "N": "5"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "335"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "42"
+              },
+              "totalDamage": {
+                "N": "68263"
+              },
+              "totalTakedowns": {
+                "N": "48"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "96"
+              }
+            }
+          },
+          "Xayah": {
+            "M": {
+              "doubleKills": {
+                "N": "4"
+              },
+              "eCasts": {
+                "N": "96"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "145"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "18"
+              },
+              "totalDamage": {
+                "N": "77395"
+              },
+              "totalTakedowns": {
+                "N": "42"
+              },
+              "tripleKills": {
+                "N": "1"
+              },
+              "wCasts": {
+                "N": "89"
+              }
+            }
+          },
+          "Yorick": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "32"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "158"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "4"
+              },
+              "totalDamage": {
+                "N": "18686"
+              },
+              "totalTakedowns": {
+                "N": "0"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "16"
+              }
+            }
+          },
+          "Yunara": {
+            "M": {
+              "doubleKills": {
+                "N": "27"
+              },
+              "eCasts": {
+                "N": "1263"
+              },
+              "gamesPlayed": {
+                "N": "18"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "377"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "138"
+              },
+              "totalDamage": {
+                "N": "426035"
+              },
+              "totalTakedowns": {
+                "N": "253"
+              },
+              "tripleKills": {
+                "N": "3"
+              },
+              "wCasts": {
+                "N": "1050"
+              }
+            }
+          },
+          "Zac": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "42"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "35"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "3"
+              },
+              "totalDamage": {
+                "N": "6594"
+              },
+              "totalTakedowns": {
+                "N": "5"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "89"
+              }
+            }
+          },
+          "Zed": {
+            "M": {
+              "doubleKills": {
+                "N": "0"
+              },
+              "eCasts": {
+                "N": "81"
+              },
+              "gamesPlayed": {
+                "N": "1"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "98"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "11"
+              },
+              "totalDamage": {
+                "N": "9827"
+              },
+              "totalTakedowns": {
+                "N": "9"
+              },
+              "tripleKills": {
+                "N": "0"
+              },
+              "wCasts": {
+                "N": "49"
+              }
+            }
+          },
+          "Zeri": {
+            "M": {
+              "doubleKills": {
+                "N": "6"
+              },
+              "eCasts": {
+                "N": "79"
+              },
+              "gamesPlayed": {
+                "N": "2"
+              },
+              "pentaKills": {
+                "N": "0"
+              },
+              "qCasts": {
+                "N": "1462"
+              },
+              "quadraKills": {
+                "N": "0"
+              },
+              "rCasts": {
+                "N": "22"
+              },
+              "totalDamage": {
+                "N": "68094"
+              },
+              "totalTakedowns": {
+                "N": "52"
+              },
+              "tripleKills": {
+                "N": "1"
+              },
+              "wCasts": {
+                "N": "143"
+              }
+            }
+          }
+        }
+      },
+      "overallStats": {
+        "M": {
+          "longestGameDuration": {
+            "N": "3574"
+          },
+          "losses": {
+            "N": "332"
+          },
+          "mostAssists": {
+            "M": {
+              "champion": {
+                "S": "Taliyah"
+              },
+              "value": {
+                "N": "49"
+              }
+            }
+          },
+          "mostDeaths": {
+            "M": {
+              "champion": {
+                "S": "Elise"
+              },
+              "value": {
+                "N": "23"
+              }
+            }
+          },
+          "mostKills": {
+            "M": {
+              "champion": {
+                "S": "Samira"
+              },
+              "value": {
+                "N": "32"
+              }
+            }
+          },
+          "mostPlayedWith": {
+            "M": {
+              "Eleshaky#wTZDNj43U9XRG6YrCofjbf0W4x84XH5ccc2h0YgoOaRVSW5j2U8EHIO5Pjp_88HzEGP-TAdeu36Kkg": {
+                "N": "32"
+              },
+              "MortadaMoghazy#xY6tjQZI5lnXiC7Y2HAJabIdUoAeOyKNMeV9bofpU3xpRSpOVMdj261mV8xf02B2swUhme2t8hBuuA": {
+                "N": "49"
+              },
+              "OriginalSubZero#Ya3UYhD0Grrzu-jLpVks98xGjY3z29kdsWKtQZ5WO02wB9vmmqe-U1aSomtPK4Ur8cbJGoQ7M9Id1g": {
+                "N": "75"
+              },
+              "TheBest6699#w0qBrpAQ0QKyVdwtTXun9ohGq3lzhQ9JcvZkxXWj9Op0CMVm3gRQqoh3aQHESbsNUIuypAIzVI1qkw": {
+                "N": "51"
+              },
+              "Xx Nerf me xX#rc_1Dt9hL8eyDCKr_NnQat4-1Xm54-CLt5uZZPLXIniqOPWgihzKYX9qEYOTIOZrKuqFz7oL3byTFA": {
+                "N": "58"
+              }
+            }
+          },
+          "shortestGameDuration": {
+            "N": "102"
+          },
+          "topItems": {
+            "L": [
+              {
+                "M": {
+                  "gamesBought": {
+                    "N": "337"
+                  },
+                  "itemId": {
+                    "N": "1055"
+                  }
+                }
+              },
+              {
+                "M": {
+                  "gamesBought": {
+                    "N": "251"
+                  },
+                  "itemId": {
+                    "N": "3031"
+                  }
+                }
+              },
+              {
+                "M": {
+                  "gamesBought": {
+                    "N": "172"
+                  },
+                  "itemId": {
+                    "N": "3006"
+                  }
+                }
+              }
+            ]
+          },
+          "topSummonerSpells": {
+            "M": {
+              "Barrier": {
+                "M": {
+                  "avgCastsPerGame": {
+                    "N": "4.16"
+                  },
+                  "gamesUsed": {
+                    "N": "186"
+                  },
+                  "totalCasts": {
+                    "N": "774"
+                  }
+                }
+              },
+              "Cleanse": {
+                "M": {
+                  "avgCastsPerGame": {
+                    "N": "3.17"
+                  },
+                  "gamesUsed": {
+                    "N": "40"
+                  },
+                  "totalCasts": {
+                    "N": "127"
+                  }
+                }
+              },
+              "Exhaust": {
+                "M": {
+                  "avgCastsPerGame": {
+                    "N": "3.51"
+                  },
+                  "gamesUsed": {
+                    "N": "255"
+                  },
+                  "totalCasts": {
+                    "N": "895"
+                  }
+                }
+              },
+              "Flash": {
+                "M": {
+                  "avgCastsPerGame": {
+                    "N": "3.53"
+                  },
+                  "gamesUsed": {
+                    "N": "672"
+                  },
+                  "totalCasts": {
+                    "N": "2369"
+                  }
+                }
+              },
+              "Smite": {
+                "M": {
+                  "avgCastsPerGame": {
+                    "N": "13.37"
+                  },
+                  "gamesUsed": {
+                    "N": "163"
+                  },
+                  "totalCasts": {
+                    "N": "2180"
+                  }
+                }
+              }
+            }
+          },
+          "totalCS": {
+            "N": "136984"
+          },
+          "totalMatches": {
+            "N": "672"
+          },
+          "wins": {
+            "N": "340"
+          }
+        }
+      },
+      "top3ChampionsFromOpgg": {
+        "L": [
+          {
+            "S": "Smolder"
+          },
+          {
+            "S": "Kaisa"
+          },
+          {
+            "S": "Naafiri"
+          }
+        ]
+      },
+      "totalMatchesAnalyzed": {
+        "N": "672"
+      },
+      "totalMatchesAttempted": {
+        "N": "672"
+      },
+      "uniqueChampionsPlayed": {
+        "N": "62"
+      }
+    }
+  },
+  "status": {
+    "S": "COMPLETE"
+  },
+  "tagLine": {
+    "S": "6194"
+  }
+}
