@@ -1,0 +1,205 @@
+Current Profile — YasserSalem#RANK [EUW1]
+Form(5): LLWWW
+Streak: 3 win
+Overall: WR 60.0%, Line 7.3/6.3/8.9 (KDA 2.56), CS 193.7, CSPM 6.93, GPM 456.3, KP 49.8%, DmgShare 21.1%, Vision/10 7.86
+Team Avgs: TeamKills 32.2, EnemyKills 27.6, TeamGold 60369, EnemyGold 58131, GoldDiff 2238 (Obj Ctrl — Drag 55.2%, Baron 42.3%, Herald 52.6%, Tower 55.5%, Inhib 63.0%; Firsts — FB 0.0%, FT 60.0%, FD 55.0%, FBaron 25.0%)
+
+Game 20 (played as Kindred — JUNGLE) — WIN
+MatchId: EUW1_7592291593  |  Queue: 420  |  Duration: 25:58
+Me: 12/3/11  (KDA 7.667)  |  CS 225 (CSPM 8.66)  |  Gold 16041 (GPM 617.8, Share 25.9%)  |  Damage 29490 (Share 32.7%)  |  Vision 15 (per10 5.78)  |  KP 59.0%
+Wards: Placed 3, Cleared 2  |  Level 17  |  Items: 6676, 6672, 3172, 3036, 3094, 1038, 3364
+Lane Opp: MasterYi  (4/9/2), CS 174, Gold 10289, Level 14
+Team:  Kills 39 / Deaths 16 / Gold 62030 / Dmg 90287
+Enemy: Kills 16 / Deaths 39 / Gold 45769 / Dmg 72228
+Gold Diff (Team − Enemy): 16261
+Objectives (Team vs Enemy): Drag 3:1 (75.0%, First False)  |  Baron 0:0 (—, First False)  |  Herald 1:0 (100.0%)  |  Tower 10:1 (90.9%, First False)  |  Inhib 2:0 (100.0%)  |  FirstBlood: False
+
+Game 19 (played as Viego — JUNGLE) — WIN
+MatchId: EUW1_7592210306  |  Queue: 420  |  Duration: 26:38
+Me: 9/5/5  (KDA 2.8)  |  CS 212 (CSPM 7.96)  |  Gold 14317 (GPM 537.6, Share 23.3%)  |  Damage 20238 (Share 20.2%)  |  Vision 17 (per10 6.38)  |  KP 38.9%
+Wards: Placed 2, Cleared 3  |  Level 16  |  Items: 6610, 3077, 6665, 3174, 6672, 2021, 3364
+Lane Opp: Nidalee  (7/6/8), CS 170, Gold 12429, Level 15
+Team:  Kills 36 / Deaths 24 / Gold 61544 / Dmg 100007
+Enemy: Kills 23 / Deaths 36 / Gold 51144 / Dmg 77910
+Gold Diff (Team − Enemy): 10400
+Objectives (Team vs Enemy): Drag 2:1 (66.7%, First True)  |  Baron 0:0 (—, First False)  |  Herald 1:0 (100.0%)  |  Tower 11:2 (84.6%, First False)  |  Inhib 3:0 (100.0%)  |  FirstBlood: False
+
+Game 18 (played as Qiyana — JUNGLE) — WIN
+MatchId: EUW1_7592047580  |  Queue: 420  |  Duration: 21:02
+Me: 14/3/7  (KDA 7.0)  |  CS 182 (CSPM 8.65)  |  Gold 12134 (GPM 576.9, Share 22.7%)  |  Damage 20766 (Share 27.8%)  |  Vision 11 (per10 5.23)  |  KP 48.8%
+Wards: Placed 2, Cleared 0  |  Level 15  |  Items: 3171, 3142, 6701, 3814, 3364
+Lane Opp: JarvanIV  (1/8/3), CS 104, Gold 6522, Level 11
+Team:  Kills 43 / Deaths 12 / Gold 53366 / Dmg 74774
+Enemy: Kills 12 / Deaths 43 / Gold 35948 / Dmg 43875
+Gold Diff (Team − Enemy): 17418
+Objectives (Team vs Enemy): Drag 3:0 (100.0%, First True)  |  Baron 0:0 (—, First False)  |  Herald 1:0 (100.0%)  |  Tower 10:1 (90.9%, First True)  |  Inhib 2:0 (100.0%)  |  FirstBlood: False
+
+Game 17 (played as Viego — JUNGLE) — LOSS
+MatchId: EUW1_7591967577  |  Queue: 420  |  Duration: 30:22
+Me: 7/12/12  (KDA 1.583)  |  CS 181 (CSPM 5.96)  |  Gold 13345 (GPM 439.5, Share 21.4%)  |  Damage 26343 (Share 20.1%)  |  Vision 22 (per10 7.24)  |  KP 55.9%
+Wards: Placed 2, Cleared 3  |  Level 16  |  Items: 6610, 6672, 3047, 6333, 1031, 1028, 3364
+Lane Opp: Shaco  (13/10/11), CS 168, Gold 14120, Level 16
+Team:  Kills 34 / Deaths 48 / Gold 62349 / Dmg 130821
+Enemy: Kills 48 / Deaths 34 / Gold 70055 / Dmg 136525
+Gold Diff (Team − Enemy): -7706
+Objectives (Team vs Enemy): Drag 1:3 (25.0%, First False)  |  Baron 0:1 (0.0%, First False)  |  Herald 0:1 (0.0%)  |  Tower 3:10 (23.1%, First False)  |  Inhib 0:2 (0.0%)  |  FirstBlood: False
+
+Game 16 (played as XinZhao — JUNGLE) — LOSS
+MatchId: EUW1_7591912383  |  Queue: 420  |  Duration: 31:04
+Me: 3/9/8  (KDA 1.222)  |  CS 190 (CSPM 6.12)  |  Gold 10596 (GPM 341.1, Share 18.7%)  |  Damage 17656 (Share 19.4%)  |  Vision 23 (per10 7.4)  |  KP 52.4%
+Wards: Placed 3, Cleared 4  |  Level 15  |  Items: 3071, 6610, 3047, 6695, 2055, 3364
+Lane Opp: Graves  (5/3/8), CS 229, Gold 13225, Level 17
+Team:  Kills 21 / Deaths 29 / Gold 56772 / Dmg 91147
+Enemy: Kills 29 / Deaths 21 / Gold 65244 / Dmg 100946
+Gold Diff (Team − Enemy): -8472
+Objectives (Team vs Enemy): Drag 1:4 (20.0%, First True)  |  Baron 0:1 (0.0%, First False)  |  Herald 0:1 (0.0%)  |  Tower 2:11 (15.4%, First True)  |  Inhib 0:3 (0.0%)  |  FirstBlood: False
+
+Game 15 (played as Kayn — JUNGLE) — WIN
+MatchId: EUW1_7591900491  |  Queue: 420  |  Duration: 28:12
+Me: 8/2/5  (KDA 6.5)  |  CS 266 (CSPM 9.43)  |  Gold 14470 (GPM 513.1, Share 24.2%)  |  Damage 23226 (Share 30.1%)  |  Vision 20 (per10 7.09)  |  KP 41.9%
+Wards: Placed 3, Cleared 2  |  Level 18  |  Items: 3142, 6699, 3171, 3814, 6694, 1036, 3364
+Lane Opp: Ekko  (2/7/1), CS 171, Gold 9485, Level 14
+Team:  Kills 31 / Deaths 9 / Gold 59900 / Dmg 77089
+Enemy: Kills 9 / Deaths 31 / Gold 46912 / Dmg 48429
+Gold Diff (Team − Enemy): 12988
+Objectives (Team vs Enemy): Drag 2:1 (66.7%, First False)  |  Baron 1:0 (100.0%, First True)  |  Herald 1:0 (100.0%)  |  Tower 10:2 (83.3%, First True)  |  Inhib 2:0 (100.0%)  |  FirstBlood: False
+
+Game 14 (played as Qiyana — JUNGLE) — LOSS
+MatchId: EUW1_7591432029  |  Queue: 420  |  Duration: 24:17
+Me: 4/10/3  (KDA 0.7)  |  CS 131 (CSPM 5.39)  |  Gold 10825 (GPM 445.8, Share 22.2%)  |  Damage 8462 (Share 14.7%)  |  Vision 15 (per10 6.18)  |  KP 38.9%
+Wards: Placed 7, Cleared 1  |  Level 13  |  Items: 6701, 3142, 3158, 3814, 2055, 3364
+Lane Opp: Belveth  (16/3/9), CS 167, Gold 13800, Level 16
+Team:  Kills 18 / Deaths 50 / Gold 48726 / Dmg 57702
+Enemy: Kills 50 / Deaths 18 / Gold 62563 / Dmg 103695
+Gold Diff (Team − Enemy): -13837
+Objectives (Team vs Enemy): Drag 0:3 (0.0%, First False)  |  Baron 0:0 (—, First False)  |  Herald 0:1 (0.0%)  |  Tower 2:11 (15.4%, First False)  |  Inhib 0:2 (0.0%)  |  FirstBlood: False
+
+Game 13 (played as Qiyana — JUNGLE) — LOSS
+MatchId: EUW1_7591130909  |  Queue: 420  |  Duration: 26:22
+Me: 5/9/3  (KDA 0.889)  |  CS 165 (CSPM 6.26)  |  Gold 10133 (GPM 384.3, Share 21.2%)  |  Damage 14774 (Share 19.3%)  |  Vision 26 (per10 9.86)  |  KP 40.0%
+Wards: Placed 4, Cleared 2  |  Level 14  |  Items: 6695, 6701, 3142, 1028, 3158, 3364
+Lane Opp: Hecarim  (15/1/11), CS 256, Gold 16080, Level 18
+Team:  Kills 20 / Deaths 35 / Gold 47713 / Dmg 76546
+Enemy: Kills 35 / Deaths 20 / Gold 63770 / Dmg 94867
+Gold Diff (Team − Enemy): -16057
+Objectives (Team vs Enemy): Drag 0:4 (0.0%, First False)  |  Baron 0:1 (0.0%, First False)  |  Herald 0:1 (0.0%)  |  Tower 1:10 (9.1%, First False)  |  Inhib 0:2 (0.0%)  |  FirstBlood: False
+
+Game 12 (played as JarvanIV — JUNGLE) — WIN
+MatchId: EUW1_7590997470  |  Queue: 420  |  Duration: 30:18
+Me: 11/2/14  (KDA 12.5)  |  CS 220 (CSPM 7.26)  |  Gold 15222 (GPM 502.4, Share 22.2%)  |  Damage 18581 (Share 15.2%)  |  Vision 22 (per10 7.26)  |  KP 62.5%
+Wards: Placed 4, Cleared 4  |  Level 18  |  Items: 3047, 3143, 6665, 6692, 6610, 1011, 3364
+Lane Opp: Udyr  (6/10/1), CS 186, Gold 13027, Level 15
+Team:  Kills 40 / Deaths 16 / Gold 68690 / Dmg 122560
+Enemy: Kills 16 / Deaths 40 / Gold 56973 / Dmg 79072
+Gold Diff (Team − Enemy): 11717
+Objectives (Team vs Enemy): Drag 3:2 (60.0%, First False)  |  Baron 1:0 (100.0%, First True)  |  Herald 0:1 (0.0%)  |  Tower 11:3 (78.6%, First True)  |  Inhib 3:0 (100.0%)  |  FirstBlood: False
+
+Game 11 (played as Viego — JUNGLE) — WIN
+MatchId: EUW1_7590955668  |  Queue: 420  |  Duration: 33:29
+Me: 13/2/13  (KDA 13.0)  |  CS 277 (CSPM 8.27)  |  Gold 17803 (GPM 531.7, Share 24.3%)  |  Damage 34735 (Share 21.9%)  |  Vision 33 (per10 9.86)  |  KP 55.3%
+Wards: Placed 5, Cleared 6  |  Level 18  |  Items: 6610, 6672, 3174, 6333, 1018, 3026, 3364
+Lane Opp: Diana  (8/12/9), CS 268, Gold 17460, Level 18
+Team:  Kills 47 / Deaths 25 / Gold 73341 / Dmg 158375
+Enemy: Kills 25 / Deaths 47 / Gold 68719 / Dmg 118746
+Gold Diff (Team − Enemy): 4622
+Objectives (Team vs Enemy): Drag 3:2 (60.0%, First True)  |  Baron 1:1 (50.0%, First False)  |  Herald 1:0 (100.0%)  |  Tower 11:6 (64.7%, First True)  |  Inhib 3:0 (100.0%)  |  FirstBlood: False
+
+Game 10 (played as XinZhao — JUNGLE) — WIN
+MatchId: EUW1_7590909105  |  Queue: 420  |  Duration: 31:11
+Me: 8/2/8  (KDA 8.0)  |  CS 248 (CSPM 7.95)  |  Gold 15095 (GPM 484.1, Share 23.2%)  |  Damage 18609 (Share 21.0%)  |  Vision 35 (per10 11.22)  |  KP 57.1%
+Wards: Placed 4, Cleared 5  |  Level 18  |  Items: 6692, 3143, 3071, 3047, 6610, 3364
+Lane Opp: Diana  (3/9/3), CS 189, Gold 10953, Level 15
+Team:  Kills 28 / Deaths 11 / Gold 65005 / Dmg 88679
+Enemy: Kills 11 / Deaths 28 / Gold 57962 / Dmg 76831
+Gold Diff (Team − Enemy): 7043
+Objectives (Team vs Enemy): Drag 4:1 (80.0%, First False)  |  Baron 1:0 (100.0%, First True)  |  Herald 1:0 (100.0%)  |  Tower 9:5 (64.3%, First True)  |  Inhib 1:0 (100.0%)  |  FirstBlood: False
+
+Game 9 (played as Qiyana — JUNGLE) — WIN
+MatchId: EUW1_7590837453  |  Queue: 420  |  Duration: 32:10
+Me: 9/7/8  (KDA 2.429)  |  CS 274 (CSPM 8.52)  |  Gold 15696 (GPM 488.0, Share 22.5%)  |  Damage 23051 (Share 18.4%)  |  Vision 23 (per10 7.15)  |  KP 38.6%
+Wards: Placed 5, Cleared 4  |  Level 18  |  Items: 6701, 6698, 3171, 6695, 3026, 3134, 3364
+Lane Opp: Kindred  (11/8/16), CS 164, Gold 14799, Level 16
+Team:  Kills 44 / Deaths 38 / Gold 69627 / Dmg 125593
+Enemy: Kills 38 / Deaths 44 / Gold 67163 / Dmg 127887
+Gold Diff (Team − Enemy): 2464
+Objectives (Team vs Enemy): Drag 4:1 (80.0%, First True)  |  Baron 0:1 (0.0%, First False)  |  Herald 0:1 (0.0%)  |  Tower 8:4 (66.7%, First True)  |  Inhib 1:0 (100.0%)  |  FirstBlood: False
+
+Game 8 (played as XinZhao — JUNGLE) — LOSS
+MatchId: EUW1_7590716776  |  Queue: 420  |  Duration: 35:57
+Me: 3/10/14  (KDA 1.7)  |  CS 213 (CSPM 5.92)  |  Gold 14032 (GPM 390.3, Share 20.5%)  |  Damage 29224 (Share 18.6%)  |  Vision 33 (per10 9.18)  |  KP 45.9%
+Wards: Placed 14, Cleared 2  |  Level 17  |  Items: 6692, 6610, 4401, 3047, 3071, 3340
+Lane Opp: Quinn  (10/6/15), CS 186, Gold 14574, Level 18
+Team:  Kills 37 / Deaths 41 / Gold 68304 / Dmg 156909
+Enemy: Kills 39 / Deaths 37 / Gold 72456 / Dmg 203258
+Gold Diff (Team − Enemy): -4152
+Objectives (Team vs Enemy): Drag 2:3 (40.0%, First False)  |  Baron 0:1 (0.0%, First False)  |  Herald 1:0 (100.0%)  |  Tower 8:8 (50.0%, First True)  |  Inhib 2:1 (66.7%)  |  FirstBlood: False
+
+Game 7 (played as Sylas — JUNGLE) — WIN
+MatchId: EUW1_7590688939  |  Queue: 420  |  Duration: 23:40
+Me: 8/3/8  (KDA 5.333)  |  CS 174 (CSPM 7.35)  |  Gold 11291 (GPM 477.1, Share 20.1%)  |  Damage 16676 (Share 17.3%)  |  Vision 7 (per10 2.96)  |  KP 44.4%
+Wards: Placed 1, Cleared 0  |  Level 15  |  Items: 4645, 3152, 2421, 3175, 3364
+Lane Opp: Qiyana  (8/8/3), CS 132, Gold 10050, Level 12
+Team:  Kills 36 / Deaths 15 / Gold 56240 / Dmg 96649
+Enemy: Kills 15 / Deaths 36 / Gold 41895 / Dmg 66220
+Gold Diff (Team − Enemy): 14345
+Objectives (Team vs Enemy): Drag 3:0 (100.0%, First True)  |  Baron 0:0 (—, First False)  |  Herald 1:0 (100.0%)  |  Tower 10:2 (83.3%, First True)  |  Inhib 2:0 (100.0%)  |  FirstBlood: False
+
+Game 6 (played as Yone — TOP) — WIN
+MatchId: EUW1_7590655134  |  Queue: 420  |  Duration: 27:39
+Me: 7/9/4  (KDA 1.222)  |  CS 231 (CSPM 8.35)  |  Gold 12697 (GPM 459.2, Share 20.8%)  |  Damage 27594 (Share 24.8%)  |  Vision 11 (per10 3.98)  |  KP 37.9%
+Wards: Placed 7, Cleared 1  |  Level 18  |  Items: 1011, 3006, 3033, 3031, 1057, 3155, 3363
+Lane Opp: Fiora  (5/8/2), CS 225, Gold 12964, Level 16
+Team:  Kills 29 / Deaths 23 / Gold 61128 / Dmg 111270
+Enemy: Kills 23 / Deaths 29 / Gold 53244 / Dmg 81110
+Gold Diff (Team − Enemy): 7884
+Objectives (Team vs Enemy): Drag 2:2 (50.0%, First True)  |  Baron 1:0 (100.0%, First True)  |  Herald 0:1 (0.0%)  |  Tower 9:5 (64.3%, First True)  |  Inhib 2:0 (100.0%)  |  FirstBlood: False
+
+Game 5 (played as Thresh — UTILITY) — WIN
+MatchId: EUW1_7590591837  |  Queue: 420  |  Duration: 44:29
+Me: 1/11/25  (KDA 2.364)  |  CS 34 (CSPM 0.76)  |  Gold 12778 (GPM 287.3, Share 14.1%)  |  Damage 15800 (Share 7.3%)  |  Vision 112 (per10 25.18)  |  KP 63.4%
+Wards: Placed 43, Cleared 12  |  Level 17  |  Items: 3876, 3190, 3107, 3109, 3158, 3110, 3364
+Lane Opp: Nami  (1/8/27), CS 36, Gold 10688, Level 17
+Team:  Kills 41 / Deaths 42 / Gold 90571 / Dmg 216483
+Enemy: Kills 42 / Deaths 41 / Gold 82311 / Dmg 223968
+Gold Diff (Team − Enemy): 8260
+Objectives (Team vs Enemy): Drag 4:3 (57.1%, First True)  |  Baron 3:0 (100.0%, First True)  |  Herald 1:0 (100.0%)  |  Tower 10:7 (58.8%, First False)  |  Inhib 2:1 (66.7%)  |  FirstBlood: False
+
+Game 4 (played as XinZhao — JUNGLE) — LOSS
+MatchId: EUW1_7590353918  |  Queue: 420  |  Duration: 19:42
+Me: 4/4/2  (KDA 1.5)  |  CS 132 (CSPM 6.7)  |  Gold 7426 (GPM 377.0, Share 23.8%)  |  Damage 11631 (Share 25.3%)  |  Vision 15 (per10 7.61)  |  KP 42.9%
+Wards: Placed 2, Cleared 2  |  Level 11  |  Items: 2031, 6610, 3133, 1037, 2422, 3364
+Lane Opp: Amumu  (5/2/9), CS 134, Gold 8640, Level 12
+Team:  Kills 14 / Deaths 31 / Gold 31234 / Dmg 46014
+Enemy: Kills 31 / Deaths 14 / Gold 43921 / Dmg 62705
+Gold Diff (Team − Enemy): -12687
+Objectives (Team vs Enemy): Drag 1:2 (33.3%, First True)  |  Baron 0:0 (—, First False)  |  Herald 0:1 (0.0%)  |  Tower 0:6 (0.0%, First False)  |  Inhib 0:0 (—)  |  FirstBlood: False
+
+Game 3 (played as Viego — JUNGLE) — LOSS
+MatchId: EUW1_7589721549  |  Queue: 420  |  Duration: 34:03
+Me: 5/10/10  (KDA 1.5)  |  CS 205 (CSPM 6.02)  |  Gold 13181 (GPM 387.1, Share 20.0%)  |  Damage 28750 (Share 19.2%)  |  Vision 21 (per10 6.17)  |  KP 55.6%
+Wards: Placed 3, Cleared 3  |  Level 16  |  Items: 3748, 6672, 3174, 6610, 1037, 1028, 3364
+Lane Opp: XinZhao  (6/5/16), CS 190, Gold 13180, Level 17
+Team:  Kills 27 / Deaths 45 / Gold 65742 / Dmg 149615
+Enemy: Kills 45 / Deaths 27 / Gold 70548 / Dmg 153029
+Gold Diff (Team − Enemy): -4806
+Objectives (Team vs Enemy): Drag 2:2 (50.0%, First True)  |  Baron 0:1 (0.0%, First False)  |  Herald 1:0 (100.0%)  |  Tower 5:7 (41.7%, First True)  |  Inhib 0:1 (0.0%)  |  FirstBlood: False
+
+Game 2 (played as Sylas — JUNGLE) — LOSS
+MatchId: EUW1_7589661927  |  Queue: 420  |  Duration: 37:00
+Me: 9/12/10  (KDA 1.583)  |  CS 196 (CSPM 5.3)  |  Gold 13826 (GPM 373.7, Share 19.0%)  |  Damage 39589 (Share 26.0%)  |  Vision 23 (per10 6.22)  |  KP 51.4%
+Wards: Placed 4, Cleared 2  |  Level 17  |  Items: 4645, 3152, 3157, 3067, 3020, 3113, 3364
+Lane Opp: Graves  (16/6/5), CS 282, Gold 21275, Level 18
+Team:  Kills 37 / Deaths 37 / Gold 72704 / Dmg 152181
+Enemy: Kills 37 / Deaths 37 / Gold 80677 / Dmg 164562
+Gold Diff (Team − Enemy): -7973
+Objectives (Team vs Enemy): Drag 2:3 (40.0%, First False)  |  Baron 0:2 (0.0%, First False)  |  Herald 0:1 (0.0%)  |  Tower 4:12 (25.0%, First False)  |  Inhib 0:5 (0.0%)  |  FirstBlood: False
+
+Game 1 (played as Qiyana — JUNGLE) — WIN
+MatchId: EUW1_7589640188  |  Queue: 420  |  Duration: 15:11
+Me: 6/2/9  (KDA 7.5)  |  CS 118 (CSPM 7.77)  |  Gold 7761 (GPM 511.2, Share 23.9%)  |  Damage 10192 (Share 22.0%)  |  Vision 8 (per10 5.27)  |  KP 65.2%
+Wards: Placed 1, Cleared 1  |  Level 11  |  Items: 3158, 3142, 3134, 1037, 1036, 3364
+Lane Opp: Viego  (5/6/1), CS 94, Gold 6661, Level 9
+Team:  Kills 23 / Deaths 8 / Gold 32410 / Dmg 46276
+Enemy: Kills 8 / Deaths 23 / Gold 25348 / Dmg 29874
+Gold Diff (Team − Enemy): 7062
+Objectives (Team vs Enemy): Drag 1:0 (100.0%, First True)  |  Baron 0:0 (—, First False)  |  Herald 0:0 (—)  |  Tower 1:0 (100.0%, First True)  |  Inhib 0:0 (—)  |  FirstBlood: False
