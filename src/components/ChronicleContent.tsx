@@ -1197,17 +1197,6 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
                           </p>
                         </div>
                       </div>
-                          
-                          {/* Individual Takedowns */}
-                          <div className="border-t border-violet-400/20 pt-2 mt-1">
-                            <p className="text-center text-slate-300">
-                              <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
-                                {player.takedowns}
-                              </span>
-                              {' '}
-                              <span className="text-xs text-slate-400">enemies taken down</span>
-                            </p>
-                          </div>
                         </div>
                       </div>
                 ))}
