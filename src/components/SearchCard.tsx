@@ -88,10 +88,6 @@ export function SearchCard({
           <CardTitle className="font-heading text-3xl text-slate-100">
             Ready to rewind your season?
           </CardTitle>
-          <CardDescription className="text-base text-slate-300/80">
-            Plug in your Riot IGN and tagline to generate a personalised year in
-            review plus game-by-game coaching insights.
-          </CardDescription>
         </CardHeader>
         <CardContent className="mt-6 flex flex-col gap-5">
           <div className="grid gap-4 md:grid-cols-3">

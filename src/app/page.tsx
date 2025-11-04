@@ -15,22 +15,14 @@ export default function Home() {
           transition={{ duration: 0.45, ease: "easeOut" }}
           className="flex w-full flex-col items-center gap-10"
         >
-          <div className="flex flex-col items-center gap-8">
-            <Image
-              src="/images/Logo.png"
-              alt="RewindCoach emblem"
-              width={500}
-              height={500}
-              priority
-              className="drop-shadow-[0_35px_120px_rgba(99,102,241,0.3)]"
-            />
-            <p className="max-w-2xl text-lg text-slate-200/80">
-              Generate your playstyle DNA, comb through every match, and ask an AI coach why fights swung the way they did. Your season, rewound with clarity.
-            </p>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-400/80">
-              Built for RiotAmazon RiftRewind Hackathon
-            </p>
-          </div>
+          <Image
+            src="/images/Logo.png"
+            alt="RewindCoach"
+            width={500}
+            height={500}
+            priority
+            className="drop-shadow-[0_35px_120px_rgba(99,102,241,0.3)]"
+          />
           <SearchCard className="w-full" />
         </motion.div>
       </div>
