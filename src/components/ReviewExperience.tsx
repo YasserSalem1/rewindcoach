@@ -6,7 +6,7 @@ import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import type { MatchBundle, TimelineEvent, TimelineFrame } from "@/lib/riot";
-import { parseReviewTimeline, type CoachParsedEvent } from "@/lib/parseReviewOutput";
+import { parseReviewTimeline, parsePlayerRoles, type CoachParsedEvent } from "@/lib/parseReviewOutput";
 import { useScrubber } from "@/hooks/useScrubber";
 import { CoachChat } from "@/components/CoachChat";
 import { RiftMap } from "@/components/RiftMap";
@@ -40,6 +40,17 @@ export function ReviewExperience({
     } catch (error) {
       console.warn("[ReviewExperience] Failed to parse coach review timeline", error);
       return [];
+    }
+  }, [coachReviewText, participants]);
+
+  // Parse roles from coach_match text (more accurate than Riot API)
+  const coachRoles = useMemo(() => {
+    if (!coachReviewText) return new Map<string, string>();
+    try {
+      return parsePlayerRoles(coachReviewText, participants);
+    } catch (error) {
+      console.warn("[ReviewExperience] Failed to parse player roles", error);
+      return new Map<string, string>();
     }
   }, [coachReviewText, participants]);
 
@@ -690,6 +701,7 @@ export function ReviewExperience({
         onChampionClick={handleChampionClick}
         onClearSelection={clearChampionSelection}
         onMinuteChange={handleMinuteSelect}
+        coachRoles={coachRoles}
       />
       {/* Minute Navigator 
       

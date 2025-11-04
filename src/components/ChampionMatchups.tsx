@@ -53,6 +53,7 @@ interface ChampionMatchupsProps {
   onChampionClick: (puuid: string) => void;
   onClearSelection: () => void;
   onMinuteChange?: (minute: number) => void;
+  coachRoles?: Map<string, string>;
 }
 
 interface ParticipantWithLane extends RiotParticipant {
@@ -78,31 +79,43 @@ const laneFallbacks: Record<string, string> = {
   BOTTOM: "BOTTOM",
 };
 
-function detectLane(participant: RiotParticipant): string {
-  const laneRaw = (participant.lane ?? "").toUpperCase();
-  const roleRaw = (participant.role ?? "").toUpperCase();
-
-  const laneNormalized =
-    laneFallbacks[laneRaw] ??
-    laneFallbacks[roleRaw] ??
-    (laneRaw || roleRaw || "UNKNOWN");
-
-  if (laneNormalized === "NONE" && roleRaw === "SUPPORT") return "UTILITY";
-  if (laneNormalized === "NONE" && roleRaw === "CARRY") return "BOTTOM";
-
-  if (!LANE_ORDER.some((lane) => lane.key === laneNormalized)) {
-    if (laneRaw === "UTILITY" || roleRaw === "UTILITY") return "UTILITY";
-    if (laneRaw === "SUPPORT" || roleRaw === "SUPPORT") return "UTILITY";
-    return "UNKNOWN";
+function detectLane(participant: RiotParticipant, coachRole?: string): string {
+  // Prioritize coach_match role data (most accurate)
+  if (coachRole) {
+    const normalized = laneFallbacks[coachRole] || coachRole;
+    if (LANE_ORDER.some((lane) => lane.key === normalized)) {
+      return normalized;
+    }
   }
 
-  return laneNormalized;
+  // Fallback to Riot API data
+  const roleRaw = (participant.role ?? "").toUpperCase().trim();
+  const laneRaw = (participant.lane ?? "").toUpperCase().trim();
+
+  const roleDetected = laneFallbacks[roleRaw] || (LANE_ORDER.some(l => l.key === roleRaw) ? roleRaw : null);
+  const laneDetected = laneFallbacks[laneRaw] || (LANE_ORDER.some(l => l.key === laneRaw) ? laneRaw : null);
+
+  if (roleDetected) return roleDetected;
+  if (laneDetected) return laneDetected;
+
+  // Fallback to participantId (1-5 Blue, 6-10 Red map to TOP,JG,MID,BOT,SUP)
+  const participantId = participant.participantId;
+  const isBlue = participant.teamId === 100;
+  const teamOffset = isBlue ? 0 : 5;
+  const laneIndex = (participantId - 1 - teamOffset) % 5;
+  const laneByParticipantId = LANE_ORDER[laneIndex]?.key;
+  
+  if (laneByParticipantId && participantId >= 1 && participantId <= 10) {
+    return laneByParticipantId;
+  }
+
+  return "UNKNOWN";
 }
 
-function createLaneRows(participants: RiotParticipant[]) {
+function createLaneRows(participants: RiotParticipant[], coachRoles?: Map<string, string>) {
   const withLane: ParticipantWithLane[] = participants.map((participant) => ({
     ...participant,
-    laneLabel: detectLane(participant),
+    laneLabel: detectLane(participant, coachRoles?.get(participant.puuid)),
   }));
 
   const blue: Record<string, ParticipantWithLane | undefined> = {};
@@ -338,10 +351,11 @@ export function ChampionMatchups({
   onChampionClick,
   onClearSelection,
   onMinuteChange,
+  coachRoles,
 }: ChampionMatchupsProps) {
   const rows = useMemo(
-    () => createLaneRows(participants),
-    [participants],
+    () => createLaneRows(participants, coachRoles),
+    [participants, coachRoles],
   );
 
   const displayedMinute =

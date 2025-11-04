@@ -260,6 +260,57 @@ const parsePositionsLine = (
   return positions;
 };
 
+/**
+ * Parses role assignments from the "Players — Final Stats:" section
+ * Returns a map of puuid -> role (TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY)
+ */
+export function parsePlayerRoles(
+  text: string | null | undefined,
+  participants: RiotParticipant[],
+): Map<string, string> {
+  const roleMap = new Map<string, string>();
+  if (!text) return roleMap;
+
+  const statsMarker = "Players — Final Stats:";
+  const statsIndex = text.indexOf(statsMarker);
+  if (statsIndex < 0) return roleMap;
+
+  // Extract section from "Players — Final Stats:" to "Timeline:" or end
+  let section = text.slice(statsIndex + statsMarker.length);
+  const timelineIndex = section.indexOf("Timeline:");
+  if (timelineIndex >= 0) {
+    section = section.slice(0, timelineIndex);
+  }
+
+  const lines = section.split(/\r?\n/);
+  const lookup = buildParticipantLookup(participants);
+
+  // Parse each player line: "- Blue Szpont (Vladimir) [TOP] K/D/A ..."
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || !trimmed.startsWith('-')) continue;
+
+    const match = trimmed.match(/^-\s+(Blue|Red)\s+(.+?)\s+\((.+?)\)\s+\[([^\]]+)\]/i);
+    if (match) {
+      const [, color, name, champion, role] = match;
+      const teamColor = color.toLowerCase() as "blue" | "red";
+      const teamKey = `${teamColor}::`;
+      
+      // Find participant by name or champion
+      let participant = lookup.byName.get(teamKey + normalize(name));
+      if (!participant) {
+        participant = lookup.byChampion.get(teamKey + normalize(champion));
+      }
+
+      if (participant?.puuid) {
+        roleMap.set(participant.puuid, role.trim().toUpperCase());
+      }
+    }
+  }
+
+  return roleMap;
+}
+
 export function parseReviewTimeline(
   text: string | null | undefined,
   participants: RiotParticipant[],

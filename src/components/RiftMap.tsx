@@ -266,17 +266,6 @@ export function RiftMap({
                     {position.championName.slice(0, 2).toUpperCase()}
                   </div>
                 )}
-
-                {badge ? (
-                  <span
-                    className={cn(
-                      "pointer-events-none absolute inset-0 flex items-center justify-center text-2xl font-black uppercase tracking-tight drop-shadow-[0_1px_10px_rgba(15,23,42,0.95)]",
-                      badge.colorClass ?? BADGE_BASE[badge.variant],
-                    )}
-                  >
-                    {badge.label}
-                  </span>
-                ) : null}
               </div>
             </motion.div>
           );
