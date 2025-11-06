@@ -35,7 +35,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
   }, [puuid]);
 
   const handleBack = () => {
-    router.back();
+    router.push('/');
   };
 
   const stopPolling = useCallback(() => {
@@ -269,7 +269,10 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
                 </span>
               </Button>
               <span className="text-xs text-slate-300/75 md:text-right">
-                Chronicle your split and relive every highlight.
+                {isGenerating 
+                  ? "This may take 10-15 minutes. Feel free to explore or come back later!"
+                  : "Chronicle your split and relive every highlight."
+                }
               </span>
             </div>
           </div>

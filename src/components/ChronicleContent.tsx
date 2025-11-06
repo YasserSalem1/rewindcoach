@@ -35,6 +35,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   const [isLoadingSeasonStats, setIsLoadingSeasonStats] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [showCopiedToast, setShowCopiedToast] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch season stats ONLY from AWS Lambda API
@@ -328,8 +329,6 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
       tempContainer.style.backgroundColor = '#020617';
       tempContainer.style.margin = '0';
       tempContainer.style.padding = '0';
-      tempContainer.style.border = 'none';
-      tempContainer.style.outline = 'none';
       document.body.appendChild(tempContainer);
       
       // Clone and append all sections
@@ -340,14 +339,15 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
         clone.style.width = '100%';
         clone.style.margin = '0';
         clone.style.padding = '0';
-        clone.style.border = 'none';
-        clone.style.outline = 'none';
         tempContainer.appendChild(clone);
       });
       
+      // Use the same approach as single page download
       const dataUrl = await domtoimage.toPng(tempContainer, {
         quality: 0.95,
         bgcolor: '#020617',
+        width: tempContainer.clientWidth,
+        height: tempContainer.clientHeight,
         style: {
           margin: '0',
           padding: '0',
@@ -356,14 +356,10 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           boxShadow: 'none',
         },
         filter: (node: Node) => {
-          // Remove any debug borders or outlines
+          // Use the same simple filter as single page download
           if (node instanceof HTMLElement && node.style) {
             node.style.outline = 'none';
-            const currentBorder = node.style.border;
-            // Only remove border if it's not a styled border (keep intentional borders)
-            if (currentBorder && !currentBorder.includes('border-')) {
-              node.style.border = 'none';
-            }
+            node.style.border = node.style.border?.includes('border-') ? node.style.border : 'none';
           }
           return true;
         },
@@ -388,8 +384,8 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   const copyShareableLink = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-    // You could add a toast notification here
-    alert('Link copied to clipboard!');
+    setShowCopiedToast(true);
+    setTimeout(() => setShowCopiedToast(false), 3000);
   };
 
   // Format rank display
@@ -545,12 +541,21 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           </motion.div>
 
           <motion.p
-            className="text-slate-300/80"
+            className="text-slate-300/80 text-center max-w-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
             Preparing your chronicle...
+          </motion.p>
+          
+          <motion.p
+            className="text-slate-400/70 text-sm text-center max-w-md"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            This may take 10-15 minutes. Feel free to explore or come back later!
           </motion.p>
 
           {/* Progress bar animation */}
@@ -1432,6 +1437,58 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           </div>
         </div>
       </section>
+
+      {/* Custom Toast Notification */}
+      {showCopiedToast && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          transition={{ duration: 0.2 }}
+          className="fixed bottom-8 right-8 z-[100] pointer-events-none"
+        >
+          <div className="relative overflow-hidden rounded-xl border border-green-400/50 bg-gradient-to-br from-green-900/95 via-emerald-900/95 to-teal-900/95 backdrop-blur-xl shadow-lg shadow-green-500/30">
+            {/* Content */}
+            <div className="relative flex items-center gap-3 px-5 py-3">
+              {/* Success Icon */}
+              <div className="flex-shrink-0">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500">
+                  <svg
+                    className="h-5 w-5 text-white"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Text */}
+              <div className="flex flex-col">
+                <p className="text-base font-semibold text-green-100">
+                  Link Copied!
+                </p>
+                <p className="text-sm text-green-200/80">
+                  Ready to share
+                </p>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <motion.div
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400"
+              initial={{ scaleX: 1 }}
+              animate={{ scaleX: 0 }}
+              transition={{ duration: 3, ease: "linear" }}
+              style={{ transformOrigin: "left" }}
+            />
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

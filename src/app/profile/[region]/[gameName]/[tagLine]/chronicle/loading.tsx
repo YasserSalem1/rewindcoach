@@ -124,12 +124,21 @@ export default function ChronicleLoading() {
         </motion.div>
 
         <motion.p
-          className="text-slate-300/80"
+          className="text-slate-300/80 text-center max-w-md mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
           Preparing your chronicle...
+        </motion.p>
+
+        <motion.p
+          className="text-slate-400/70 text-sm text-center max-w-md mx-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          This may take 10-15 minutes. Feel free to explore or come back later!
         </motion.p>
 
         {/* Progress bar animation */}
