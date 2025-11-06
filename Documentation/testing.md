@@ -7,10 +7,12 @@
 > - ⏱️ **100 requests per 2 minutes**  
 >
 > Please allow a few extra seconds when testing pages that fetch live match data.
+>
+> When Generating Chronocile - Season Rewind, USING other functionalities of the webapp may cause it to crash. 
 
 ---
 
-## 🌐 Accessing the App
+## Accessing the App
 
 **Website:** [https://rewind-coach.com](https://rewind-coach.com)
 
@@ -19,7 +21,7 @@
 
 ---
 
-## 🧭 Profile Overview (Landing Page)
+## Profile Overview (Landing Page)
 
 Once the data loads, you’ll see the **main dashboard** divided into three sections:
 
@@ -29,17 +31,17 @@ Once the data loads, you’ll see the **main dashboard** divided into three sect
 
 ---
 
-## 🔍 Use Case 1 — Match Review
+## Use Case 1 — Match Review
 
-### 🧠 Description  
+### Description  
 Detailed analysis of a single match — showing events, stats, and insights minute-by-minute.
 
-### 🧪 How to Test
+### How to Test
 1. From your **Profile Overview**, scroll to **Recent Matches**.  
 2. Click **“Review Match”** on any game.  
 3. Wait for data to load (depending on Riot API).
 
-### ✅ Expected Results
+### Expected Results
 - A full **Match Review Page** appears showing:
   - **Minute-by-minute stats** (Items, CS, Levels, Objectives).  
   - **Dynamic Summoner’s Rift Map** updating champion positions each minute.  
@@ -48,20 +50,20 @@ Detailed analysis of a single match — showing events, stats, and insights minu
     - “When did I fall behind in gold?”  
     - “Who carried this game?”  
 
-The chatbot understands match data, events, and gold flow — acting like a real coach that explains *why* things happened.
+The chatbot understands match data, events, and gold flow — acting like a real coach that explains *why* things happened. ( check the MatchReviewOutput file to check what exactlly is fed to the chatbot )
 
 ---
 
-## 🧪 Use Case 2 — 20 Match Lab
+## Use Case 2 — 20 Match Lab
 
-### 🧠 Description  
+### Description  
 This page acts as a **Time Machine**, taking you **20 matches back in time** to reveal patterns, momentum shifts, and performance evolution.
 
-### 🧪 How to Test
+### How to Test
 1. From the top navigation bar or main dashboard, click **“20 Match Lab.”**  
 2. Allow time for data aggregation.
 
-### ✅ Expected Results
+### xpected Results
 - Overview of your last 20 matches including:
   - Best and worst performances  
   - Average KDA and win rate  
@@ -72,16 +74,16 @@ This page acts as a **Time Machine**, taking you **20 matches back in time** to 
 
 ---
 
-## 📖 Use Case 3 — Chronicle (Season Rewind)
+## Use Case 3 — Chronicle (Season Rewind)
 
-### 🧠 Description  
+### Description  
 Turns your entire season into a **personalized story** highlighting achievements, playstyle, and milestones.
 
-### 🧪 How to Test
+### How to Test
 1. Click **“Chronicle”** or **“Season Rewind.”**  
 2. Wait for the full season data to load.
 
-### ✅ Expected Results
+### xpected Results
 The page will display **four main sections**:
 
 1. **Season Overview** – Total games, win rate, takedowns, KDA, and unique champions played.  
@@ -97,16 +99,17 @@ Each section is **sharable**, allowing users to showcase their season stats and 
 
 ---
 
-## ✅ Notes for Judges
+## Notes for Judges
 
 - The **first load** may take **10–20 seconds** due to live data fetching from the Riot API.  
 - Use **public summoner names** for more consistent test results (e.g., known players).  
 - If the rate limit is reached, the app will automatically retry; refreshing after ~30–60 seconds helps.  
 - Optimized for **Chrome** and **Edge** on desktop.
+- When Generating Chronocile - Season Rewind, USING other functionalities of the webapp may cause it to crash. 
 
 ---
 
-## 🏁 Summary
+## ummary
 
 | Feature | Description | Testing Focus |
 |----------|--------------|----------------|
