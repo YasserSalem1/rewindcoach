@@ -1,6 +1,10 @@
 # Rewind Coach
 
+![Rewind Coach logo](./Logo3.png)
+
 Rewind Coach is an AI-powered League of Legends mentor that transforms raw match telemetry into actionable insights, cinematic recaps, and strategic coaching moments.
+
+> <span style="color:#ef4444;font-weight:600;">CHECK testing.md in Documentation to learn how to go through the website with expected results.</span>
 
 ## Why Players Use It
 

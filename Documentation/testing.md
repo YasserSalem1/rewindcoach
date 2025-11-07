@@ -8,7 +8,7 @@
 >
 > Please allow a few extra seconds when testing pages that fetch live match data.
 >
-> When Generating Chronocile - Season Rewind, USING other functionalities of the webapp may cause it to crash. 
+> <span style="color:#f87171;font-weight:600;">When Generating Chronocile - Season Rewind, USING other functionalities of the webapp may cause it to crash.</span>
 
 ---
 
@@ -105,7 +105,7 @@ Each section is **sharable**, allowing users to showcase their season stats and 
 - Use **public summoner names** for more consistent test results (e.g., known players).  
 - If the rate limit is reached, the app will automatically retry; refreshing after ~30–60 seconds helps.  
 - Optimized for **Chrome** and **Edge** on desktop.
-- When Generating Chronocile - Season Rewind, USING other functionalities of the webapp may cause it to crash. 
+- <span style="color:#f87171;font-weight:600;">When Generating Chronocile - Season Rewind, USING other functionalities of the webapp may cause it to crash.</span>
 
 ---
 
@@ -118,4 +118,3 @@ Each section is **sharable**, allowing users to showcase their season stats and 
 | **Chronicle – Season Rewind** | Season-long recap and story | Visual storytelling and stats summary |
 
 ---
-
