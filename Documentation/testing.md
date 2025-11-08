@@ -16,7 +16,7 @@
 
 **Website:** [https://rewind-coach.com](https://rewind-coach.com)
 
-1. When you open the site, you’ll be prompted to **enter your Riot region**, **Riot ID**, and **tagline** (for example: `YasserSalem#RANK`  `moghazy99#6194`).  
+1. When you open the site, you’ll be prompted to **enter your Riot region**, **Riot ID**, and **tagline** (for example: `EUW - YasserSalem#RANK`  `EUNE - moghazy99#6194`).  
 2. After submission, the system retrieves your profile data and loads the **Profile Overview** page.
 
 ---
