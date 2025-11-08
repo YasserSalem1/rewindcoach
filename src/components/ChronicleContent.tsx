@@ -42,7 +42,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   useEffect(() => {
     const loadSeasonStats = async () => {
       try {
-        const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
+        const response = await fetch(`/api/season-rewind?gameName=${encodeURIComponent(summoner.summonerName)}&tagLine=${encodeURIComponent(summoner.tagline)}`);
         
         if (response.status === 200) {
           const data = await response.json();
@@ -62,7 +62,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
     };
 
     loadSeasonStats();
-  }, [puuid]);
+  }, [summoner.summonerName, summoner.tagline]);
 
   // Track current page using IntersectionObserver
   useEffect(() => {

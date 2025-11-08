@@ -3,25 +3,29 @@ import { NextRequest, NextResponse } from "next/server";
 const STATS_API_BASE = "https://ncois6bqrc.execute-api.us-east-1.amazonaws.com/stats";
 
 /**
- * GET /api/season-rewind?puuid=<puuid>
- * Checks the status of season statistics for a given PUUID
+ * GET /api/season-rewind?gameName=<name>&tagLine=<tag>
+ * Checks the status of season statistics for a given player
+ * Uses the same /stats/initiate endpoint which checks DB first
  */
 export async function GET(req: NextRequest) {
-  const puuid = req.nextUrl.searchParams.get("puuid");
+  const gameName = req.nextUrl.searchParams.get("gameName");
+  const tagLine = req.nextUrl.searchParams.get("tagLine");
 
-  if (!puuid) {
+  if (!gameName || !tagLine) {
     return NextResponse.json(
-      { error: "Missing puuid parameter" },
+      { error: "Missing gameName or tagLine parameters" },
       { status: 400 }
     );
   }
 
   try {
-    const response = await fetch(`${STATS_API_BASE}/${puuid}`, {
-      method: "GET",
+    // Use the same initiate endpoint - it checks DB first and returns cached status
+    const response = await fetch(`${STATS_API_BASE}/initiate`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({ gameName, tagLine }),
     });
 
     // Return the response as-is, preserving status codes (404, 200, etc.)

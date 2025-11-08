@@ -47,7 +47,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
 
   const checkStatus = useCallback(async () => {
     try {
-      const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
+      const response = await fetch(`/api/season-rewind?gameName=${encodeURIComponent(summoner.summonerName)}&tagLine=${encodeURIComponent(summoner.tagline)}`);
       const data = await response.json();
 
       if (response.status === 200) {
@@ -69,7 +69,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
       console.error("Error checking status:", error);
       // Continue polling on error
     }
-  }, [puuid, region, summoner.summonerName, summoner.tagline, router, stopPolling]);
+  }, [region, summoner.summonerName, summoner.tagline, router, stopPolling]);
 
   const startPolling = useCallback(() => {
     // Initial check
@@ -85,7 +85,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
   useEffect(() => {
     const checkInitialStatus = async () => {
       try {
-        const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
+        const response = await fetch(`/api/season-rewind?gameName=${encodeURIComponent(summoner.summonerName)}&tagLine=${encodeURIComponent(summoner.tagline)}`);
         const data = await response.json();
 
         if (response.status === 404) {
@@ -113,7 +113,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
     };
 
     checkInitialStatus();
-  }, [puuid, startPolling]);
+  }, [summoner.summonerName, summoner.tagline, startPolling]);
 
   // Clean up polling interval on unmount
   useEffect(() => {
@@ -160,7 +160,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
     setButtonText("Generating your rewind...");
 
     try {
-      const response = await fetch(`/api/season-rewind?puuid=${encodeURIComponent(puuid)}`);
+      const response = await fetch(`/api/season-rewind?gameName=${encodeURIComponent(summoner.summonerName)}&tagLine=${encodeURIComponent(summoner.tagline)}`);
       const data = await response.json();
 
       if (response.status === 404) {
