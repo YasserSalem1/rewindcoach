@@ -47,6 +47,9 @@ import {
 
 import { parseTimelineText } from "./timelineParser";
 
+const MATCH_FETCH_BUFFER = 10;
+const MATCH_HISTORY_LIMIT = 100;
+
 // ============================================================================
 // High-Level API Functions
 // ============================================================================
@@ -89,31 +92,75 @@ export async function getProfileBundle(
   // Account response already includes profileIconUrl from the new API
   const profileIcon = account.profileIconUrl;
 
-  // Fetch matches
-  const matchIds = await fetchMatches(account.puuid, region, matchCount);
+  // Fetch matches with a buffer so intermittent failures still yield a full window
+  const matches: RiotMatch[] = [];
+  let startIndex = 0;
 
-  // Fetch all matches in parallel for better performance
-  const matchDtos: RiotMatchDto[] = await Promise.all(
-    matchIds.map(async (id) => {
-      try {
-        const response = await fetchMatch(id);
-        // New API returns { matchId, region, metadata, info }
-        // Convert to RiotMatchDto format
-        return {
-          metadata: response.metadata,
-          info: response.info,
-        };
-      } catch (error) {
-        console.warn(`[backend] Failed to load match ${id}`, error);
-        return null;
+  while (matches.length < matchCount && startIndex < MATCH_HISTORY_LIMIT) {
+    const remaining = matchCount - matches.length;
+    const requestCount = Math.min(
+      Math.max(remaining + MATCH_FETCH_BUFFER, MATCH_FETCH_BUFFER),
+      MATCH_HISTORY_LIMIT - startIndex,
+    );
+
+    if (requestCount <= 0) {
+      break;
+    }
+
+    const matchIds = await fetchMatches(
+      account.puuid,
+      region,
+      requestCount,
+      startIndex,
+    );
+
+    if (matchIds.length === 0) {
+      break;
+    }
+
+    const matchDtos: RiotMatchDto[] = await Promise.all(
+      matchIds.map(async (id) => {
+        try {
+          const response = await fetchMatch(id);
+          return {
+            metadata: response.metadata,
+            info: response.info,
+          };
+        } catch (error) {
+          console.warn(`[backend] Failed to load match ${id}`, error);
+          return null;
+        }
+      }),
+    ).then((results) =>
+      results.filter((dto): dto is RiotMatchDto => dto !== null),
+    );
+
+    if (matchDtos.length > 0) {
+      const mappedMatches = await Promise.all(
+        matchDtos.map((dto) =>
+          mapParticipantData(dto, region, account.puuid),
+        ),
+      );
+
+      for (const match of mappedMatches) {
+        matches.push(match);
+        if (matches.length >= matchCount) {
+          break;
+        }
       }
-    })
-  ).then(results => results.filter((dto): dto is RiotMatchDto => dto !== null));
+    }
 
-  // Process matches in parallel
-  const matches: RiotMatch[] = await Promise.all(
-    matchDtos.map(dto => mapParticipantData(dto, region, account.puuid))
-  );
+    if (matches.length >= matchCount) {
+      break;
+    }
+
+    if (matchIds.length < requestCount) {
+      // No more matches available
+      break;
+    }
+
+    startIndex += matchIds.length;
+  }
 
   const { highlights, styleDNA } = summarizeMatches(matches, account.puuid);
 

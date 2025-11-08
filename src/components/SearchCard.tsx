@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -49,6 +48,10 @@ export function SearchCard({
   const [isValidating, setIsValidating] = useState(false);
 
   const submit = async () => {
+    if (isValidating) {
+      return;
+    }
+
     if (!gameName.trim() || !tagLine.trim()) {
       setError("Enter both your in-game name and tagline.");
       return;
@@ -61,8 +64,33 @@ export function SearchCard({
     const trimmedTag = tagLine.trim();
 
     try {
-      // Save preference and navigate directly - validation will happen on profile page
-      // This is faster than pre-validating via API call
+      const search = new URLSearchParams({
+        region,
+        gameName: trimmedGame,
+        tagLine: trimmedTag,
+      });
+
+      const response = await fetch(`/api/profile/validate?${search.toString()}`);
+      if (!response.ok) {
+        let message = "Failed to validate that Riot ID. Please try again.";
+        try {
+          const data = await response.json();
+          if (typeof data?.error === "string") {
+            message = data.error;
+          }
+        } catch {
+          // Ignore JSON parse errors and use fallback
+        }
+
+        if (response.status === 404) {
+          setError(message);
+          setIsValidating(false);
+          return;
+        }
+
+        throw new Error(message);
+      }
+
       setProfilePref({ region, gameName: trimmedGame, tagLine: trimmedTag });
       const path = `/profile/${region}/${encodeURIComponent(trimmedGame)}/${encodeURIComponent(trimmedTag)}`;
       
@@ -71,9 +99,13 @@ export function SearchCard({
       });
     } catch (error) {
       console.error("[SearchCard] navigation failed", error);
-      setError("Navigation error. Please try again.");
+      const message = error instanceof Error ? error.message : "Navigation error. Please try again.";
+      setError(message);
       setIsValidating(false);
+      return;
     }
+
+    // Keep the validating state true while the route transition occurs.
   };
 
   return (
