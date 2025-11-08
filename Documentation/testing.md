@@ -1,10 +1,14 @@
-# 🧪 Testing Guide — Rewind Coach
+# Testing Guide — Rewind Coach
 
-> **Disclaimer**  
+> **Disclaimer**
+> 
 > Loading time may vary depending on Riot API rate limits.  
 > The Riot API allows:  
 > - ⏳ **20 requests per second**  
-> - ⏱️ **100 requests per 2 minutes**  
+> - ⏱️ **100 requests per 2 minutes**
+>
+> <span style="color:#f87171;font-weight:600;">To ensure stable performance during testing, please avoid concurrent usage — the app performs best when accessed by one user at a time.</span>
+
 >
 > Please allow a few extra seconds when testing pages that fetch live match data.
 >
