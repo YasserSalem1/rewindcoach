@@ -109,7 +109,7 @@ export function MatchLabLoader({ className }: MatchLabLoaderProps) {
             Fetching your advanced match insights...
           </motion.p>
           <p className="text-sm text-slate-400">
-            loading !
+            Reload The page if this takes too long!
           </p>
         </motion.div>
 

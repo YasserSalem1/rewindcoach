@@ -558,7 +558,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            loading !
+            Reload The page if this takes too long
           </motion.p>
 
           {/* Progress bar animation */}
