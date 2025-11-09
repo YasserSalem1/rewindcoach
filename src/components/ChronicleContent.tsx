@@ -28,6 +28,11 @@ const SUMMONER_SPELL_IDS: Record<string, string> = {
   "Mark": "SummonerSnowball",
 };
 
+// Mapping for spell names to their icon filenames
+const SPELL_ICON_MAP: Record<string, string> = {
+  "Spell_2201": "flee.png",
+};
+
 export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   const router = useRouter();
   const { profile: summoner } = bundle;
@@ -223,7 +228,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
         name,
         id: SUMMONER_SPELL_IDS[name] || name,
         totalCasts: stats.totalCasts,
-        icon: `/images/spells/${name.toLowerCase()}.png`,
+        icon: `/images/spells/${SPELL_ICON_MAP[name] || name.toLowerCase() + '.png'}`,
       }));
   }, [seasonStats]);
 
