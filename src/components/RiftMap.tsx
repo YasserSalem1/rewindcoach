@@ -45,13 +45,6 @@ interface RiftMapProps {
   focusSelection?: boolean;
 }
 
-const BADGE_BASE: Record<BadgeVariant, string> = {
-  kill: "text-emerald-300",
-  death: "text-rose-300",
-  assist: "text-sky-300",
-  objective: "text-amber-300",
-};
-
 const normalize = (value?: string | null) =>
   (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -265,6 +258,16 @@ export function RiftMap({
                   <div className="flex h-full w-full items-center justify-center bg-slate-900 text-xs text-slate-400">
                     {position.championName.slice(0, 2).toUpperCase()}
                   </div>
+                )}
+                {badge && (
+                  <span
+                    className={cn(
+                      "pointer-events-none absolute -top-1 -right-1 rounded-full bg-slate-950/95 px-1.5 py-0.5 text-[10px] font-semibold uppercase shadow-[0_0_12px_rgba(15,23,42,0.85)]",
+                      badge.colorClass,
+                    )}
+                  >
+                    {badge.label}
+                  </span>
                 )}
               </div>
             </motion.div>

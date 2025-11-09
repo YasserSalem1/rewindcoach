@@ -30,7 +30,7 @@ const SUMMONER_SPELL_IDS: Record<string, string> = {
 
 export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   const router = useRouter();
-  const { profile: summoner, puuid } = bundle;
+  const { profile: summoner } = bundle;
   const [seasonStats, setSeasonStats] = useState<SeasonStatsResponse | null>(null);
   const [isLoadingSeasonStats, setIsLoadingSeasonStats] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);

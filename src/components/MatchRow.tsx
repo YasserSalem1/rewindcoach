@@ -47,22 +47,19 @@ const MatchRowComponent = ({
       return;
     }
 
-    const navigate = () => {
-      const search = new URLSearchParams({ puuid: participant.puuid });
-      if (gameName) {
-        search.set("gameName", gameName);
-      }
-      if (tagLine) {
-        search.set("tagLine", tagLine);
-      }
-      router.push(`/review/${match.id}?${search.toString()}`);
-    };
+    const loaderParams = new URLSearchParams({
+      matchId: match.id,
+      puuid: participant.puuid,
+    });
 
-    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
-      window.requestAnimationFrame(navigate);
-    } else {
-      navigate();
+    if (gameName) {
+      loaderParams.set("gameName", gameName);
     }
+    if (tagLine) {
+      loaderParams.set("tagLine", tagLine);
+    }
+
+    router.push(`/review-loading?${loaderParams.toString()}`);
   };
 
   // For static item slots
