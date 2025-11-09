@@ -10,7 +10,6 @@ import type { RiotMatch, RiotParticipant } from "@/lib/riot";
 import { formatDuration, formatRelativeDate, kdaString } from "@/lib/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ReviewLoader } from "@/components/loaders/ReviewLoader";
 
 interface MatchRowProps {
   match: RiotMatch;
@@ -270,7 +269,6 @@ const MatchRowComponent = ({
         </Button>
         </motion.div>
       </motion.article>
-      {isLoading && <ReviewLoader className="fixed inset-0 z-50" />}
     </>
   );
 };

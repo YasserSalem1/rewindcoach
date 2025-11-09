@@ -180,7 +180,7 @@ export function ReviewLoader({ className }: ReviewLoaderProps) {
         </div>
 
         <p className="text-xs text-slate-400">
-          loading !
+          If it takes too long, reload the page.
         </p>
       </div>
     </div>
