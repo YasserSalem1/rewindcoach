@@ -10,6 +10,7 @@ import type { RiotMatch, RiotParticipant } from "@/lib/riot";
 import { formatDuration, formatRelativeDate, kdaString } from "@/lib/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ReviewLoader } from "@/components/loaders/ReviewLoader";
 
 interface MatchRowProps {
   match: RiotMatch;
@@ -64,14 +65,15 @@ const MatchRowComponent = ({
 
   // Runes are always present in a static spot in the layout regardless of items
   return (
-    <motion.article
-      variants={rowVariants}
-      initial="initial"
-      animate="animate"
-      className="flex flex-col gap-4 rounded-2xl border border-white/5 bg-slate-900/45 p-4 transition hover:border-violet-400/40 hover:bg-slate-900/65 sm:flex-row sm:items-center"
-    >
-      {/* Champion Info Section - Fixed Width */}
-      <div className="flex items-center gap-4 sm:w-[280px] sm:flex-shrink-0">
+    <>
+      <motion.article
+        variants={rowVariants}
+        initial="initial"
+        animate="animate"
+        className="flex flex-col gap-4 rounded-2xl border border-white/5 bg-slate-900/45 p-4 transition hover:border-violet-400/40 hover:bg-slate-900/65 sm:flex-row sm:items-center"
+      >
+        {/* Champion Info Section - Fixed Width */}
+        <div className="flex items-center gap-4 sm:w-[280px] sm:flex-shrink-0">
         <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-violet-400/45 flex-shrink-0">
           <Image
             src={participant.championIcon}
@@ -257,8 +259,14 @@ const MatchRowComponent = ({
             </>
           )}
         </Button>
-      </motion.div>
-    </motion.article>
+        </motion.div>
+      </motion.article>
+      {isLoading && (
+        <div className="fixed inset-0 z-50">
+          <ReviewLoader />
+        </div>
+      )}
+    </>
   );
 };
 
