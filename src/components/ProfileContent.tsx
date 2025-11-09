@@ -270,7 +270,7 @@ export function ProfileContent({ bundle, region }: ProfileContentProps) {
               </Button>
               <span className="text-xs text-slate-300/75 md:text-right">
                 {isGenerating 
-                  ? "This may take 10-15 minutes. Feel free to explore or come back later!"
+                  ? "If it takes too long, reload the page."
                   : "Chronicle your split and relive every highlight."
                 }
               </span>

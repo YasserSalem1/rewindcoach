@@ -172,6 +172,10 @@ export default function ReviewLoading() {
             </motion.div>
           ))}
         </div>
+
+        <p className="text-xs text-slate-400">
+          If it takes too long, reload the page.
+        </p>
       </div>
     </div>
   );

@@ -138,7 +138,7 @@ export default function ChronicleLoading() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          This may take 10-15 minutes. Feel free to explore or come back later!
+          If it takes too long, reload the page.
         </motion.p>
 
         {/* Progress bar animation */}
