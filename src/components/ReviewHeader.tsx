@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 import type { RiotMatch } from "@/lib/riot";
 import { formatDuration } from "@/lib/ui";
@@ -18,12 +19,15 @@ interface ReviewHeaderProps {
 
 export function ReviewHeader({ match, gameName, tagLine, region }: ReviewHeaderProps) {
   const router = useRouter();
+  const [isBackNavigating, setIsBackNavigating] = useState(false);
   const player = match.participants.find(
     (p) => p.puuid === match.primaryParticipantPuuid,
   );
   const winTeam = match.teams.find((team) => team.win);
 
   const handleBack = () => {
+    if (isBackNavigating) return;
+    setIsBackNavigating(true);
     if (gameName && tagLine && region) {
       router.push(`/profile/${region}/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`);
     } else {
@@ -38,10 +42,12 @@ export function ReviewHeader({ match, gameName, tagLine, region }: ReviewHeaderP
         variant="ghost"
         size="sm"
         onClick={handleBack}
-        className="text-slate-300 hover:text-slate-100"
+        disabled={isBackNavigating}
+        className="text-slate-300 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Profile
+        <span>Back to Profile</span>
+        {isBackNavigating && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
       </Button>
 
       {/* Improved Header Design */}

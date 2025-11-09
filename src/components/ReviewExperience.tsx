@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 import type { MatchBundle, TimelineEvent, TimelineFrame } from "@/lib/riot";
 import { parseReviewTimeline, parsePlayerRoles, type CoachParsedEvent } from "@/lib/parseReviewOutput";
@@ -29,6 +29,7 @@ export function ReviewExperience({
   focusTagLine,
   coachReviewText,
 }: ReviewExperienceProps) {
+  const router = useRouter();
   const { match, timeline } = bundle;
   const participants = match.participants;
   const gameDuration = match.gameDuration;
@@ -597,26 +598,33 @@ export function ReviewExperience({
     profileUrl = `/profile/${match.region}/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
   }
 
+  const [isBackNavigating, setIsBackNavigating] = useState(false);
+
+  const handleBackNavigation = useCallback(() => {
+    if (isBackNavigating) return;
+    setIsBackNavigating(true);
+    if (profileUrl) {
+      router.push(profileUrl);
+      return;
+    }
+    if (typeof window !== "undefined") {
+      window.history.back();
+    }
+  }, [isBackNavigating, profileUrl, router]);
+
   return (
     <div className="flex flex-col gap-6">
       {/* Back Button */}
-      {profileUrl ? (
-        <Link
-          href={profileUrl}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-all group w-fit"
-        >
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-          <span>Back to Profile</span>
-        </Link>
-      ) : (
-        <button
-          onClick={() => window.history.back()}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-all group w-fit"
-        >
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-          <span>Back</span>
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={handleBackNavigation}
+        disabled={isBackNavigating}
+        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-all group w-fit disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+        <span>{profileUrl ? "Back to Profile" : "Back"}</span>
+        {isBackNavigating && <Loader2 className="h-4 w-4 animate-spin text-slate-200" />}
+      </button>
       <div className={cn("relative overflow-hidden rounded-3xl border p-6 shadow-lg shadow-violet-900/25", heroCardClass)}>
         {/* Champion Splash Art Background */}
         {championSplashUrl && (

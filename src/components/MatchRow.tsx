@@ -10,6 +10,7 @@ import type { RiotMatch, RiotParticipant } from "@/lib/riot";
 import { formatDuration, formatRelativeDate, kdaString } from "@/lib/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ReviewLoader } from "@/components/loaders/ReviewLoader";
 
 interface MatchRowProps {
   match: RiotMatch;
@@ -39,6 +40,7 @@ const MatchRowComponent = ({
   const resultTone = isWin ? "good" : "bad";
 
   const review = () => {
+    if (isLoading) return;
     setIsLoading(true);
     
     if (onReview) {
@@ -46,14 +48,22 @@ const MatchRowComponent = ({
       return;
     }
 
-    const search = new URLSearchParams({ puuid: participant.puuid });
-    if (gameName) {
-      search.set("gameName", gameName);
+    const navigate = () => {
+      const search = new URLSearchParams({ puuid: participant.puuid });
+      if (gameName) {
+        search.set("gameName", gameName);
+      }
+      if (tagLine) {
+        search.set("tagLine", tagLine);
+      }
+      router.push(`/review/${match.id}?${search.toString()}`);
+    };
+
+    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(navigate);
+    } else {
+      navigate();
     }
-    if (tagLine) {
-      search.set("tagLine", tagLine);
-    }
-    router.push(`/review/${match.id}?${search.toString()}`);
   };
 
   // For static item slots
@@ -260,6 +270,7 @@ const MatchRowComponent = ({
         </Button>
         </motion.div>
       </motion.article>
+      {isLoading && <ReviewLoader className="fixed inset-0 z-50" />}
     </>
   );
 };

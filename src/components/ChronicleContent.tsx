@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy, Target, Flame, ChevronDown, Award, Clock, Package, Skull, HeartHandshake, Share2, Download, Link, Crown, Sparkles, Crosshair, Swords } from "lucide-react";
+import { ArrowLeft, Trophy, Target, Flame, ChevronDown, Award, Clock, Package, Skull, HeartHandshake, Share2, Download, Link, Crown, Sparkles, Crosshair, Swords, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showCopiedToast, setShowCopiedToast] = useState(false);
+  const [isBackNavigating, setIsBackNavigating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch season stats ONLY from AWS Lambda API
@@ -248,6 +249,8 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
   }, [seasonStats]);
 
   const handleBack = () => {
+    if (isBackNavigating) return;
+    setIsBackNavigating(true);
     router.push(`/profile/${region}/${encodeURIComponent(summoner.summonerName)}/${encodeURIComponent(summoner.tagline)}`);
   };
 
@@ -588,10 +591,12 @@ export function ChronicleContent({ bundle, region }: ChronicleContentProps) {
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="bg-slate-950/80 backdrop-blur-sm text-slate-300 hover:text-slate-100 border border-white/10 transition-all duration-300 hover:scale-105"
+          disabled={isBackNavigating}
+          className="bg-slate-950/80 backdrop-blur-sm text-slate-300 hover:text-slate-100 border border-white/10 transition-all duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-70"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Profile
+          <span>Back to Profile</span>
+          {isBackNavigating && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
         </Button>
       </div>
 
