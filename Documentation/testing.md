@@ -107,11 +107,15 @@ Each section is **sharable**, allowing users to showcase their season stats and 
 - Use **public summoner names** for more consistent test results (e.g., known players).  
 - If the rate limit is reached, the app will automatically retry; refreshing after ~30–60 seconds helps.  
 - Optimized for **Chrome** and **Edge** on desktop.
-- <span style="color:#f87171;font-weight:600;">When Generating Chronocile - Season Rewind, USING other functionalities of the webapp may cause it to crash.</span>
+- The website is optimised for multiple request by using diffrent riot API Keys, using the website while generating chronicle will work fine.
+- Users with non english char or weird symbols MIGHT cause issue while fetching data.
+- There are 2 diffrent chatbots in the webapp, each fed diffrent data respectivly Test out their Knowledgd, and check out example of what is being fed in the documentation.
+- Review Match chatbot is fed data from match timeline and match info.
+- 20 match lab chatbot is fed data from match info, during the last 20 matches  
 
 ---
 
-## ummary
+## Summary
 
 | Feature | Description | Testing Focus |
 |----------|--------------|----------------|
