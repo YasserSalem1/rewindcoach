@@ -11,8 +11,6 @@
 
 >
 > Please allow a few extra seconds when testing pages that fetch live match data.
->
-> <span style="color:#f87171;font-weight:600;">When Generating Chronocile - Season Rewind, USING other functionalities of the webapp may cause it to crash.</span>
 
 ---
 
