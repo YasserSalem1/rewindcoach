@@ -62,7 +62,7 @@ The chatbot understands match data, events, and gold flow — acting like a real
 This page acts as a **Time Machine**, taking you **20 matches back in time** to reveal patterns, momentum shifts, and performance evolution.
 
 ### How to Test
-1. From the top navigation bar or main dashboard, click **“20 Match Lab.”**  
+1. From the main dashboard, click **“OPEN Match Lab.”**  
 2. Allow time for data aggregation.
 
 ### xpected Results
